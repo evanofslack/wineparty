@@ -1,0 +1,6 @@
+wineparty
+state.json
+.env
+web/node_modules/
+web/dist/
+*.log

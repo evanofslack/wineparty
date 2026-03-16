@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-paper: #F7F3EE;
+  --color-coral: #FF6B6B;
+  --color-sky: #4ECDC4;
+  --color-lime: #95E06C;
+  --color-sunny: #FFE66D;
+  --color-grape: #9B59B6;
+  --color-ink: #2C1A1D;
+  --color-muted: #8B7D7F;
+  --border-radius-sketch: 12px 8px 14px 10px / 8px 14px 10px 12px;
+  --shadow-sketch: 4px 4px 0px 0px rgba(44,26,29,0.15);
+}
+
+html, body, #root {
+  height: 100%;
+  background-color: var(--color-paper);
+  font-family: 'Nunito', system-ui, sans-serif;
+  color: var(--color-ink);
+}
+
+.sketch-border {
+  border: 2.5px solid var(--color-ink);
+  border-radius: 12px 8px 14px 10px / 8px 14px 10px 12px;
+  box-shadow: 4px 4px 0px 0px rgba(44,26,29,0.15);
+}
+
+.sketch-border-lg {
+  border: 3px solid var(--color-ink);
+  border-radius: 14px 10px 16px 12px / 10px 16px 12px 14px;
+  box-shadow: 6px 6px 0px 0px rgba(44,26,29,0.2);
+}
+
+.btn-sketch {
+  @apply font-bold px-5 py-3 sketch-border cursor-pointer transition-all select-none;
+  @apply active:translate-x-1 active:translate-y-1 active:shadow-none;
+}
