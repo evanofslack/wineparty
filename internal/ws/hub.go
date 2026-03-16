@@ -52,6 +52,7 @@ func (h *Hub) Run() {
 			h.mu.Lock()
 			h.clients[c] = struct{}{}
 			h.mu.Unlock()
+			h.sendStateTo(c)
 
 		case c := <-h.unregister:
 			h.mu.Lock()
@@ -212,4 +213,19 @@ func (h *Hub) broadcastState() {
 		return
 	}
 	h.broadcast <- data
+}
+
+func (h *Hub) sendStateTo(c *Client) {
+	state := h.repo.GetState()
+	env := Envelope{Type: MsgGameState, Payload: state}
+	data, err := json.Marshal(env)
+	if err != nil {
+		slog.Error("marshal state for new client", "err", err)
+		return
+	}
+	select {
+	case c.send <- data:
+	default:
+		slog.Warn("new client send buffer full on connect")
+	}
 }
