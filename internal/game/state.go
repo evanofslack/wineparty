@@ -2,32 +2,15 @@ package game
 
 import "time"
 
-type Phase int
+type Phase string
 
 const (
-	PhaseLobby    Phase = iota // waiting for players
-	PhaseGuessing              // players submitting guesses
-	PhaseScoring               // reveal + scores shown
-	PhaseComplete              // game over, winner shown
-	PhaseMiniGame              // placeholder for future mini-game rounds
+	PhaseLobby    Phase = "lobby"
+	PhaseGuessing Phase = "guessing"
+	PhaseScoring  Phase = "scoring"
+	PhaseComplete Phase = "complete"
+	PhaseMiniGame Phase = "minigame"
 )
-
-func (p Phase) String() string {
-	switch p {
-	case PhaseLobby:
-		return "lobby"
-	case PhaseGuessing:
-		return "guessing"
-	case PhaseScoring:
-		return "scoring"
-	case PhaseComplete:
-		return "complete"
-	case PhaseMiniGame:
-		return "minigame"
-	default:
-		return "unknown"
-	}
-}
 
 type Role string
 
