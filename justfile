@@ -9,7 +9,7 @@ default:
 
 # Start backend (direct, no docker)
 backend:
-    go run .
+    go run ./...
 
 # Start frontend dev server (direct, no docker)
 frontend:
