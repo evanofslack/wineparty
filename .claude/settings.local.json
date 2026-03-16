@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go mod:*)",
+      "Bash(go get:*)",
+      "Bash(go test:*)",
+      "Bash(mkdir:*)",
+      "Bash(echo:*)",
+      "Bash(cd:*)",
+      "Bash(npm create:*)",
+      "Bash(npx:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(go build:*)",
+      "Bash(find:*)"
+    ]
+  }
+}
