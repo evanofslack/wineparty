@@ -119,6 +119,7 @@ func (h *Hub) handleJoin(c *Client, raw json.RawMessage) {
 			role = game.RoleAdmin
 		} else {
 			c.sendEnvelope(MsgError, ErrorPayload{Message: "wrong admin password"})
+			return
 		}
 	}
 

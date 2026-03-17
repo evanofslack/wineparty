@@ -27,10 +27,12 @@ func (e *Engine) State() *GameState {
 
 func (e *Engine) AddPlayer(id, name string, role Role) (*Player, error) {
 	if p, exists := e.state.Players[id]; exists {
-		// reconnect: update name if changed, mark connected
 		p.Connected = true
 		if name != "" {
 			p.Name = name
+		}
+		if role != RolePlayer {
+			p.Role = role
 		}
 		return p, nil
 	}
