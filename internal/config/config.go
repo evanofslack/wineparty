@@ -28,6 +28,7 @@ type Config struct {
 	AdminPassword string
 	WinesFile     string
 	StateFile     string
+	LogDir        string
 	Wines         []Wine
 }
 
@@ -36,6 +37,7 @@ func Load() *Config {
 	adminPass := flag.String("admin-password", envOr("ADMIN_PASSWORD", "wine123"), "Admin password")
 	winesFile := flag.String("wines-file", envOr("WINES_FILE", "config/wines.yaml"), "Path to wines YAML")
 	stateFile := flag.String("state-file", envOr("STATE_FILE", "state.json"), "Path to state snapshot file")
+	logDir := flag.String("log-dir", envOr("LOG_DIR", "logs"), "Directory for game event logs")
 	flag.Parse()
 
 	cfg := &Config{
@@ -43,6 +45,7 @@ func Load() *Config {
 		AdminPassword: *adminPass,
 		WinesFile:     *winesFile,
 		StateFile:     *stateFile,
+		LogDir:        *logDir,
 	}
 
 	data, err := os.ReadFile(cfg.WinesFile)

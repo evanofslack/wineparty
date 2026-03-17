@@ -31,14 +31,15 @@ type Player struct {
 type FlavorNote string
 
 type Guess struct {
-	PlayerID   string       `json:"playerId"`
-	RoundIndex int          `json:"roundIndex"`
-	Variety    string       `json:"variety"`
-	Country    string       `json:"country"`
-	Region     string       `json:"region"`
-	Year       int          `json:"year"`
-	Flavors    []FlavorNote `json:"flavors"`
-	SubmittedAt time.Time   `json:"submittedAt"`
+	PlayerID    string       `json:"playerId"`
+	RoundIndex  int          `json:"roundIndex"`
+	Variety     string       `json:"variety"`
+	Country     string       `json:"country"`
+	Region      string       `json:"region"`
+	Year        int          `json:"year"`
+	Flavors     []FlavorNote `json:"flavors"`
+	Rating      int          `json:"rating"` // 0 = unrated, 1–10
+	SubmittedAt time.Time    `json:"submittedAt"`
 }
 
 type RoundScore struct {
@@ -78,14 +79,45 @@ type Round struct {
 	RevealedAt *time.Time `json:"revealedAt,omitempty"`
 }
 
+type WineRatingSummary struct {
+	RoundIndex  int     `json:"roundIndex"`
+	WineName    string  `json:"wineName"`
+	WineVariety string  `json:"wineVariety"`
+	AvgRating   float64 `json:"avgRating"`
+	RatedCount  int     `json:"ratedCount"`
+	Variance    float64 `json:"variance"`
+}
+
+type GameSummary struct {
+	MostPopular   *WineRatingSummary  `json:"mostPopular"`
+	LeastLiked    *WineRatingSummary  `json:"leastLiked"`
+	MostContested *WineRatingSummary  `json:"mostContested"`
+	WineRatings   []WineRatingSummary `json:"wineRatings"`
+}
+
+type PlayerSummary struct {
+	PlayerID           string  `json:"playerId"`
+	FavoriteWine       string  `json:"favoriteWine"`
+	FavoriteWineVariety string `json:"favoriteWineVariety"`
+	FavoriteWineRound  int     `json:"favoriteWineRound"`
+	BestRound          int     `json:"bestRound"`
+	BestRoundPoints    int     `json:"bestRoundPoints"`
+	VarietyHits        int     `json:"varietyHits"`
+	TotalYearPoints    int     `json:"totalYearPoints"`
+	AvgRatingGiven     float64 `json:"avgRatingGiven"`
+	RoundsPlayed       int     `json:"roundsPlayed"`
+}
+
 type GameState struct {
-	Phase        Phase              `json:"phase"`
-	CurrentRound int                `json:"currentRound"`
-	Rounds       []Round            `json:"rounds"`
-	Players      map[string]*Player `json:"players"`
-	Leaderboard  []LeaderboardEntry `json:"leaderboard"`
-	StartedAt    *time.Time         `json:"startedAt,omitempty"`
-	CompletedAt  *time.Time         `json:"completedAt,omitempty"`
+	Phase           Phase                      `json:"phase"`
+	CurrentRound    int                        `json:"currentRound"`
+	Rounds          []Round                    `json:"rounds"`
+	Players         map[string]*Player         `json:"players"`
+	Leaderboard     []LeaderboardEntry         `json:"leaderboard"`
+	StartedAt       *time.Time                 `json:"startedAt,omitempty"`
+	CompletedAt     *time.Time                 `json:"completedAt,omitempty"`
+	Summary         *GameSummary               `json:"summary,omitempty"`
+	PlayerSummaries map[string]*PlayerSummary  `json:"playerSummaries,omitempty"`
 }
 
 func NewGameState(wines []WineConfig) *GameState {

@@ -4,3 +4,4 @@ state.json
 web/node_modules/
 web/dist/
 *.log
+logs/

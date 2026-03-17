@@ -115,6 +115,9 @@ func (e *Engine) NextRound() error {
 		now := time.Now()
 		e.state.CompletedAt = &now
 		e.state.Phase = PhaseComplete
+		summary, playerSummaries := computeSummary(e.state)
+		e.state.Summary = summary
+		e.state.PlayerSummaries = playerSummaries
 		return nil
 	}
 	e.state.CurrentRound = next

@@ -1,6 +1,6 @@
 import { Leaderboard } from '../components/Leaderboard'
 import { useGameStore } from '../store/gameStore'
-import type { LeaderboardEntry, Player } from '../types/game'
+import type { LeaderboardEntry, Player, WineRatingSummary } from '../types/game'
 
 const APP_NAME = 'Wine Party'
 
@@ -167,8 +167,22 @@ export function DisplayView() {
   // Complete
   if (gameState.phase === 'complete') {
     const winner = gameState.leaderboard[0]
+    const summary = gameState.summary
+
+    function HighlightCard({ label, wrs }: { label: string; wrs: WineRatingSummary }) {
+      const stdDev = Math.sqrt(wrs.variance)
+      return (
+        <div className="sketch-border bg-white px-4 py-4 flex-1 min-w-40">
+          <p className="text-xs font-bold text-muted uppercase tracking-wider mb-1">{label}</p>
+          <p className="font-black text-lg text-ink leading-tight">{wrs.wineName} ({wrs.wineVariety}) #{wrs.roundIndex + 1}</p>
+          <p className="text-2xl font-black text-grape">{wrs.avgRating.toFixed(1)}<span className="text-base font-semibold text-muted">/10</span></p>
+          <p className="text-xs text-muted font-semibold">±{stdDev.toFixed(2)} · {wrs.ratedCount} rating{wrs.ratedCount !== 1 ? 's' : ''}</p>
+        </div>
+      )
+    }
+
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-8 px-8">
+      <div className="flex flex-col items-center min-h-screen gap-8 px-8 py-10">
         <div className="text-8xl">🏆</div>
         <h1 className="text-6xl font-black text-center">
           {winner ? `${winner.playerName} wins!` : 'Game Over!'}
@@ -181,6 +195,30 @@ export function DisplayView() {
         <div className="w-full max-w-md">
           <Leaderboard entries={gameState.leaderboard} />
         </div>
+        {summary && (
+          <div className="w-full max-w-2xl">
+            <p className="text-sm font-bold text-muted uppercase tracking-wider mb-4">Wine Ratings</p>
+            {(summary.mostPopular || summary.leastLiked || summary.mostContested) && (
+              <div className="flex gap-4 mb-6 flex-wrap">
+                {summary.mostPopular && <HighlightCard label="Most Popular" wrs={summary.mostPopular} />}
+                {summary.leastLiked && summary.leastLiked.wineName !== summary.mostPopular?.wineName && (
+                  <HighlightCard label="Least Liked" wrs={summary.leastLiked} />
+                )}
+                {summary.mostContested && <HighlightCard label="Most Divisive" wrs={summary.mostContested} />}
+              </div>
+            )}
+            <div className="sketch-border bg-white px-4 py-4">
+              {summary.wineRatings.map((wr) => (
+                <div key={wr.roundIndex} className="flex justify-between items-center py-1.5 border-b last:border-0 border-paper">
+                  <span className="font-semibold">{wr.wineName} ({wr.wineVariety}) #{wr.roundIndex + 1}</span>
+                  <span className="font-black text-grape">
+                    {wr.ratedCount > 0 ? `${wr.avgRating.toFixed(1)}/10` : '—'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     )
   }

@@ -36,7 +36,7 @@ func main() {
 
 	repo := repository.NewMemoryRepo(wines, cfg.StateFile)
 	eng := game.NewEngine(repo.GetState())
-	hub := ws.NewHub(repo, eng, cfg.AdminPassword, wines)
+	hub := ws.NewHub(repo, eng, cfg.AdminPassword, wines, cfg.LogDir)
 	go hub.Run()
 
 	r := chi.NewRouter()

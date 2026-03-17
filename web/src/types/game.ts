@@ -45,6 +45,7 @@ export interface Guess {
   region: string
   year: number
   flavors: string[]
+  rating: number
   submittedAt: string
 }
 
@@ -85,6 +86,35 @@ export interface Round {
   revealedAt?: string
 }
 
+export interface WineRatingSummary {
+  roundIndex: number
+  wineName: string
+  wineVariety: string
+  avgRating: number
+  ratedCount: number
+  variance: number
+}
+
+export interface GameSummary {
+  mostPopular?: WineRatingSummary
+  leastLiked?: WineRatingSummary
+  mostContested?: WineRatingSummary
+  wineRatings: WineRatingSummary[]
+}
+
+export interface PlayerSummary {
+  playerId: string
+  favoriteWine: string
+  favoriteWineVariety: string
+  favoriteWineRound: number
+  bestRound: number
+  bestRoundPoints: number
+  varietyHits: number
+  totalYearPoints: number
+  avgRatingGiven: number
+  roundsPlayed: number
+}
+
 export interface GameState {
   phase: Phase
   currentRound: number
@@ -93,6 +123,8 @@ export interface GameState {
   leaderboard: LeaderboardEntry[]
   startedAt?: string
   completedAt?: string
+  summary?: GameSummary
+  playerSummaries?: Record<string, PlayerSummary>
 }
 
 export interface Envelope<T = unknown> {
@@ -112,6 +144,7 @@ export interface GuessPayload {
   region: string
   year: number
   flavors: string[]
+  rating: number
 }
 
 export interface AdminActionPayload {

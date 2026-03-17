@@ -52,6 +52,7 @@ type GuessPayload struct {
 	Region  string            `json:"region"`
 	Year    int               `json:"year"`
 	Flavors []game.FlavorNote `json:"flavors"`
+	Rating  int               `json:"rating"`
 }
 
 // AdminActionPayload carries an admin command.

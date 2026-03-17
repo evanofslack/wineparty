@@ -35,11 +35,12 @@ export function BlindTastingForm({ onSubmit, submitted }: Props) {
   const [region, setRegion] = useState('')
   const [year, setYear] = useState<number>(currentYear - 3)
   const [flavors, setFlavors] = useState<string[]>([])
+  const [rating, setRating] = useState<number>(5)
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
     if (!variety || !country || !region || !year) return
-    onSubmit({ variety, country, region, year, flavors })
+    onSubmit({ variety, country, region, year, flavors, rating })
   }
 
   if (submitted) {
@@ -119,6 +120,23 @@ export function BlindTastingForm({ onSubmit, submitted }: Props) {
       </div>
 
       <FlavorPicker selected={flavors} onChange={setFlavors} />
+
+      <div className="flex flex-col gap-1.5">
+        <label className="font-bold text-sm text-ink">Your Rating: {rating}/10</label>
+        <input
+          type="range"
+          min={1}
+          max={10}
+          value={rating}
+          onChange={(e) => setRating(Number(e.target.value))}
+          className="w-full accent-grape"
+        />
+        <div className="flex justify-between text-xs text-muted font-semibold">
+          <span>1</span>
+          <span className="font-black text-grape text-base">{rating}</span>
+          <span>10</span>
+        </div>
+      </div>
 
       <button
         type="submit"

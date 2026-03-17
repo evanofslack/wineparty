@@ -157,22 +157,39 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
   if (gameState?.phase === 'complete') {
     const winner = gameState.leaderboard[0]
     const isWinner = winner?.playerId === playerId
+    const mySummary = gameState.playerSummaries?.[playerId]
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen px-6 gap-6 text-center">
+      <div className="flex flex-col items-center min-h-screen px-6 pt-8 pb-12 gap-6 text-center max-w-sm mx-auto">
         <div className="text-6xl">{isWinner ? '🏆' : '🍷'}</div>
         <h1 className="text-3xl font-black">
-          {isWinner ? 'You won! 🎉' : 'Game Over!'}
+          {isWinner ? 'You won!' : 'Game Over!'}
         </h1>
         {winner && (
-          <div className="sketch-border-lg bg-sunny/50 px-6 py-4 w-full max-w-sm">
+          <div className="sketch-border-lg bg-sunny/50 px-6 py-4 w-full">
             <p className="text-sm font-bold text-muted">Winner</p>
             <p className="text-2xl font-black">{winner.playerName}</p>
             <p className="text-lg font-bold text-grape">{winner.score} points</p>
           </div>
         )}
-        <div className="w-full max-w-sm">
+        <div className="w-full">
           <Leaderboard entries={gameState.leaderboard} highlightId={playerId} />
         </div>
+        {mySummary && (
+          <div className="sketch-border bg-white px-4 py-4 w-full text-left">
+            <p className="font-bold text-sm text-muted uppercase tracking-wider mb-3">Your Stats</p>
+            <div className="space-y-1.5 text-sm font-semibold">
+              {mySummary.favoriteWine && (
+                <p>Favorite wine: <span className="text-grape font-black">{mySummary.favoriteWine} ({mySummary.favoriteWineVariety}) #{mySummary.favoriteWineRound + 1}</span></p>
+              )}
+              <p>Best round: <span className="font-black">Round {mySummary.bestRound + 1}</span> <span className="text-grape">(+{mySummary.bestRoundPoints}pts)</span></p>
+              <p>Variety correct: <span className="font-black">{mySummary.varietyHits}</span> time{mySummary.varietyHits !== 1 ? 's' : ''}</p>
+              <p>Year points total: <span className="font-black">{mySummary.totalYearPoints}</span></p>
+              {mySummary.avgRatingGiven > 0 && (
+                <p>Avg rating given: <span className="font-black">{mySummary.avgRatingGiven.toFixed(1)}</span>/10</p>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     )
   }

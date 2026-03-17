@@ -1,6 +1,7 @@
 package game
 
 import (
+	"math"
 	"testing"
 )
 
@@ -88,6 +89,158 @@ func TestScoreNoMatch(t *testing.T) {
 	}
 	if rs.YearPoints != 0 {
 		t.Fatalf("expected 0 year points, got %d", rs.YearPoints)
+	}
+}
+
+func makeState(rounds []Round, players map[string]*Player) *GameState {
+	return &GameState{
+		Phase:   PhaseComplete,
+		Rounds:  rounds,
+		Players: players,
+	}
+}
+
+func TestComputeSummaryAllRated(t *testing.T) {
+	state := makeState([]Round{
+		{
+			Index: 0,
+			Wine:  WineConfig{Name: "Red A"},
+			Guesses: []Guess{
+				{PlayerID: "p1", Rating: 8},
+				{PlayerID: "p2", Rating: 6},
+			},
+		},
+		{
+			Index: 1,
+			Wine:  WineConfig{Name: "White B"},
+			Guesses: []Guess{
+				{PlayerID: "p1", Rating: 4},
+				{PlayerID: "p2", Rating: 10},
+			},
+		},
+	}, map[string]*Player{
+		"p1": {ID: "p1", Role: RolePlayer},
+		"p2": {ID: "p2", Role: RolePlayer},
+	})
+
+	gs, _ := computeSummary(state)
+
+	if gs.WineRatings[0].AvgRating != 7.0 {
+		t.Fatalf("expected avg 7.0 for round 0, got %v", gs.WineRatings[0].AvgRating)
+	}
+	if gs.WineRatings[1].AvgRating != 7.0 {
+		t.Fatalf("expected avg 7.0 for round 1, got %v", gs.WineRatings[1].AvgRating)
+	}
+	if gs.WineRatings[0].RatedCount != 2 {
+		t.Fatalf("expected 2 raters, got %d", gs.WineRatings[0].RatedCount)
+	}
+	// round 1 has higher variance: [(4-7)^2 + (10-7)^2]/2 = 9
+	if gs.MostContested == nil {
+		t.Fatal("expected MostContested to be set")
+	}
+	if gs.MostContested.WineName != "White B" {
+		t.Fatalf("expected White B as most contested, got %s", gs.MostContested.WineName)
+	}
+}
+
+func TestComputeSummaryNoneRated(t *testing.T) {
+	state := makeState([]Round{
+		{
+			Index: 0,
+			Wine:  WineConfig{Name: "Red A"},
+			Guesses: []Guess{
+				{PlayerID: "p1", Rating: 0},
+			},
+		},
+	}, map[string]*Player{
+		"p1": {ID: "p1", Role: RolePlayer},
+	})
+
+	gs, _ := computeSummary(state)
+
+	if gs.MostPopular != nil || gs.LeastLiked != nil || gs.MostContested != nil {
+		t.Fatal("expected all highlights nil when no ratings")
+	}
+	if gs.WineRatings[0].RatedCount != 0 {
+		t.Fatalf("expected 0 rated count, got %d", gs.WineRatings[0].RatedCount)
+	}
+}
+
+func TestComputeSummaryVariance(t *testing.T) {
+	state := makeState([]Round{
+		{
+			Index: 0,
+			Wine:  WineConfig{Name: "R"},
+			Guesses: []Guess{
+				{PlayerID: "p1", Rating: 2},
+				{PlayerID: "p2", Rating: 8},
+			},
+		},
+	}, map[string]*Player{
+		"p1": {ID: "p1", Role: RolePlayer},
+		"p2": {ID: "p2", Role: RolePlayer},
+	})
+
+	gs, _ := computeSummary(state)
+
+	// avg=5, variance = [(2-5)^2 + (8-5)^2]/2 = 9
+	wantVariance := 9.0
+	if math.Abs(gs.WineRatings[0].Variance-wantVariance) > 1e-9 {
+		t.Fatalf("expected variance %v, got %v", wantVariance, gs.WineRatings[0].Variance)
+	}
+}
+
+func TestComputeSummaryFavoriteWineTieBreak(t *testing.T) {
+	// Tie on rating: first encountered should win
+	state := makeState([]Round{
+		{
+			Index:   0,
+			Wine:    WineConfig{Name: "First"},
+			Guesses: []Guess{{PlayerID: "p1", Rating: 9}},
+		},
+		{
+			Index:   1,
+			Wine:    WineConfig{Name: "Second"},
+			Guesses: []Guess{{PlayerID: "p1", Rating: 9}},
+		},
+	}, map[string]*Player{
+		"p1": {ID: "p1", Role: RolePlayer},
+	})
+
+	_, ps := computeSummary(state)
+	if ps["p1"].FavoriteWine != "First" {
+		t.Fatalf("expected First as favorite (tie-break first encountered), got %s", ps["p1"].FavoriteWine)
+	}
+}
+
+func TestComputeSummaryBestRound(t *testing.T) {
+	state := makeState([]Round{
+		{
+			Index:  0,
+			Wine:   WineConfig{Name: "R1"},
+			Scores: []RoundScore{{PlayerID: "p1", Points: 3}},
+		},
+		{
+			Index:  1,
+			Wine:   WineConfig{Name: "R2"},
+			Scores: []RoundScore{{PlayerID: "p1", Points: 8, VarietyHit: true, YearPoints: 2}},
+		},
+	}, map[string]*Player{
+		"p1": {ID: "p1", Role: RolePlayer},
+	})
+
+	_, ps := computeSummary(state)
+	if ps["p1"].BestRound != 1 {
+		t.Fatalf("expected best round 1, got %d", ps["p1"].BestRound)
+	}
+	if ps["p1"].BestRoundPoints != 8 {
+		t.Fatalf("expected best round points 8, got %d", ps["p1"].BestRoundPoints)
+	}
+	if ps["p1"].VarietyHits != 1 {
+		t.Fatalf("expected 1 variety hit, got %d", ps["p1"].VarietyHits)
+	}
+	if ps["p1"].TotalYearPoints != 2 {
+		t.Fatalf("expected 2 total year points, got %d", ps["p1"].TotalYearPoints)
 	}
 }
 

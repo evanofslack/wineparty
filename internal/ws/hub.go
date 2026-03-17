@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"log/slog"
 	"sync"
+	"time"
 
+	"wineparty/internal/eventlog"
 	"wineparty/internal/game"
 	"wineparty/internal/repository"
 )
@@ -25,13 +27,15 @@ type Hub struct {
 	engine      *game.Engine
 	adminPass   string
 	wines       []game.WineConfig
+	logDir      string
+	eventLog    *eventlog.EventLog
 }
 
 func (h *Hub) RegisterClient(c *Client) {
 	h.register <- c
 }
 
-func NewHub(repo repository.Repository, engine *game.Engine, adminPass string, wines []game.WineConfig) *Hub {
+func NewHub(repo repository.Repository, engine *game.Engine, adminPass string, wines []game.WineConfig, logDir string) *Hub {
 	return &Hub{
 		clients:    make(map[*Client]struct{}),
 		register:   make(chan *Client, 16),
@@ -42,6 +46,7 @@ func NewHub(repo repository.Repository, engine *game.Engine, adminPass string, w
 		engine:     engine,
 		adminPass:  adminPass,
 		wines:      wines,
+		logDir:     logDir,
 	}
 }
 
@@ -123,10 +128,19 @@ func (h *Hub) handleJoin(c *Client, raw json.RawMessage) {
 		}
 	}
 
+	_, isReconnect := h.repo.GetState().Players[p.PlayerID]
 	player, _ := h.engine.AddPlayer(p.PlayerID, p.Name, role)
 	c.PlayerID = player.ID
 	h.repo.SaveState()
 	slog.Info("player joined", "id", player.ID, "name", player.Name, "role", player.Role)
+	if !isReconnect {
+		h.eventLog.Write(eventlog.Event{
+			Time:     time.Now(),
+			Type:     eventlog.EventPlayerJoin,
+			PlayerID: player.ID,
+			Payload:  map[string]string{"name": player.Name, "role": string(player.Role)},
+		})
+	}
 	h.broadcastState()
 }
 
@@ -147,11 +161,20 @@ func (h *Hub) handleGuess(c *Client, raw json.RawMessage) {
 		Region:   p.Region,
 		Year:     p.Year,
 		Flavors:  p.Flavors,
+		Rating:   p.Rating,
 	}
 	if err := h.engine.SubmitGuess(guess); err != nil {
 		c.sendEnvelope(MsgError, ErrorPayload{Message: err.Error()})
 		return
 	}
+	state := h.repo.GetState()
+	h.eventLog.Write(eventlog.Event{
+		Time:       time.Now(),
+		Type:       eventlog.EventGuessSubmit,
+		RoundIndex: state.CurrentRound,
+		PlayerID:   c.PlayerID,
+		Payload:    map[string]interface{}{"rating": p.Rating},
+	})
 	h.repo.SaveState()
 	h.broadcastState()
 }
@@ -174,10 +197,45 @@ func (h *Hub) handleAdminAction(c *Client, raw json.RawMessage) {
 	switch p.Action {
 	case ActionStartGame:
 		err = h.engine.StartGame()
+		if err == nil {
+			now := time.Now()
+			h.eventLog.Close()
+			el, elErr := eventlog.Open(h.logDir, now)
+			if elErr != nil {
+				slog.Warn("could not open event log", "err", elErr)
+			} else {
+				h.eventLog = el
+			}
+			h.eventLog.Write(eventlog.Event{
+				Time: now,
+				Type: eventlog.EventGameStart,
+			})
+		}
 	case ActionCloseGuessing:
+		roundIndex := h.repo.GetState().CurrentRound
 		err = h.engine.CloseGuessing()
+		if err == nil {
+			h.eventLog.Write(eventlog.Event{
+				Time:       time.Now(),
+				Type:       eventlog.EventCloseGuessing,
+				RoundIndex: roundIndex,
+			})
+		}
 	case ActionNextRound:
+		roundIndex := h.repo.GetState().CurrentRound
 		err = h.engine.NextRound()
+		if err == nil {
+			newState := h.engine.State()
+			evType := eventlog.EventNextRound
+			if newState.Phase == game.PhaseComplete {
+				evType = eventlog.EventGameComplete
+			}
+			h.eventLog.Write(eventlog.Event{
+				Time:       time.Now(),
+				Type:       evType,
+				RoundIndex: roundIndex,
+			})
+		}
 	case ActionSetScore:
 		err = h.engine.SetPlayerScore(p.PlayerID, p.Score)
 	case ActionResetGame:
@@ -194,6 +252,8 @@ func (h *Hub) handleAdminAction(c *Client, raw json.RawMessage) {
 			}
 		}
 		h.engine.ResetToLobby(wineConfigs)
+		h.eventLog.Close()
+		h.eventLog = nil
 	default:
 		c.sendEnvelope(MsgError, ErrorPayload{Message: "unknown admin action"})
 		return
