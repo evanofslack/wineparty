@@ -71,10 +71,15 @@ export function AdminView({ playerId, sendJoin, sendAdminAction }: Props) {
   const players = Object.values(gameState.players).filter((p) => p.role === 'player')
   const currentRound = gameState.rounds[gameState.currentRound]
 
+  const APP_NAME = 'Wine Party'
+
   return (
     <div className="min-h-screen bg-paper px-6 py-8 max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-black">Admin Panel 🍷</h1>
+        <div className="flex items-center gap-4">
+          <span className="text-2xl font-black text-grape">{APP_NAME}</span>
+          <h1 className="text-3xl font-black">Admin Panel 🍷</h1>
+        </div>
         <div className="flex items-center gap-2">
           <span className={`w-3 h-3 rounded-full ${connected ? 'bg-lime' : 'bg-coral'}`} />
           <span className="font-bold text-sm text-muted">

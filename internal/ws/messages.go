@@ -47,9 +47,10 @@ type ErrorPayload struct {
 
 // GuessPayload carries a player's wine guess.
 type GuessPayload struct {
-	Variety string           `json:"variety"`
-	Region  string           `json:"region"`
-	Year    int              `json:"year"`
+	Variety string            `json:"variety"`
+	Country string            `json:"country"`
+	Region  string            `json:"region"`
+	Year    int               `json:"year"`
 	Flavors []game.FlavorNote `json:"flavors"`
 }
 

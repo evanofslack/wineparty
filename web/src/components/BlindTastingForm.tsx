@@ -9,6 +9,11 @@ const VARIETIES = [
   'Viognier', 'Chenin Blanc', 'Albariño', 'Grenache Rosé', 'Other',
 ]
 
+const COUNTRIES = [
+  'France', 'USA', 'Italy', 'Spain', 'Argentina',
+  'Australia', 'New Zealand', 'Germany', 'Portugal', 'Austria', 'Chile', 'Other',
+]
+
 const REGIONS = [
   'Napa Valley', 'Sonoma', 'Willamette Valley', 'Walla Walla',
   'Bordeaux', 'Burgundy', 'Rhône Valley', 'Champagne', 'Alsace', 'Loire Valley',
@@ -18,23 +23,23 @@ const REGIONS = [
 ]
 
 interface Props {
-  hint?: string
   onSubmit: (guess: GuessPayload) => void
   submitted: boolean
 }
 
 const currentYear = new Date().getFullYear()
 
-export function BlindTastingForm({ hint, onSubmit, submitted }: Props) {
+export function BlindTastingForm({ onSubmit, submitted }: Props) {
   const [variety, setVariety] = useState('')
+  const [country, setCountry] = useState('')
   const [region, setRegion] = useState('')
   const [year, setYear] = useState<number>(currentYear - 3)
   const [flavors, setFlavors] = useState<string[]>([])
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    if (!variety || !region || !year) return
-    onSubmit({ variety, region, year, flavors })
+    if (!variety || !country || !region || !year) return
+    onSubmit({ variety, country, region, year, flavors })
   }
 
   if (submitted) {
@@ -51,12 +56,6 @@ export function BlindTastingForm({ hint, onSubmit, submitted }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-      {hint && (
-        <div className="sketch-border bg-sunny/30 px-4 py-3">
-          <p className="text-sm font-bold text-ink">Hint: {hint}</p>
-        </div>
-      )}
-
       <div className="flex flex-col gap-1.5">
         <label className="font-bold text-sm text-ink">Grape Variety</label>
         <select
@@ -68,6 +67,21 @@ export function BlindTastingForm({ hint, onSubmit, submitted }: Props) {
           <option value="">Select variety...</option>
           {VARIETIES.map((v) => (
             <option key={v} value={v}>{v}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label className="font-bold text-sm text-ink">Country</label>
+        <select
+          className="sketch-border bg-white px-3 py-3 font-semibold text-ink w-full"
+          value={country}
+          onChange={(e) => setCountry(e.target.value)}
+          required
+        >
+          <option value="">Select country...</option>
+          {COUNTRIES.map((c) => (
+            <option key={c} value={c}>{c}</option>
           ))}
         </select>
       </div>

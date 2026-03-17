@@ -62,7 +62,7 @@ export function Leaderboard({ entries, highlightId }: Props) {
             </span>
             <span className="flex-1 font-bold text-ink truncate">{e.playerName}</span>
             <span
-              className={`text-xl font-black transition-all ${isAnimating ? 'text-grape scale-110' : 'text-ink'}`}
+              className={`text-xl font-black transition-all w-12 text-right shrink-0 ${isAnimating ? 'text-grape scale-110' : 'text-ink'}`}
             >
               {e.score}
             </span>

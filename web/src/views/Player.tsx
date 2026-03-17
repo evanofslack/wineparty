@@ -17,7 +17,7 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
   const { gameState, connected, error } = store
   const [nameInput, setNameInput] = useState(playerName)
   const [hasJoined, setHasJoined] = useState(false)
-  const [guessSubmitted, setGuessSubmitted] = useState(false)
+  const [submittedRound, setSubmittedRound] = useState<number | null>(null)
 
   const me = gameState?.players[playerId]
   const currentRound = gameState ? gameState.rounds[gameState.currentRound] : null
@@ -34,11 +34,8 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
 
   function handleGuess(payload: GuessPayload) {
     sendGuess(payload)
-    setGuessSubmitted(true)
+    setSubmittedRound(gameState?.currentRound ?? null)
   }
-
-  // Reset guess submitted state when round changes
-  const roundKey = `${gameState?.currentRound}-${gameState?.phase}`
 
   if (!connected) {
     return (
@@ -92,7 +89,7 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
 
   // Guessing phase
   if (gameState?.phase === 'guessing' && currentRound) {
-    const submittedThisRound = myGuess !== undefined || (guessSubmitted && roundKey.startsWith(`${gameState.currentRound}-`))
+    const submittedThisRound = myGuess !== undefined || submittedRound === gameState.currentRound
     return (
       <div className="flex flex-col min-h-screen px-4 pt-6 pb-10 max-w-md mx-auto">
         <div className="flex justify-between items-center mb-4">
@@ -104,7 +101,6 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
           </span>
         </div>
         <BlindTastingForm
-          hint={currentRound.wine.hint}
           onSubmit={handleGuess}
           submitted={submittedThisRound}
         />
@@ -122,8 +118,9 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
         {/* The wine reveal */}
         <div className="sketch-border bg-grape text-white px-4 py-4 mb-4">
           <p className="text-sm font-bold opacity-70">The wine was...</p>
-          <p className="text-xl font-black">{currentRound.wine.variety}</p>
-          <p className="font-semibold">{currentRound.wine.region}, {currentRound.wine.year}</p>
+          <p className="text-xl font-black">{currentRound.wine.name}</p>
+          <p className="text-lg font-bold mt-0.5">{currentRound.wine.variety}</p>
+          <p className="font-semibold">{currentRound.wine.country} · {currentRound.wine.region}, {currentRound.wine.year}</p>
         </div>
 
         {/* My score */}
@@ -134,6 +131,7 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
               <span className="text-4xl font-black text-grape">+{myScore.points}</span>
               <div className="text-sm font-semibold space-y-0.5 text-muted">
                 {myScore.varietyHit && <p>✅ Variety correct (+3)</p>}
+                {myScore.countryHit && <p>✅ Country correct (+1)</p>}
                 {myScore.regionHit && <p>✅ Region correct (+2)</p>}
                 {myScore.yearPoints > 0 && <p>📅 Year {myScore.yearPoints === 3 ? 'exact' : myScore.yearPoints === 2 ? '1yr off' : '2yr off'} (+{myScore.yearPoints})</p>}
                 {myScore.flavorPoints > 0 && <p>👃 Flavors (+{myScore.flavorPoints})</p>}

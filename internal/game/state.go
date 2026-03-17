@@ -34,6 +34,7 @@ type Guess struct {
 	PlayerID   string       `json:"playerId"`
 	RoundIndex int          `json:"roundIndex"`
 	Variety    string       `json:"variety"`
+	Country    string       `json:"country"`
 	Region     string       `json:"region"`
 	Year       int          `json:"year"`
 	Flavors    []FlavorNote `json:"flavors"`
@@ -41,13 +42,15 @@ type Guess struct {
 }
 
 type RoundScore struct {
-	PlayerID    string `json:"playerId"`
-	RoundIndex  int    `json:"roundIndex"`
-	Points      int    `json:"points"`
-	VarietyHit  bool   `json:"varietyHit"`
-	RegionHit   bool   `json:"regionHit"`
-	YearPoints  int    `json:"yearPoints"`
-	FlavorPoints int   `json:"flavorPoints"`
+	PlayerID     string `json:"playerId"`
+	RoundIndex   int    `json:"roundIndex"`
+	Points       int    `json:"points"`
+	VarietyHit   bool   `json:"varietyHit"`
+	CountryHit   bool   `json:"countryHit"`
+	CountryPoints int   `json:"countryPoints"`
+	RegionHit    bool   `json:"regionHit"`
+	YearPoints   int    `json:"yearPoints"`
+	FlavorPoints  int   `json:"flavorPoints"`
 }
 
 type LeaderboardEntry struct {
@@ -61,6 +64,7 @@ type WineConfig struct {
 	ID      int    `json:"id"`
 	Name    string `json:"name"`
 	Variety string `json:"variety"`
+	Country string `json:"country"`
 	Region  string `json:"region"`
 	Year    int    `json:"year"`
 	Hint    string `json:"hint"`

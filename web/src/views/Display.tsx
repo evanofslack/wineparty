@@ -1,5 +1,20 @@
 import { Leaderboard } from '../components/Leaderboard'
 import { useGameStore } from '../store/gameStore'
+import type { LeaderboardEntry, Player } from '../types/game'
+
+const APP_NAME = 'Wine Party'
+
+function playersAsLeaderboard(players: Record<string, Player>): LeaderboardEntry[] {
+  return Object.values(players)
+    .filter((p) => p.role === 'player')
+    .sort((a, b) => b.totalScore - a.totalScore)
+    .map((p, i) => ({
+      rank: i + 1,
+      playerId: p.id,
+      playerName: p.name,
+      score: p.totalScore,
+    }))
+}
 
 export function DisplayView() {
   const { store } = useGameStore()
@@ -24,9 +39,12 @@ export function DisplayView() {
 
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-8 px-8">
+        <div className="fixed top-6 left-8">
+          <span className="text-2xl font-black text-grape">{APP_NAME}</span>
+        </div>
         <div className="text-center">
           <div className="text-8xl mb-2">🍷</div>
-          <h1 className="text-6xl font-black text-ink">Wine Party!</h1>
+          <h1 className="text-6xl font-black text-ink">{APP_NAME}!</h1>
           <p className="text-2xl font-bold text-muted mt-2">Blind Tasting Challenge</p>
         </div>
 
@@ -68,28 +86,30 @@ export function DisplayView() {
     const round = gameState.rounds[gameState.currentRound]
     const players = Object.values(gameState.players).filter((p) => p.role === 'player')
     const submitted = round.guesses.length
+    const liveEntries = gameState.leaderboard.length > 0
+      ? gameState.leaderboard
+      : playersAsLeaderboard(gameState.players)
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-8 px-8">
-        <div className="text-center">
-          <p className="text-xl font-bold text-muted uppercase tracking-wider">
-            Round {gameState.currentRound + 1} of {gameState.rounds.length}
-          </p>
-          <h2 className="text-5xl font-black text-ink mt-1">{round.wine.name}</h2>
-          {round.wine.hint && (
-            <p className="text-xl text-muted font-semibold mt-2">Hint: {round.wine.hint}</p>
-          )}
+      <div className="relative min-h-screen flex flex-col items-center justify-center px-12 py-10">
+        <div className="fixed top-6 left-8">
+          <span className="text-2xl font-black text-grape">{APP_NAME}</span>
+        </div>
+        <div className="fixed top-6 right-8">
+          <div className="sketch-border bg-white px-5 py-3 text-center">
+            <p className="text-sm font-bold text-muted uppercase tracking-wider">
+              Round {gameState.currentRound + 1} of {gameState.rounds.length}
+            </p>
+            <p className="text-2xl font-black text-ink">{round.wine.name}</p>
+            <p className="text-lg font-bold text-muted mt-1">
+              {submitted} / {players.length} guesses
+            </p>
+          </div>
         </div>
 
-        <div className="sketch-border-lg bg-white px-8 py-6 text-center">
-          <p className="text-lg font-bold text-muted">Guesses submitted</p>
-          <p className="text-7xl font-black text-grape">{submitted}</p>
-          <p className="text-lg font-bold text-muted">of {players.length} players</p>
-        </div>
-
-        <div className="w-full max-w-lg">
-          <p className="text-sm font-bold text-muted uppercase tracking-wider mb-3">Current Standings</p>
-          <Leaderboard entries={gameState.leaderboard} />
+        <div className="w-full max-w-xl">
+          <p className="text-sm font-bold text-muted uppercase tracking-wider mb-4">Current Standings</p>
+          <Leaderboard entries={liveEntries} />
         </div>
       </div>
     )
@@ -101,12 +121,16 @@ export function DisplayView() {
 
     return (
       <div className="flex gap-12 items-start justify-center min-h-screen px-12 py-10">
+        <div className="fixed top-6 left-8">
+          <span className="text-2xl font-black text-grape">{APP_NAME}</span>
+        </div>
         {/* Wine reveal */}
         <div className="flex flex-col gap-6 flex-1 max-w-sm">
           <div className="sketch-border-lg bg-grape text-white px-6 py-6">
             <p className="text-sm font-bold opacity-70 uppercase tracking-wider">The wine was...</p>
-            <h2 className="text-4xl font-black mt-1">{round.wine.variety}</h2>
-            <p className="text-xl font-semibold mt-1">{round.wine.region}</p>
+            <h2 className="text-4xl font-black mt-1">{round.wine.name}</h2>
+            <p className="text-2xl font-bold mt-1">{round.wine.variety}</p>
+            <p className="text-xl font-semibold mt-1">{round.wine.country} · {round.wine.region}</p>
             <p className="text-2xl font-black mt-1">{round.wine.year}</p>
           </div>
 

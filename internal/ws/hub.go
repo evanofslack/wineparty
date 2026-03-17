@@ -143,6 +143,7 @@ func (h *Hub) handleGuess(c *Client, raw json.RawMessage) {
 	guess := game.Guess{
 		PlayerID: c.PlayerID,
 		Variety:  p.Variety,
+		Country:  p.Country,
 		Region:   p.Region,
 		Year:     p.Year,
 		Flavors:  p.Flavors,
@@ -186,6 +187,7 @@ func (h *Hub) handleAdminAction(c *Client, raw json.RawMessage) {
 				ID:      w.ID,
 				Name:    w.Name,
 				Variety: w.Variety,
+				Country: w.Country,
 				Region:  w.Region,
 				Year:    w.Year,
 				Hint:    w.Hint,

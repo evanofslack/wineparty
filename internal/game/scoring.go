@@ -7,13 +7,14 @@ import (
 )
 
 const (
-	pointsVariety  = 3
-	pointsRegion   = 2
+	pointsVariety   = 3
+	pointsCountry   = 1
+	pointsRegion    = 2
 	pointsYearExact = 3
-	pointsYearOne  = 2
-	pointsYearTwo  = 1
-	pointsFlavor   = 1
-	maxFlavors     = 3
+	pointsYearOne   = 2
+	pointsYearTwo   = 1
+	pointsFlavor    = 1
+	maxFlavors      = 3
 )
 
 func ScoreGuess(g Guess, wine WineConfig) RoundScore {
@@ -25,6 +26,12 @@ func ScoreGuess(g Guess, wine WineConfig) RoundScore {
 	if strings.EqualFold(strings.TrimSpace(g.Variety), strings.TrimSpace(wine.Variety)) {
 		rs.VarietyHit = true
 		rs.Points += pointsVariety
+	}
+
+	if wine.Country != "" && strings.EqualFold(strings.TrimSpace(g.Country), strings.TrimSpace(wine.Country)) {
+		rs.CountryHit = true
+		rs.CountryPoints = pointsCountry
+		rs.Points += rs.CountryPoints
 	}
 
 	if strings.EqualFold(strings.TrimSpace(g.Region), strings.TrimSpace(wine.Region)) {

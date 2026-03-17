@@ -41,6 +41,7 @@ export interface Guess {
   playerId: string
   roundIndex: number
   variety: string
+  country: string
   region: string
   year: number
   flavors: string[]
@@ -52,6 +53,8 @@ export interface RoundScore {
   roundIndex: number
   points: number
   varietyHit: boolean
+  countryHit: boolean
+  countryPoints: number
   regionHit: boolean
   yearPoints: number
   flavorPoints: number
@@ -68,6 +71,7 @@ export interface WineConfig {
   id: number
   name: string
   variety: string
+  country: string
   region: string
   year: number
   hint: string
@@ -104,6 +108,7 @@ export interface JoinPayload {
 
 export interface GuessPayload {
   variety: string
+  country: string
   region: string
   year: number
   flavors: string[]

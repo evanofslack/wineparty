@@ -42,6 +42,7 @@ export function FlavorPicker({ selected, onChange, max = 3 }: Props) {
 
           return (
             <button
+              type="button"
               key={flavor}
               onClick={() => toggle(flavor)}
               disabled={disabled}
