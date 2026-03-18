@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react'
+import { useState, useEffect, FormEvent } from 'react'
 import { PlayerList } from '../components/PlayerList'
 import { Leaderboard } from '../components/Leaderboard'
 import { CountdownTimer } from '../components/CountdownTimer'
@@ -6,29 +6,56 @@ import { useGameStore } from '../store/gameStore'
 import { AdminActionType } from '../types/game'
 import type { AdminActionPayload } from '../types/game'
 
+const ADMIN_ID_KEY = 'wineparty_admin_id'
+const ADMIN_PW_KEY = 'wineparty_admin_password'
+
+function getOrCreateAdminId(): string {
+  let id = localStorage.getItem(ADMIN_ID_KEY)
+  if (!id) {
+    id = crypto.randomUUID()
+    localStorage.setItem(ADMIN_ID_KEY, id)
+  }
+  return id
+}
+
 interface Props {
-  playerId: string
   sendJoin: (payload: { playerId: string; name: string; password?: string }) => void
   sendAdminAction: (payload: AdminActionPayload) => void
 }
 
-export function AdminView({ playerId, sendJoin, sendAdminAction }: Props) {
+export function AdminView({ sendJoin, sendAdminAction }: Props) {
   const { store } = useGameStore()
   const { gameState, connected, error } = store
+  const [adminId] = useState<string>(getOrCreateAdminId)
   const [password, setPassword] = useState('')
-  const [hasJoined, setHasJoined] = useState(false)
+  const [attempted, setAttempted] = useState(false)
   const [editScores, setEditScores] = useState<Record<string, string>>({})
   const [showWineInfo, setShowWineInfo] = useState(false)
   const [timerMinutes, setTimerMinutes] = useState(5)
   const [timerSeconds, setTimerSeconds] = useState(0)
 
-  const me = gameState?.players[playerId]
+  const me = gameState?.players[adminId]
   const isAdmin = me?.role === 'admin'
+
+  // Auto-join with stored password when connected
+  useEffect(() => {
+    if (!connected) return
+    const stored = localStorage.getItem(ADMIN_PW_KEY)
+    if (stored) {
+      sendJoin({ playerId: adminId, name: 'Admin', password: stored })
+    }
+  }, [connected, adminId])
 
   function handleLogin(e: FormEvent) {
     e.preventDefault()
-    sendJoin({ playerId, name: 'Admin', password })
-    setHasJoined(true)
+    setAttempted(true)
+    sendJoin({ playerId: adminId, name: 'Admin', password })
+  }
+
+  function handleLogout() {
+    localStorage.removeItem(ADMIN_PW_KEY)
+    localStorage.removeItem(ADMIN_ID_KEY)
+    window.location.reload()
   }
 
   function action(a: AdminActionType, extra?: Partial<AdminActionPayload>) {
@@ -43,8 +70,8 @@ export function AdminView({ playerId, sendJoin, sendAdminAction }: Props) {
     )
   }
 
-  // Auth screen
-  if (!hasJoined || !isAdmin) {
+  // Auth screen — shown until server confirms admin role
+  if (!isAdmin) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-6 px-6">
         <div className="text-6xl">🔑</div>
@@ -62,12 +89,14 @@ export function AdminView({ playerId, sendJoin, sendAdminAction }: Props) {
             Login
           </button>
         </form>
-        {error && <p className="text-coral font-bold">{error}</p>}
-        {hasJoined && !isAdmin && (
-          <p className="text-coral font-bold">Wrong password — try again</p>
-        )}
+        {attempted && error && <p className="text-coral font-bold">{error}</p>}
       </div>
     )
+  }
+
+  // Store password on successful auth (first time)
+  if (!localStorage.getItem(ADMIN_PW_KEY) && password) {
+    localStorage.setItem(ADMIN_PW_KEY, password)
   }
 
   if (!gameState) return null
@@ -85,11 +114,17 @@ export function AdminView({ playerId, sendJoin, sendAdminAction }: Props) {
           <span className="text-2xl font-black text-grape">{APP_NAME}</span>
           <h1 className="text-3xl font-black">Admin Panel 🍷</h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <span className={`w-3 h-3 rounded-full ${connected ? 'bg-lime' : 'bg-coral'}`} />
           <span className="font-bold text-sm text-muted">
             Phase: <span className="text-ink capitalize">{gameState.phase}</span>
           </span>
+          <button
+            className="btn-sketch bg-paper text-muted text-sm px-3 py-1"
+            onClick={handleLogout}
+          >
+            Log out
+          </button>
         </div>
       </div>
 

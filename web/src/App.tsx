@@ -31,7 +31,6 @@ function AppRoutes() {
           path="/admin"
           element={
             <AdminView
-              playerId={playerId}
               sendJoin={sendJoin}
               sendAdminAction={sendAdminAction}
             />
