@@ -60,7 +60,7 @@ export function BlindTastingForm({ onSubmit, submitted }: Props) {
       <div className="flex flex-col gap-1.5">
         <label className="font-bold text-sm text-ink">Grape Variety</label>
         <select
-          className="sketch-border bg-white px-3 py-3 font-semibold text-ink w-full"
+          className="sketch-border-grape bg-white px-3 py-3 font-semibold text-ink w-full"
           value={variety}
           onChange={(e) => setVariety(e.target.value)}
           required
@@ -75,7 +75,7 @@ export function BlindTastingForm({ onSubmit, submitted }: Props) {
       <div className="flex flex-col gap-1.5">
         <label className="font-bold text-sm text-ink">Country</label>
         <select
-          className="sketch-border bg-white px-3 py-3 font-semibold text-ink w-full"
+          className="sketch-border-sky bg-white px-3 py-3 font-semibold text-ink w-full"
           value={country}
           onChange={(e) => setCountry(e.target.value)}
           required
@@ -90,7 +90,7 @@ export function BlindTastingForm({ onSubmit, submitted }: Props) {
       <div className="flex flex-col gap-1.5">
         <label className="font-bold text-sm text-ink">Region</label>
         <select
-          className="sketch-border bg-white px-3 py-3 font-semibold text-ink w-full"
+          className="sketch-border-lime bg-white px-3 py-3 font-semibold text-ink w-full"
           value={region}
           onChange={(e) => setRegion(e.target.value)}
           required
@@ -102,7 +102,7 @@ export function BlindTastingForm({ onSubmit, submitted }: Props) {
         </select>
       </div>
 
-      <div className="flex flex-col gap-1.5">
+      <div className="sketch-border-sunny bg-sunny/10 px-3 py-3 rounded flex flex-col gap-1.5">
         <label className="font-bold text-sm text-ink">Vintage Year: {year}</label>
         <input
           type="range"
@@ -110,18 +110,18 @@ export function BlindTastingForm({ onSubmit, submitted }: Props) {
           max={currentYear}
           value={year}
           onChange={(e) => setYear(Number(e.target.value))}
-          className="w-full accent-grape"
+          className="w-full accent-sunny"
         />
         <div className="flex justify-between text-xs text-muted font-semibold">
           <span>{currentYear - 20}</span>
-          <span className="font-black text-grape text-base">{year}</span>
+          <span className="font-black text-sunny text-base">{year}</span>
           <span>{currentYear}</span>
         </div>
       </div>
 
       <FlavorPicker selected={flavors} onChange={setFlavors} />
 
-      <div className="flex flex-col gap-1.5">
+      <div className="sketch-border-coral bg-coral/10 px-3 py-3 rounded flex flex-col gap-1.5">
         <label className="font-bold text-sm text-ink">Your Rating: {rating}/10</label>
         <input
           type="range"
@@ -129,11 +129,11 @@ export function BlindTastingForm({ onSubmit, submitted }: Props) {
           max={10}
           value={rating}
           onChange={(e) => setRating(Number(e.target.value))}
-          className="w-full accent-grape"
+          className="w-full accent-coral"
         />
         <div className="flex justify-between text-xs text-muted font-semibold">
           <span>1</span>
-          <span className="font-black text-grape text-base">{rating}</span>
+          <span className="font-black text-coral text-base">{rating}</span>
           <span>10</span>
         </div>
       </div>

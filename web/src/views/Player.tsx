@@ -78,7 +78,7 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
       <div className="flex flex-col items-center justify-center min-h-screen px-6 gap-6 text-center">
         <div className="text-6xl">🥂</div>
         <h1 className="text-3xl font-black">Welcome, {me.name}!</h1>
-        <div className="sketch-border bg-white px-6 py-4 w-full max-w-sm">
+        <div className="sketch-border-sky bg-sky/15 px-6 py-4 w-full max-w-sm">
           <p className="text-muted font-semibold">Waiting for host to start...</p>
           <p className="text-xl font-black text-grape mt-2">{playerCount} player{playerCount !== 1 ? 's' : ''} ready</p>
         </div>
@@ -96,7 +96,7 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
           <h2 className="text-xl font-black text-ink">
             Wine #{gameState.currentRound + 1} of {gameState.rounds.length}
           </h2>
-          <span className="sketch-border px-2 py-1 text-sm font-bold text-grape bg-white">
+          <span className="sketch-border-sunny bg-sunny/20 px-2 py-1 text-sm font-bold text-ink">
             {me.totalScore}pt
           </span>
         </div>
@@ -116,19 +116,19 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
         <h2 className="text-2xl font-black mb-4 text-center">Results! 🎉</h2>
 
         {/* The wine reveal */}
-        <div className="sketch-border bg-grape text-white px-4 py-4 mb-4">
-          <p className="text-sm font-bold opacity-70">The wine was...</p>
-          <p className="text-xl font-black">{currentRound.wine.name}</p>
-          <p className="text-lg font-bold mt-0.5">{currentRound.wine.variety}</p>
-          <p className="font-semibold">{currentRound.wine.country} · {currentRound.wine.region}, {currentRound.wine.year}</p>
+        <div className="sketch-border-burgundy px-4 py-4 mb-4" style={{ backgroundColor: 'rgba(114,47,55,0.15)' }}>
+          <p className="text-sm font-bold text-muted">The wine was...</p>
+          <p className="text-xl font-black text-ink">{currentRound.wine.name}</p>
+          <p className="text-lg font-bold mt-0.5 text-ink">{currentRound.wine.variety}</p>
+          <p className="font-semibold text-muted">{currentRound.wine.country} · {currentRound.wine.region}, {currentRound.wine.year}</p>
         </div>
 
         {/* My score */}
         {myScore && (
-          <div className="sketch-border bg-white px-4 py-4 mb-4">
+          <div className="sketch-border-sunny bg-sunny/20 px-4 py-4 mb-4">
             <p className="text-sm font-bold text-muted mb-2">Your score this round</p>
             <div className="flex items-center gap-4">
-              <span className="text-4xl font-black text-grape">+{myScore.points}</span>
+              <span className="text-4xl font-black text-ink">+{myScore.points}</span>
               <div className="text-sm font-semibold space-y-0.5 text-muted">
                 {myScore.varietyHit && <p>✅ Variety correct (+3)</p>}
                 {myScore.countryHit && <p>✅ Country correct (+1)</p>}
@@ -140,13 +140,15 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
           </div>
         )}
         {!myScore && myGuess === undefined && (
-          <div className="sketch-border bg-sunny/30 px-4 py-3 mb-4">
+          <div className="sketch-border-sunny bg-sunny/30 px-4 py-3 mb-4">
             <p className="font-semibold text-muted">You didn't submit a guess this round.</p>
           </div>
         )}
 
-        <p className="text-sm font-bold text-muted uppercase tracking-wider mb-2">Leaderboard</p>
-        <Leaderboard entries={gameState.leaderboard} highlightId={playerId} />
+        <div className="sketch-border-sky bg-sky/10 px-4 py-3">
+          <p className="text-sm font-bold text-muted uppercase tracking-wider mb-2">Leaderboard</p>
+          <Leaderboard entries={gameState.leaderboard} highlightId={playerId} />
+        </div>
 
         <p className="text-center text-muted font-semibold mt-6">Waiting for next round...</p>
       </div>
@@ -165,7 +167,7 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
           {isWinner ? 'You won!' : 'Game Over!'}
         </h1>
         {winner && (
-          <div className="sketch-border-lg bg-sunny/50 px-6 py-4 w-full">
+          <div className="sketch-border-lime bg-lime/20 px-6 py-4 w-full">
             <p className="text-sm font-bold text-muted">Winner</p>
             <p className="text-2xl font-black">{winner.playerName}</p>
             <p className="text-lg font-bold text-grape">{winner.score} points</p>
@@ -175,7 +177,7 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
           <Leaderboard entries={gameState.leaderboard} highlightId={playerId} />
         </div>
         {mySummary && (
-          <div className="sketch-border bg-white px-4 py-4 w-full text-left">
+          <div className="sketch-border-sky bg-sky/10 px-4 py-4 w-full text-left">
             <p className="font-bold text-sm text-muted uppercase tracking-wider mb-3">Your Stats</p>
             <div className="space-y-1.5 text-sm font-semibold">
               {mySummary.favoriteWine && (

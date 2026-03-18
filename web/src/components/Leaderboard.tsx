@@ -46,13 +46,17 @@ export function Leaderboard({ entries, highlightId }: Props) {
         const rankColor = e.rank <= 3 ? RANK_COLORS[e.rank - 1] : 'var(--color-paper)'
         const rankLabel = e.rank <= 3 ? RANK_LABELS[e.rank - 1] : `#${e.rank}`
 
+        const borderClass = e.rank === 1 ? 'sketch-border-sunny' : e.rank === 2 ? 'sketch-border-sky' : e.rank === 3 ? 'sketch-border-coral' : 'sketch-border'
+        const bgStyle = e.rank === 1 ? 'rgba(255,230,109,0.25)' : e.rank === 2 ? 'rgba(78,205,196,0.20)' : e.rank === 3 ? 'rgba(255,107,107,0.15)' : 'white'
+        const ringClass = e.rank === 1 ? 'ring-sunny' : e.rank === 2 ? 'ring-sky' : e.rank === 3 ? 'ring-coral' : 'ring-ink'
+
         return (
           <div
             key={e.playerId}
-            className={`flex items-center gap-3 px-4 py-3 sketch-border transition-transform ${
+            className={`flex items-center gap-3 px-4 py-3 ${borderClass} transition-transform ${
               isAnimating ? 'scale-105' : ''
-            } ${isHighlight ? 'ring-2 ring-grape ring-offset-1' : ''}`}
-            style={{ backgroundColor: isHighlight ? '#f0e8f7' : 'white' }}
+            } ${isHighlight ? `ring-2 ${ringClass} ring-offset-1` : ''}`}
+            style={{ backgroundColor: bgStyle }}
           >
             <span
               className="text-xl w-10 text-center font-black shrink-0"
