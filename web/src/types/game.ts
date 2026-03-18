@@ -15,6 +15,10 @@ export enum AdminActionType {
   ActionNextRound = 2,
   ActionSetScore = 3,
   ActionResetGame = 4,
+  ActionSetTimer = 5,
+  ActionStartTimer = 6,
+  ActionPauseTimer = 7,
+  ActionResetTimer = 8,
 }
 
 export type Phase =
@@ -125,6 +129,7 @@ export interface GameState {
   completedAt?: string
   summary?: GameSummary
   playerSummaries?: Record<string, PlayerSummary>
+  timer?: TimerState
 }
 
 export interface Envelope<T = unknown> {
@@ -147,8 +152,16 @@ export interface GuessPayload {
   rating: number
 }
 
+export interface TimerState {
+  durationSecs: number
+  startedAt?: string
+  elapsedSecs: number
+  running: boolean
+}
+
 export interface AdminActionPayload {
   action: AdminActionType
   playerId?: string
   score?: number
+  durationSecs?: number
 }

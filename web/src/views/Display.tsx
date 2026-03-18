@@ -1,4 +1,5 @@
 import { Leaderboard } from '../components/Leaderboard'
+import { CountdownTimer } from '../components/CountdownTimer'
 import { useGameStore } from '../store/gameStore'
 import type { LeaderboardEntry, Player } from '../types/game'
 
@@ -104,6 +105,11 @@ export function DisplayView() {
             <p className="text-lg font-bold mt-1">
               <span className="text-coral font-black">{submitted}</span> / <span className="text-lime font-black">{players.length}</span> guesses
             </p>
+            {gameState.timer && gameState.timer.durationSecs > 0 && (
+              <div className="mt-3 border-t border-sunny/40 pt-3">
+                <CountdownTimer timer={gameState.timer} size="lg" />
+              </div>
+            )}
           </div>
         </div>
 

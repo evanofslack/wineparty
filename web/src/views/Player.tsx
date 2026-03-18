@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { BlindTastingForm } from '../components/BlindTastingForm'
 import { Leaderboard } from '../components/Leaderboard'
 import { useGameStore } from '../store/gameStore'
@@ -18,6 +18,10 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
   const [nameInput, setNameInput] = useState(playerName)
   const [hasJoined, setHasJoined] = useState(false)
   const [submittedRound, setSubmittedRound] = useState<number | null>(null)
+
+  useEffect(() => {
+    setSubmittedRound(null)
+  }, [gameState?.startedAt])
 
   const me = gameState?.players[playerId]
   const currentRound = gameState ? gameState.rounds[gameState.currentRound] : null

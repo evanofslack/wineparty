@@ -213,6 +213,7 @@ func (h *Hub) handleAdminAction(c *Client, raw json.RawMessage) {
 		}
 	case ActionCloseGuessing:
 		roundIndex := h.repo.GetState().CurrentRound
+		h.engine.ClearTimer()
 		err = h.engine.CloseGuessing()
 		if err == nil {
 			h.eventLog.Write(eventlog.Event{
@@ -223,6 +224,7 @@ func (h *Hub) handleAdminAction(c *Client, raw json.RawMessage) {
 		}
 	case ActionNextRound:
 		roundIndex := h.repo.GetState().CurrentRound
+		h.engine.ClearTimer()
 		err = h.engine.NextRound()
 		if err == nil {
 			newState := h.engine.State()
@@ -236,6 +238,14 @@ func (h *Hub) handleAdminAction(c *Client, raw json.RawMessage) {
 				RoundIndex: roundIndex,
 			})
 		}
+	case ActionSetTimer:
+		h.engine.SetTimer(p.DurationSecs)
+	case ActionStartTimer:
+		err = h.engine.StartTimer()
+	case ActionPauseTimer:
+		h.engine.PauseTimer()
+	case ActionResetTimer:
+		h.engine.ResetTimer()
 	case ActionSetScore:
 		err = h.engine.SetPlayerScore(p.PlayerID, p.Score)
 	case ActionResetGame:

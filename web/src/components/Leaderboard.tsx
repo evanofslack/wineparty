@@ -53,7 +53,7 @@ export function Leaderboard({ entries, highlightId }: Props) {
         return (
           <div
             key={e.playerId}
-            className={`flex items-center gap-3 px-4 py-3 ${borderClass} transition-transform ${
+            className={`flex items-center gap-3 px-4 py-3 w-full ${borderClass} transition-transform ${
               isAnimating ? 'scale-105' : ''
             } ${isHighlight ? `ring-2 ${ringClass} ring-offset-1` : ''}`}
             style={{ backgroundColor: bgStyle }}

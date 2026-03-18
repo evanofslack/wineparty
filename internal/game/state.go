@@ -108,6 +108,13 @@ type PlayerSummary struct {
 	RoundsPlayed       int     `json:"roundsPlayed"`
 }
 
+type TimerState struct {
+	DurationSecs int        `json:"durationSecs"`
+	StartedAt    *time.Time `json:"startedAt,omitempty"`
+	ElapsedSecs  int        `json:"elapsedSecs"`
+	Running      bool       `json:"running"`
+}
+
 type GameState struct {
 	Phase           Phase                      `json:"phase"`
 	CurrentRound    int                        `json:"currentRound"`
@@ -118,6 +125,7 @@ type GameState struct {
 	CompletedAt     *time.Time                 `json:"completedAt,omitempty"`
 	Summary         *GameSummary               `json:"summary,omitempty"`
 	PlayerSummaries map[string]*PlayerSummary  `json:"playerSummaries,omitempty"`
+	Timer           *TimerState                `json:"timer,omitempty"`
 }
 
 func NewGameState(wines []WineConfig) *GameState {

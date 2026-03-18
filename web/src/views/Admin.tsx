@@ -1,6 +1,7 @@
 import { useState, FormEvent } from 'react'
 import { PlayerList } from '../components/PlayerList'
 import { Leaderboard } from '../components/Leaderboard'
+import { CountdownTimer } from '../components/CountdownTimer'
 import { useGameStore } from '../store/gameStore'
 import { AdminActionType } from '../types/game'
 import type { AdminActionPayload } from '../types/game'
@@ -17,6 +18,9 @@ export function AdminView({ playerId, sendJoin, sendAdminAction }: Props) {
   const [password, setPassword] = useState('')
   const [hasJoined, setHasJoined] = useState(false)
   const [editScores, setEditScores] = useState<Record<string, string>>({})
+  const [showWineInfo, setShowWineInfo] = useState(false)
+  const [timerMinutes, setTimerMinutes] = useState(5)
+  const [timerSeconds, setTimerSeconds] = useState(0)
 
   const me = gameState?.players[playerId]
   const isAdmin = me?.role === 'admin'
@@ -70,6 +74,7 @@ export function AdminView({ playerId, sendJoin, sendAdminAction }: Props) {
 
   const players = Object.values(gameState.players).filter((p) => p.role === 'player')
   const currentRound = gameState.rounds[gameState.currentRound]
+  const timer = gameState.timer
 
   const APP_NAME = 'Wine Party'
 
@@ -141,14 +146,113 @@ export function AdminView({ playerId, sendJoin, sendAdminAction }: Props) {
 
           {currentRound && (
             <div className="sketch-border bg-white px-4 py-4">
-              <p className="font-black text-lg mb-1">
-                Current Round: #{gameState.currentRound + 1}
-              </p>
-              <p className="font-semibold text-muted">{currentRound.wine.variety}</p>
-              <p className="text-sm text-muted">{currentRound.wine.region}, {currentRound.wine.year}</p>
+              <div className="flex items-center justify-between mb-1">
+                <p className="font-black text-lg">
+                  Current Round: #{gameState.currentRound + 1}
+                </p>
+                <button
+                  className="text-xs font-bold px-2 py-1 sketch-border text-muted"
+                  onClick={() => setShowWineInfo((v) => !v)}
+                >
+                  {showWineInfo ? 'Hide info' : 'Reveal info'}
+                </button>
+              </div>
+              {showWineInfo ? (
+                <>
+                  <p className="font-semibold text-ink">{currentRound.wine.name}</p>
+                  <p className="font-semibold text-muted">{currentRound.wine.variety}</p>
+                  <p className="text-sm text-muted">{currentRound.wine.region}, {currentRound.wine.year}</p>
+                </>
+              ) : (
+                <p className="text-sm text-muted italic">Wine info hidden — click Reveal info to show</p>
+              )}
               <p className="text-sm font-bold text-grape mt-2">
                 {currentRound.guesses.length} / {players.length} guesses
               </p>
+            </div>
+          )}
+
+          {/* Timer controls — guessing phase only */}
+          {gameState.phase === 'guessing' && (
+            <div className="sketch-border-sunny bg-sunny/10 px-4 py-4">
+              <p className="font-black text-lg mb-3">Round Timer</p>
+
+              {timer && timer.durationSecs > 0 ? (
+                <div className="flex flex-col items-center gap-3">
+                  <CountdownTimer timer={timer} size="sm" />
+                  <div className="flex gap-2 w-full">
+                    <button
+                      className="btn-sketch flex-1 text-sm bg-lime text-ink"
+                      onClick={() => action(timer.running ? AdminActionType.ActionPauseTimer : AdminActionType.ActionStartTimer)}
+                    >
+                      {timer.running ? 'Pause' : 'Resume'}
+                    </button>
+                    <button
+                      className="btn-sketch flex-1 text-sm bg-paper text-muted"
+                      onClick={() => action(AdminActionType.ActionResetTimer)}
+                    >
+                      Reset
+                    </button>
+                    <button
+                      className="btn-sketch flex-1 text-sm bg-coral text-white"
+                      onClick={() => action(AdminActionType.ActionSetTimer, { durationSecs: 0 })}
+                    >
+                      Clear
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex flex-col gap-1 flex-1">
+                      <label className="text-xs font-bold text-muted">Minutes</label>
+                      <input
+                        type="number"
+                        min={0}
+                        max={99}
+                        value={timerMinutes}
+                        onChange={(e) => setTimerMinutes(Math.max(0, Math.min(99, Number(e.target.value))))}
+                        className="sketch-border px-2 py-2 font-bold text-center w-full"
+                      />
+                    </div>
+                    <span className="font-black text-xl mt-4">:</span>
+                    <div className="flex flex-col gap-1 flex-1">
+                      <label className="text-xs font-bold text-muted">Seconds</label>
+                      <input
+                        type="number"
+                        min={0}
+                        max={59}
+                        value={timerSeconds}
+                        onChange={(e) => setTimerSeconds(Math.max(0, Math.min(59, Number(e.target.value))))}
+                        className="sketch-border px-2 py-2 font-bold text-center w-full"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    className="btn-sketch bg-sunny text-ink w-full font-bold"
+                    onClick={() => {
+                      const secs = timerMinutes * 60 + timerSeconds
+                      if (secs > 0) {
+                        action(AdminActionType.ActionSetTimer, { durationSecs: secs })
+                      }
+                    }}
+                  >
+                    Set Timer
+                  </button>
+                  <button
+                    className="btn-sketch bg-lime text-ink w-full font-bold text-sm"
+                    onClick={() => {
+                      const secs = timerMinutes * 60 + timerSeconds
+                      if (secs > 0) {
+                        action(AdminActionType.ActionSetTimer, { durationSecs: secs })
+                        setTimeout(() => action(AdminActionType.ActionStartTimer), 50)
+                      }
+                    }}
+                  >
+                    Set &amp; Start
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

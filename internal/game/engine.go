@@ -135,6 +135,49 @@ func (e *Engine) SetPlayerScore(playerID string, score int) error {
 	return nil
 }
 
+func (e *Engine) SetTimer(durationSecs int) {
+	e.state.Timer = &TimerState{
+		DurationSecs: durationSecs,
+	}
+}
+
+func (e *Engine) StartTimer() error {
+	if e.state.Timer == nil || e.state.Timer.DurationSecs == 0 {
+		return errors.New("timer not set")
+	}
+	if e.state.Timer.Running {
+		return nil
+	}
+	now := time.Now()
+	e.state.Timer.StartedAt = &now
+	e.state.Timer.Running = true
+	return nil
+}
+
+func (e *Engine) PauseTimer() {
+	if e.state.Timer == nil || !e.state.Timer.Running {
+		return
+	}
+	if e.state.Timer.StartedAt != nil {
+		e.state.Timer.ElapsedSecs += int(time.Since(*e.state.Timer.StartedAt).Seconds())
+		e.state.Timer.StartedAt = nil
+	}
+	e.state.Timer.Running = false
+}
+
+func (e *Engine) ResetTimer() {
+	if e.state.Timer == nil {
+		return
+	}
+	e.state.Timer.ElapsedSecs = 0
+	e.state.Timer.StartedAt = nil
+	e.state.Timer.Running = false
+}
+
+func (e *Engine) ClearTimer() {
+	e.state.Timer = nil
+}
+
 func (e *Engine) ResetToLobby(wines []WineConfig) {
 	*e.state = *NewGameState(wines)
 }

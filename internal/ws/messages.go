@@ -20,11 +20,15 @@ const (
 type AdminActionType int
 
 const (
-	ActionStartGame    AdminActionType = iota // 0
-	ActionCloseGuessing                       // 1
-	ActionNextRound                           // 2
-	ActionSetScore                            // 3
-	ActionResetGame                           // 4
+	ActionStartGame     AdminActionType = iota // 0
+	ActionCloseGuessing                        // 1
+	ActionNextRound                            // 2
+	ActionSetScore                             // 3
+	ActionResetGame                            // 4
+	ActionSetTimer                             // 5
+	ActionStartTimer                           // 6
+	ActionPauseTimer                           // 7
+	ActionResetTimer                           // 8
 )
 
 // Envelope is the outer wrapper for all WS messages.
@@ -57,7 +61,8 @@ type GuessPayload struct {
 
 // AdminActionPayload carries an admin command.
 type AdminActionPayload struct {
-	Action   AdminActionType `json:"action"`
-	PlayerID string          `json:"playerId,omitempty"` // for ActionSetScore
-	Score    int             `json:"score,omitempty"`    // for ActionSetScore
+	Action       AdminActionType `json:"action"`
+	PlayerID     string          `json:"playerId,omitempty"`     // for ActionSetScore
+	Score        int             `json:"score,omitempty"`        // for ActionSetScore
+	DurationSecs int             `json:"durationSecs,omitempty"` // for ActionSetTimer
 }
