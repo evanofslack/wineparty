@@ -6,6 +6,7 @@ export enum MessageType {
   MsgGuessSubmit = 3,
   MsgAdminAction = 4,
   MsgPlayerList = 5,
+  MsgMiniGameSubmit = 6,
 }
 
 // AdminActionType mirrors Go AdminActionType iota — NEVER reorder, append only
@@ -19,6 +20,8 @@ export enum AdminActionType {
   ActionStartTimer = 6,
   ActionPauseTimer = 7,
   ActionResetTimer = 8,
+  ActionEndMiniGame = 9,
+  ActionMiniGameNextQuestion = 10,
 }
 
 export type Phase =
@@ -37,6 +40,7 @@ export interface Player {
   connected: boolean
   joinedAt: string
   totalScore: number
+  miniGameScore: number
 }
 
 export interface FlavorNote extends String {}
@@ -70,6 +74,8 @@ export interface LeaderboardEntry {
   playerId: string
   playerName: string
   score: number
+  miniGameScore: number
+  combinedScore: number
 }
 
 export interface WineConfig {
@@ -119,6 +125,64 @@ export interface PlayerSummary {
   roundsPlayed: number
 }
 
+export type WordleLetterState = 'correct' | 'present' | 'absent'
+
+export interface WordleGuessResult {
+  word: string
+  states: WordleLetterState[]
+}
+
+export interface PlayerWordleState {
+  guesses: WordleGuessResult[]
+  solved: boolean
+  points: number
+}
+
+export interface PlayerConnectionsState {
+  foundGroups: string[]
+  points: number
+}
+
+export interface PlayerTriviaState {
+  answers: number[]
+  points: number
+}
+
+export interface ConnectionsGroup {
+  category: string
+  color: 'yellow' | 'green' | 'blue' | 'purple'
+  words: string[]
+}
+
+export interface TriviaQuestion {
+  text: string
+  options: string[]
+  answer: string
+  points: number
+}
+
+export interface MiniGameConfig {
+  type: 'wordle' | 'connections' | 'trivia'
+  word?: string
+  maxGuesses?: number
+  groups?: ConnectionsGroup[]
+  questions?: TriviaQuestion[]
+}
+
+export interface MiniGameState {
+  config: MiniGameConfig
+  currentQuestion: number
+  wordleStates?: Record<string, PlayerWordleState>
+  connStates?: Record<string, PlayerConnectionsState>
+  triviaStates?: Record<string, PlayerTriviaState>
+}
+
+export interface MiniGameAnswerPayload {
+  wordleGuess?: string
+  connGroup?: string[]
+  triviaAnswerIndex?: number
+}
+
 export interface GameState {
   phase: Phase
   currentRound: number
@@ -130,6 +194,9 @@ export interface GameState {
   summary?: GameSummary
   playerSummaries?: Record<string, PlayerSummary>
   timer?: TimerState
+  miniGameSchedule: number[]
+  miniGameConfigs: MiniGameConfig[]
+  miniGame?: MiniGameState
 }
 
 export interface Envelope<T = unknown> {

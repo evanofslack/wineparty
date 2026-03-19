@@ -17,36 +17,40 @@ type inboundMsg struct {
 }
 
 type Hub struct {
-	mu          sync.RWMutex
-	clients     map[*Client]struct{}
-	register    chan *Client
-	unregister  chan *Client
-	inbound     chan inboundMsg
-	broadcast   chan []byte
-	repo        repository.Repository
-	engine      *game.Engine
-	adminPass   string
-	wines       []game.WineConfig
-	logDir      string
-	eventLog    *eventlog.EventLog
+	mu               sync.RWMutex
+	clients          map[*Client]struct{}
+	register         chan *Client
+	unregister       chan *Client
+	inbound          chan inboundMsg
+	broadcast        chan []byte
+	repo             repository.Repository
+	engine           *game.Engine
+	adminPass        string
+	wines            []game.WineConfig
+	logDir           string
+	eventLog         *eventlog.EventLog
+	miniGameSchedule []int
+	miniGameConfigs  []game.MiniGameConfig
 }
 
 func (h *Hub) RegisterClient(c *Client) {
 	h.register <- c
 }
 
-func NewHub(repo repository.Repository, engine *game.Engine, adminPass string, wines []game.WineConfig, logDir string) *Hub {
+func NewHub(repo repository.Repository, engine *game.Engine, adminPass string, wines []game.WineConfig, logDir string, miniGameSchedule []int, miniGameConfigs []game.MiniGameConfig) *Hub {
 	return &Hub{
-		clients:    make(map[*Client]struct{}),
-		register:   make(chan *Client, 16),
-		unregister: make(chan *Client, 16),
-		inbound:    make(chan inboundMsg, 256),
-		broadcast:  make(chan []byte, 64),
-		repo:       repo,
-		engine:     engine,
-		adminPass:  adminPass,
-		wines:      wines,
-		logDir:     logDir,
+		clients:          make(map[*Client]struct{}),
+		register:         make(chan *Client, 16),
+		unregister:       make(chan *Client, 16),
+		inbound:          make(chan inboundMsg, 256),
+		broadcast:        make(chan []byte, 64),
+		repo:             repo,
+		engine:           engine,
+		adminPass:        adminPass,
+		wines:            wines,
+		logDir:           logDir,
+		miniGameSchedule: miniGameSchedule,
+		miniGameConfigs:  miniGameConfigs,
 	}
 }
 
@@ -106,6 +110,8 @@ func (h *Hub) handleMessage(c *Client, data []byte) {
 		h.handleGuess(c, env.Payload)
 	case MsgAdminAction:
 		h.handleAdminAction(c, env.Payload)
+	case MsgMiniGameSubmit:
+		h.handleMiniGameAnswer(c, env.Payload)
 	default:
 		c.sendEnvelope(MsgError, ErrorPayload{Message: "unknown message type"})
 	}
@@ -262,14 +268,44 @@ func (h *Hub) handleAdminAction(c *Client, raw json.RawMessage) {
 			}
 		}
 		h.engine.ResetToLobby(wineConfigs)
+		state := h.engine.State()
+		state.MiniGameSchedule = h.miniGameSchedule
+		state.MiniGameConfigs = h.miniGameConfigs
 		h.eventLog.Close()
 		h.eventLog = nil
+	case ActionEndMiniGame:
+		err = h.engine.EndMiniGame()
+	case ActionMiniGameNextQuestion:
+		err = h.engine.MiniGameNextQuestion()
 	default:
 		c.sendEnvelope(MsgError, ErrorPayload{Message: "unknown admin action"})
 		return
 	}
 
 	if err != nil {
+		c.sendEnvelope(MsgError, ErrorPayload{Message: err.Error()})
+		return
+	}
+	h.repo.SaveState()
+	h.broadcastState()
+}
+
+func (h *Hub) handleMiniGameAnswer(c *Client, raw json.RawMessage) {
+	if c.PlayerID == "" {
+		c.sendEnvelope(MsgError, ErrorPayload{Message: "not joined"})
+		return
+	}
+	var p MiniGameAnswerPayload
+	if err := json.Unmarshal(raw, &p); err != nil {
+		c.sendEnvelope(MsgError, ErrorPayload{Message: "invalid mini-game answer payload"})
+		return
+	}
+	ans := game.MiniGameAnswer{
+		WordleGuess:       p.WordleGuess,
+		ConnGroup:         p.ConnGroup,
+		TriviaAnswerIndex: p.TriviaAnswerIndex,
+	}
+	if err := h.engine.SubmitMiniGameAnswer(c.PlayerID, ans); err != nil {
 		c.sendEnvelope(MsgError, ErrorPayload{Message: err.Error()})
 		return
 	}

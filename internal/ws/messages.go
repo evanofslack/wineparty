@@ -7,12 +7,13 @@ import "wineparty/internal/game"
 type MessageType int
 
 const (
-	MsgJoin         MessageType = iota // 0: client -> server: player joins
-	MsgGameState                       // 1: server -> client: full game state push
-	MsgError                           // 2: server -> client: error message
-	MsgGuessSubmit                     // 3: client -> server: player submits guess
-	MsgAdminAction                     // 4: client -> server: admin issues command
-	MsgPlayerList                      // 5: server -> client: current player list (unused, state covers it)
+	MsgJoin          MessageType = iota // 0: client -> server: player joins
+	MsgGameState                        // 1: server -> client: full game state push
+	MsgError                            // 2: server -> client: error message
+	MsgGuessSubmit                      // 3: client -> server: player submits guess
+	MsgAdminAction                      // 4: client -> server: admin issues command
+	MsgPlayerList                       // 5: server -> client: current player list (unused, state covers it)
+	MsgMiniGameSubmit                   // 6: client -> server: player submits mini-game answer
 )
 
 // AdminActionType identifies an admin command.
@@ -20,15 +21,17 @@ const (
 type AdminActionType int
 
 const (
-	ActionStartGame     AdminActionType = iota // 0
-	ActionCloseGuessing                        // 1
-	ActionNextRound                            // 2
-	ActionSetScore                             // 3
-	ActionResetGame                            // 4
-	ActionSetTimer                             // 5
-	ActionStartTimer                           // 6
-	ActionPauseTimer                           // 7
-	ActionResetTimer                           // 8
+	ActionStartGame           AdminActionType = iota // 0
+	ActionCloseGuessing                              // 1
+	ActionNextRound                                  // 2
+	ActionSetScore                                   // 3
+	ActionResetGame                                  // 4
+	ActionSetTimer                                   // 5
+	ActionStartTimer                                 // 6
+	ActionPauseTimer                                 // 7
+	ActionResetTimer                                 // 8
+	ActionEndMiniGame                                // 9
+	ActionMiniGameNextQuestion                       // 10
 )
 
 // Envelope is the outer wrapper for all WS messages.
@@ -65,4 +68,11 @@ type AdminActionPayload struct {
 	PlayerID     string          `json:"playerId,omitempty"`     // for ActionSetScore
 	Score        int             `json:"score,omitempty"`        // for ActionSetScore
 	DurationSecs int             `json:"durationSecs,omitempty"` // for ActionSetTimer
+}
+
+// MiniGameAnswerPayload carries a player's mini-game answer.
+type MiniGameAnswerPayload struct {
+	WordleGuess       string   `json:"wordleGuess,omitempty"`
+	ConnGroup         []string `json:"connGroup,omitempty"`
+	TriviaAnswerIndex int      `json:"triviaAnswerIndex"`
 }

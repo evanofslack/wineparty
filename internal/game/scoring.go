@@ -176,10 +176,13 @@ func BuildLeaderboard(players map[string]*Player) []LeaderboardEntry {
 		if p.Role == RoleAdmin {
 			continue
 		}
+		combined := p.TotalScore + p.MiniGameScore
 		entries = append(entries, LeaderboardEntry{
-			PlayerID:   p.ID,
-			PlayerName: p.Name,
-			Score:      p.TotalScore,
+			PlayerID:      p.ID,
+			PlayerName:    p.Name,
+			Score:         combined,
+			MiniGameScore: p.MiniGameScore,
+			CombinedScore: combined,
 		})
 	}
 	sort.Slice(entries, func(i, j int) bool {

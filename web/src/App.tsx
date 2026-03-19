@@ -8,7 +8,7 @@ import { AdminView } from './views/Admin'
 
 function AppRoutes() {
   const [store, dispatch] = useGameReducer()
-  const { sendJoin, sendGuess, sendAdminAction } = useGameSocket(dispatch)
+  const { sendJoin, sendGuess, sendAdminAction, sendMiniGameAnswer } = useGameSocket(dispatch)
   const { playerId, playerName, setPlayerName } = useIdentity()
 
   return (
@@ -23,6 +23,7 @@ function AppRoutes() {
               setPlayerName={setPlayerName}
               sendJoin={sendJoin}
               sendGuess={sendGuess}
+              sendMiniGameAnswer={sendMiniGameAnswer}
             />
           }
         />

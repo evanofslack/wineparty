@@ -1,5 +1,6 @@
 import { Leaderboard } from '../components/Leaderboard'
 import { CountdownTimer } from '../components/CountdownTimer'
+import { MiniGameDisplay } from '../components/minigames/MiniGameDisplay'
 import { useGameStore } from '../store/gameStore'
 import type { LeaderboardEntry, Player } from '../types/game'
 
@@ -8,13 +9,18 @@ const APP_NAME = 'Wine Party'
 function playersAsLeaderboard(players: Record<string, Player>): LeaderboardEntry[] {
   return Object.values(players)
     .filter((p) => p.role === 'player')
-    .sort((a, b) => b.totalScore - a.totalScore)
-    .map((p, i) => ({
-      rank: i + 1,
-      playerId: p.id,
-      playerName: p.name,
-      score: p.totalScore,
-    }))
+    .sort((a, b) => (b.totalScore + b.miniGameScore) - (a.totalScore + a.miniGameScore))
+    .map((p, i) => {
+      const combined = p.totalScore + p.miniGameScore
+      return {
+        rank: i + 1,
+        playerId: p.id,
+        playerName: p.name,
+        score: combined,
+        miniGameScore: p.miniGameScore,
+        combinedScore: combined,
+      }
+    })
 }
 
 export function DisplayView() {
@@ -246,13 +252,27 @@ export function DisplayView() {
     )
   }
 
-  // Mini-game placeholder
-  if (gameState.phase === 'minigame') {
+  // Mini-game phase
+  if (gameState.phase === 'minigame' && gameState.miniGame) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-        <div className="text-8xl">🎮</div>
-        <h2 className="text-4xl font-black">Mini Game!</h2>
-        <p className="text-2xl text-muted font-semibold">Coming soon...</p>
+      <div className="grid grid-cols-2 gap-8 min-h-screen p-10">
+        <div className="fixed top-6 left-8">
+          <span className="text-2xl font-black text-grape">{APP_NAME}</span>
+        </div>
+        <div className="flex flex-col pt-12">
+          <MiniGameDisplay miniGame={gameState.miniGame} players={gameState.players} />
+          {gameState.timer && gameState.timer.durationSecs > 0 && (
+            <div className="mt-4">
+              <CountdownTimer timer={gameState.timer} size="lg" />
+            </div>
+          )}
+        </div>
+        <div className="flex flex-col pt-12">
+          <div className="sketch-border-lime bg-lime/10 px-4 py-4">
+            <h3 className="text-2xl font-black mb-4">Leaderboard</h3>
+            <Leaderboard entries={gameState.leaderboard} />
+          </div>
+        </div>
       </div>
     )
   }

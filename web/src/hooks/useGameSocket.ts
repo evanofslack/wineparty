@@ -7,6 +7,7 @@ import {
   type JoinPayload,
   type GuessPayload,
   type AdminActionPayload,
+  type MiniGameAnswerPayload,
 } from '../types/game'
 import type { GameAction } from '../store/gameStore'
 
@@ -85,5 +86,9 @@ export function useGameSocket(dispatch: Dispatch<GameAction>) {
     send(MessageType.MsgAdminAction, payload)
   }
 
-  return { sendJoin, sendGuess, sendAdminAction }
+  function sendMiniGameAnswer(payload: MiniGameAnswerPayload) {
+    send(MessageType.MsgMiniGameSubmit, payload)
+  }
+
+  return { sendJoin, sendGuess, sendAdminAction, sendMiniGameAnswer }
 }

@@ -2,6 +2,70 @@ package game
 
 import "time"
 
+type WordleLetterState string
+
+const (
+	LetterCorrect WordleLetterState = "correct"
+	LetterPresent WordleLetterState = "present"
+	LetterAbsent  WordleLetterState = "absent"
+)
+
+type WordleGuessResult struct {
+	Word   string              `json:"word"`
+	States []WordleLetterState `json:"states"`
+}
+
+type PlayerWordleState struct {
+	Guesses []WordleGuessResult `json:"guesses"`
+	Solved  bool                `json:"solved"`
+	Points  int                 `json:"points"`
+}
+
+type PlayerConnectionsState struct {
+	FoundGroups []string `json:"foundGroups"`
+	Points      int      `json:"points"`
+}
+
+type PlayerTriviaState struct {
+	Answers []int `json:"answers"`
+	Points  int   `json:"points"`
+}
+
+type ConnectionsGroup struct {
+	Category string   `json:"category"`
+	Color    string   `json:"color"`
+	Words    []string `json:"words"`
+}
+
+type TriviaQuestion struct {
+	Text    string   `json:"text"`
+	Options []string `json:"options"`
+	Answer  string   `json:"answer"`
+	Points  int      `json:"points"`
+}
+
+type MiniGameConfig struct {
+	Type       string             `json:"type"`
+	Word       string             `json:"word,omitempty"`
+	MaxGuesses int                `json:"maxGuesses,omitempty"`
+	Groups     []ConnectionsGroup `json:"groups,omitempty"`
+	Questions  []TriviaQuestion   `json:"questions,omitempty"`
+}
+
+type MiniGameState struct {
+	Config          MiniGameConfig                     `json:"config"`
+	CurrentQuestion int                                `json:"currentQuestion"`
+	WordleStates    map[string]*PlayerWordleState      `json:"wordleStates,omitempty"`
+	ConnStates      map[string]*PlayerConnectionsState `json:"connStates,omitempty"`
+	TriviaStates    map[string]*PlayerTriviaState      `json:"triviaStates,omitempty"`
+}
+
+type MiniGameAnswer struct {
+	WordleGuess       string
+	ConnGroup         []string
+	TriviaAnswerIndex int
+}
+
 type Phase string
 
 const (
@@ -20,12 +84,13 @@ const (
 )
 
 type Player struct {
-	ID         string    `json:"id"`
-	Name       string    `json:"name"`
-	Role       Role      `json:"role"`
-	Connected  bool      `json:"connected"`
-	JoinedAt   time.Time `json:"joinedAt"`
-	TotalScore int       `json:"totalScore"`
+	ID            string    `json:"id"`
+	Name          string    `json:"name"`
+	Role          Role      `json:"role"`
+	Connected     bool      `json:"connected"`
+	JoinedAt      time.Time `json:"joinedAt"`
+	TotalScore    int       `json:"totalScore"`
+	MiniGameScore int       `json:"miniGameScore"`
 }
 
 type FlavorNote string
@@ -55,10 +120,12 @@ type RoundScore struct {
 }
 
 type LeaderboardEntry struct {
-	Rank       int    `json:"rank"`
-	PlayerID   string `json:"playerId"`
-	PlayerName string `json:"playerName"`
-	Score      int    `json:"score"`
+	Rank          int    `json:"rank"`
+	PlayerID      string `json:"playerId"`
+	PlayerName    string `json:"playerName"`
+	Score         int    `json:"score"`
+	MiniGameScore int    `json:"miniGameScore"`
+	CombinedScore int    `json:"combinedScore"`
 }
 
 type WineConfig struct {
@@ -116,16 +183,19 @@ type TimerState struct {
 }
 
 type GameState struct {
-	Phase           Phase                      `json:"phase"`
-	CurrentRound    int                        `json:"currentRound"`
-	Rounds          []Round                    `json:"rounds"`
-	Players         map[string]*Player         `json:"players"`
-	Leaderboard     []LeaderboardEntry         `json:"leaderboard"`
-	StartedAt       *time.Time                 `json:"startedAt,omitempty"`
-	CompletedAt     *time.Time                 `json:"completedAt,omitempty"`
-	Summary         *GameSummary               `json:"summary,omitempty"`
-	PlayerSummaries map[string]*PlayerSummary  `json:"playerSummaries,omitempty"`
-	Timer           *TimerState                `json:"timer,omitempty"`
+	Phase            Phase                      `json:"phase"`
+	CurrentRound     int                        `json:"currentRound"`
+	Rounds           []Round                    `json:"rounds"`
+	Players          map[string]*Player         `json:"players"`
+	Leaderboard      []LeaderboardEntry         `json:"leaderboard"`
+	StartedAt        *time.Time                 `json:"startedAt,omitempty"`
+	CompletedAt      *time.Time                 `json:"completedAt,omitempty"`
+	Summary          *GameSummary               `json:"summary,omitempty"`
+	PlayerSummaries  map[string]*PlayerSummary  `json:"playerSummaries,omitempty"`
+	Timer            *TimerState                `json:"timer,omitempty"`
+	MiniGameSchedule []int                      `json:"miniGameSchedule"`
+	MiniGameConfigs  []MiniGameConfig           `json:"miniGameConfigs"`
+	MiniGame         *MiniGameState             `json:"miniGame,omitempty"`
 }
 
 func NewGameState(wines []WineConfig) *GameState {

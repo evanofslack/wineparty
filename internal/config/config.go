@@ -23,19 +23,47 @@ type WinesFile struct {
 	Wines []Wine `yaml:"wines"`
 }
 
+type ConnectionsGroup struct {
+	Category string   `yaml:"category"`
+	Color    string   `yaml:"color"`
+	Words    []string `yaml:"words"`
+}
+
+type TriviaQuestion struct {
+	Text    string   `yaml:"text"`
+	Options []string `yaml:"options"`
+	Answer  string   `yaml:"answer"`
+	Points  int      `yaml:"points"`
+}
+
+type GameConfig struct {
+	Type       string             `yaml:"type"`
+	Word       string             `yaml:"word,omitempty"`
+	MaxGuesses int                `yaml:"max_guesses,omitempty"`
+	Groups     []ConnectionsGroup `yaml:"groups,omitempty"`
+	Questions  []TriviaQuestion   `yaml:"questions,omitempty"`
+}
+
+type GamesFile struct {
+	Games []GameConfig `yaml:"games"`
+}
+
 type Config struct {
 	Port          string
 	AdminPassword string
 	WinesFile     string
+	GamesFile     string
 	StateFile     string
 	LogDir        string
 	Wines         []Wine
+	Games         []GameConfig
 }
 
 func Load() *Config {
 	port := flag.String("port", envOr("PORT", "8080"), "HTTP port")
 	adminPass := flag.String("admin-password", envOr("ADMIN_PASSWORD", "wine123"), "Admin password")
 	winesFile := flag.String("wines-file", envOr("WINES_FILE", "config/wines.yaml"), "Path to wines YAML")
+	gamesFile := flag.String("games-file", envOr("GAMES_FILE", "config/games.yaml"), "Path to games YAML")
 	stateFile := flag.String("state-file", envOr("STATE_FILE", "state.json"), "Path to state snapshot file")
 	logDir := flag.String("log-dir", envOr("LOG_DIR", "logs"), "Directory for game event logs")
 	flag.Parse()
@@ -44,21 +72,34 @@ func Load() *Config {
 		Port:          *port,
 		AdminPassword: *adminPass,
 		WinesFile:     *winesFile,
+		GamesFile:     *gamesFile,
 		StateFile:     *stateFile,
 		LogDir:        *logDir,
 	}
 
-	data, err := os.ReadFile(cfg.WinesFile)
+	wineData, err := os.ReadFile(cfg.WinesFile)
 	if err != nil {
 		slog.Warn("could not read wines file", "path", cfg.WinesFile, "err", err)
 		return cfg
 	}
 	var wf WinesFile
-	if err := yaml.Unmarshal(data, &wf); err != nil {
+	if err := yaml.Unmarshal(wineData, &wf); err != nil {
 		slog.Warn("could not parse wines file", "err", err)
 		return cfg
 	}
 	cfg.Wines = wf.Wines
+
+	gameData, err := os.ReadFile(cfg.GamesFile)
+	if err != nil {
+		slog.Warn("could not read games file", "path", cfg.GamesFile, "err", err)
+		return cfg
+	}
+	var gf GamesFile
+	if err := yaml.Unmarshal(gameData, &gf); err != nil {
+		slog.Warn("could not parse games file", "err", err)
+		return cfg
+	}
+	cfg.Games = gf.Games
 	return cfg
 }
 

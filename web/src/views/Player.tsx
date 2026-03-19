@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react'
 import { BlindTastingForm } from '../components/BlindTastingForm'
 import { Leaderboard } from '../components/Leaderboard'
+import { TriviaGame } from '../components/minigames/TriviaGame'
+import { WordleGame } from '../components/minigames/WordleGame'
+import { ConnectionsGame } from '../components/minigames/ConnectionsGame'
 import { useGameStore } from '../store/gameStore'
-import type { GuessPayload } from '../types/game'
+import type { GuessPayload, MiniGameAnswerPayload } from '../types/game'
 
 interface Props {
   playerId: string
@@ -10,9 +13,10 @@ interface Props {
   setPlayerName: (name: string) => void
   sendJoin: (payload: { playerId: string; name: string; password?: string }) => void
   sendGuess: (payload: GuessPayload) => void
+  sendMiniGameAnswer: (payload: MiniGameAnswerPayload) => void
 }
 
-export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, sendGuess }: Props) {
+export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, sendGuess, sendMiniGameAnswer }: Props) {
   const { store } = useGameStore()
   const { gameState, connected, error } = store
   const [nameInput, setNameInput] = useState(playerName)
@@ -180,6 +184,16 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
         <div className="w-full">
           <Leaderboard entries={gameState.leaderboard} highlightId={playerId} />
         </div>
+        {me && (me.totalScore > 0 || me.miniGameScore > 0) && (
+          <div className="sketch-border-sunny bg-sunny/10 px-4 py-4 w-full text-left">
+            <p className="font-bold text-sm text-muted uppercase tracking-wider mb-3">Score Breakdown</p>
+            <div className="space-y-1.5 text-sm font-semibold">
+              <p>Wine tasting: <span className="font-black">{me.totalScore} pts</span></p>
+              <p>Mini-games: <span className="font-black">{me.miniGameScore} pts</span></p>
+              <p className="border-t border-sunny/40 pt-1">Combined: <span className="text-grape font-black">{me.totalScore + me.miniGameScore} pts</span></p>
+            </div>
+          </div>
+        )}
         {mySummary && (
           <div className="sketch-border-sky bg-sky/10 px-4 py-4 w-full text-left">
             <p className="font-bold text-sm text-muted uppercase tracking-wider mb-3">Your Stats</p>
@@ -200,13 +214,41 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
     )
   }
 
-  // Mini-game placeholder
-  if (gameState?.phase === 'minigame') {
+  // Mini-game phase
+  if (gameState?.phase === 'minigame' && gameState.miniGame) {
+    const mg = gameState.miniGame
+    const type = mg.config.type
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-        <div className="text-5xl">🎮</div>
-        <p className="text-xl font-black">Mini Game!</p>
-        <p className="text-muted font-semibold">Coming soon...</p>
+      <div className="flex flex-col min-h-screen px-4 pt-6 pb-10 max-w-md mx-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-black text-ink capitalize">Mini Game: {type}</h2>
+          <span className="sketch-border-sunny bg-sunny/20 px-2 py-1 text-sm font-bold text-ink">
+            {me.miniGameScore}pt
+          </span>
+        </div>
+        {type === 'trivia' && (
+          <TriviaGame
+            config={mg.config}
+            myState={mg.triviaStates?.[playerId]}
+            currentQuestion={mg.currentQuestion}
+            onAnswer={(i) => sendMiniGameAnswer({ triviaAnswerIndex: i })}
+          />
+        )}
+        {type === 'wordle' && (
+          <WordleGame
+            config={mg.config}
+            myState={mg.wordleStates?.[playerId]}
+            onGuess={(word) => sendMiniGameAnswer({ wordleGuess: word })}
+          />
+        )}
+        {type === 'connections' && (
+          <ConnectionsGame
+            config={mg.config}
+            myState={mg.connStates?.[playerId]}
+            onSubmitGroup={(words) => sendMiniGameAnswer({ connGroup: words })}
+          />
+        )}
+        {error && <p className="text-coral font-bold mt-4 text-center">{error}</p>}
       </div>
     )
   }

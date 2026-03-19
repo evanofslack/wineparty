@@ -166,6 +166,33 @@ export function AdminView({ sendJoin, sendAdminAction }: Props) {
                     : 'Next Round ➡️'}
                 </button>
               )}
+              {gameState.phase === 'minigame' && gameState.miniGame && (
+                <>
+                  <div className="sketch-border-sky bg-sky/10 px-3 py-2 text-center">
+                    <p className="font-bold text-sm text-muted uppercase tracking-wider">Mini Game</p>
+                    <p className="font-black text-ink capitalize">{gameState.miniGame.config.type}</p>
+                  </div>
+                  {gameState.miniGame.config.type === 'trivia' && (() => {
+                    const questions = gameState.miniGame.config.questions ?? []
+                    const isLast = gameState.miniGame.currentQuestion >= questions.length - 1
+                    return (
+                      <button
+                        className="btn-sketch bg-sky text-ink w-full disabled:opacity-40"
+                        disabled={isLast}
+                        onClick={() => action(AdminActionType.ActionMiniGameNextQuestion)}
+                      >
+                        Next Question →
+                      </button>
+                    )
+                  })()}
+                  <button
+                    className="btn-sketch bg-coral text-white w-full"
+                    onClick={() => action(AdminActionType.ActionEndMiniGame)}
+                  >
+                    End Mini-Game ▶️
+                  </button>
+                </>
+              )}
               <button
                 className="btn-sketch bg-paper text-muted border-muted/40 w-full text-sm"
                 onClick={() => {

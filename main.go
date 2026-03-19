@@ -34,9 +34,45 @@ func main() {
 		}
 	}
 
+	miniGameConfigs := make([]game.MiniGameConfig, len(cfg.Games))
+	for i, g := range cfg.Games {
+		groups := make([]game.ConnectionsGroup, len(g.Groups))
+		for j, gr := range g.Groups {
+			groups[j] = game.ConnectionsGroup{
+				Category: gr.Category,
+				Color:    gr.Color,
+				Words:    gr.Words,
+			}
+		}
+		questions := make([]game.TriviaQuestion, len(g.Questions))
+		for j, q := range g.Questions {
+			questions[j] = game.TriviaQuestion{
+				Text:    q.Text,
+				Options: q.Options,
+				Answer:  q.Answer,
+				Points:  q.Points,
+			}
+		}
+		miniGameConfigs[i] = game.MiniGameConfig{
+			Type:       g.Type,
+			Word:       g.Word,
+			MaxGuesses: g.MaxGuesses,
+			Groups:     groups,
+			Questions:  questions,
+		}
+	}
+
+	miniGameSchedule := computeMiniGameSchedule(len(wines), len(miniGameConfigs))
+
 	repo := repository.NewMemoryRepo(wines, cfg.StateFile)
-	eng := game.NewEngine(repo.GetState())
-	hub := ws.NewHub(repo, eng, cfg.AdminPassword, wines, cfg.LogDir)
+	state := repo.GetState()
+	if state.MiniGameSchedule == nil {
+		state.MiniGameSchedule = miniGameSchedule
+		state.MiniGameConfigs = miniGameConfigs
+	}
+
+	eng := game.NewEngine(state)
+	hub := ws.NewHub(repo, eng, cfg.AdminPassword, wines, cfg.LogDir, miniGameSchedule, miniGameConfigs)
 	go hub.Run()
 
 	r := chi.NewRouter()
@@ -58,6 +94,27 @@ func main() {
 		slog.Error("server error", "err", err)
 		os.Exit(1)
 	}
+}
+
+func computeMiniGameSchedule(numRounds, numGames int) []int {
+	if numRounds <= 1 || numGames == 0 {
+		return nil
+	}
+	effective := numGames
+	if effective > numRounds-1 {
+		effective = numRounds - 1
+	}
+	spacing := numRounds / effective
+	cap := numRounds - 2
+	schedule := make([]int, effective)
+	for i := range effective {
+		s := spacing*(i+1) - 1
+		if s > cap {
+			s = cap
+		}
+		schedule[i] = s
+	}
+	return schedule
 }
 
 func spaHandler(fsys http.FileSystem) http.Handler {
