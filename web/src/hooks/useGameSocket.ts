@@ -20,6 +20,7 @@ export function useGameSocket(dispatch: Dispatch<GameAction>) {
   const ws = useRef<WebSocket | null>(null)
   const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
   const mountedRef = useRef(true)
+  const lastJoinPayload = useRef<JoinPayload | null>(null)
 
   const connect = useCallback(() => {
     if (!mountedRef.current) return
@@ -28,6 +29,9 @@ export function useGameSocket(dispatch: Dispatch<GameAction>) {
 
     socket.onopen = () => {
       dispatch({ type: 'SET_CONNECTED', connected: true })
+      if (lastJoinPayload.current) {
+        socket.send(JSON.stringify({ type: MessageType.MsgJoin, payload: lastJoinPayload.current }))
+      }
     }
 
     socket.onmessage = (event) => {
@@ -75,6 +79,7 @@ export function useGameSocket(dispatch: Dispatch<GameAction>) {
   }
 
   function sendJoin(payload: JoinPayload) {
+    lastJoinPayload.current = payload
     send(MessageType.MsgJoin, payload)
   }
 
