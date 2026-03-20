@@ -4,10 +4,11 @@ interface Props {
   config: MiniGameConfig
   myState: PlayerTriviaState | undefined
   currentQuestion: number
+  answerRevealed: boolean
   onAnswer: (answerIndex: number) => void
 }
 
-export function TriviaGame({ config, myState, currentQuestion, onAnswer }: Props) {
+export function TriviaGame({ config, myState, currentQuestion, answerRevealed, onAnswer }: Props) {
   const questions = config.questions ?? []
   if (questions.length === 0) return <p className="text-muted font-semibold text-center">No questions available.</p>
 
@@ -41,7 +42,7 @@ export function TriviaGame({ config, myState, currentQuestion, onAnswer }: Props
           const isSelected = myAnswer === i
           const isCorrect = opt.toLowerCase().trim() === correctAnswer.toLowerCase().trim()
           let cls = 'btn-sketch w-full text-left font-semibold px-4 py-3 '
-          if (hasAnswered) {
+          if (hasAnswered && answerRevealed) {
             if (isCorrect) {
               cls += 'bg-lime text-ink'
             } else if (isSelected) {
@@ -49,6 +50,8 @@ export function TriviaGame({ config, myState, currentQuestion, onAnswer }: Props
             } else {
               cls += 'bg-paper text-muted'
             }
+          } else if (hasAnswered && isSelected) {
+            cls += 'bg-ink text-paper'
           } else {
             cls += 'bg-white text-ink'
           }

@@ -277,6 +277,10 @@ func (h *Hub) handleAdminAction(c *Client, raw json.RawMessage) {
 		err = h.engine.EndMiniGame()
 	case ActionMiniGameNextQuestion:
 		err = h.engine.MiniGameNextQuestion()
+	case ActionMiniGameRevealAnswer:
+		err = h.engine.MiniGameRevealAnswer()
+	case ActionEndMiniGameResults:
+		err = h.engine.EndMiniGameResults()
 	default:
 		c.sendEnvelope(MsgError, ErrorPayload{Message: "unknown admin action"})
 		return

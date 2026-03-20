@@ -231,6 +231,7 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
             config={mg.config}
             myState={mg.triviaStates?.[playerId]}
             currentQuestion={mg.currentQuestion}
+            answerRevealed={mg.answerRevealed ?? false}
             onAnswer={(i) => sendMiniGameAnswer({ triviaAnswerIndex: i })}
           />
         )}
@@ -249,6 +250,117 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
           />
         )}
         {error && <p className="text-coral font-bold mt-4 text-center">{error}</p>}
+      </div>
+    )
+  }
+
+  // Mini-game results phase
+  if (gameState?.phase === 'minigame_results' && gameState.miniGame) {
+    const mg = gameState.miniGame
+    const type = mg.config.type
+    return (
+      <div className="flex flex-col min-h-screen px-4 pt-6 pb-10 max-w-md mx-auto">
+        <h2 className="text-2xl font-black mb-4 text-center">Mini-Game Results</h2>
+        {type === 'trivia' && (() => {
+          const questions = mg.config.questions ?? []
+          const myTriviaState = mg.triviaStates?.[playerId]
+          return (
+            <div className="flex flex-col gap-4">
+              {questions.map((q, qi) => {
+                const myAnswer = myTriviaState?.answers?.[qi] ?? -1
+                const answered = myAnswer !== -1
+                const correct = answered && q.options[myAnswer]?.toLowerCase().trim() === q.answer.toLowerCase().trim()
+                return (
+                  <div key={qi} className="sketch-border bg-white px-4 py-3">
+                    <p className="font-black text-sm text-ink mb-2">Q{qi + 1}: {q.text}</p>
+                    {answered ? (
+                      <p className={`text-sm font-semibold ${correct ? 'text-lime' : 'text-coral'}`}>
+                        {correct ? '✓' : '✗'} You answered: {q.options[myAnswer]}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-muted font-semibold">No answer</p>
+                    )}
+                    <p className="text-xs text-muted mt-1">Correct: <span className="font-bold text-ink">{q.answer}</span></p>
+                  </div>
+                )
+              })}
+              <div className="sketch-border-grape bg-grape/10 px-4 py-3 text-center">
+                <p className="font-bold text-sm text-muted">Your mini-game score</p>
+                <p className="text-3xl font-black text-grape">{myTriviaState?.points ?? 0} pts</p>
+              </div>
+            </div>
+          )
+        })()}
+        {type === 'wordle' && (() => {
+          const myWordleState = mg.wordleStates?.[playerId]
+          const word = mg.config.word ?? ''
+          return (
+            <div className="flex flex-col gap-4 items-center">
+              <div className="sketch-border-grape bg-grape/10 px-6 py-4 text-center w-full">
+                <p className="font-bold text-sm text-muted">The word was</p>
+                <p className="text-4xl font-black text-grape uppercase tracking-widest">{word}</p>
+              </div>
+              {myWordleState ? (
+                <>
+                  <div className="flex flex-col gap-1">
+                    {myWordleState.guesses.map((g, i) => (
+                      <div key={i} className="flex gap-1">
+                        {g.states.map((s, j) => (
+                          <div
+                            key={j}
+                            className={`w-12 h-12 border-2 flex items-center justify-center font-black text-lg uppercase ${
+                              s === 'correct' ? 'bg-lime border-lime text-ink' :
+                              s === 'present' ? 'bg-sunny border-sunny text-ink' :
+                              'bg-muted/30 border-muted/30 text-ink'
+                            }`}
+                          >
+                            {g.word[j]}
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="sketch-border-grape bg-grape/10 px-4 py-3 text-center w-full">
+                    <p className="font-bold text-sm text-muted">Your mini-game score</p>
+                    <p className="text-3xl font-black text-grape">{myWordleState.points} pts</p>
+                  </div>
+                </>
+              ) : (
+                <p className="text-muted font-semibold">You didn't play.</p>
+              )}
+            </div>
+          )
+        })()}
+        {type === 'connections' && (() => {
+          const myConnState = mg.connStates?.[playerId]
+          const groups = mg.config.groups ?? []
+          return (
+            <div className="flex flex-col gap-3">
+              {groups.map((g) => {
+                const found = myConnState?.foundGroups.includes(g.category)
+                return (
+                  <div
+                    key={g.category}
+                    className={`px-4 py-2 border-2 text-center ${
+                      g.color === 'yellow' ? 'bg-sunny/30 border-sunny' :
+                      g.color === 'green' ? 'bg-lime/30 border-lime' :
+                      g.color === 'blue' ? 'bg-sky/30 border-sky' :
+                      'bg-grape/20 border-grape'
+                    } ${!found ? 'opacity-50' : ''}`}
+                  >
+                    <p className="font-black text-sm uppercase tracking-wide">{g.category} {found ? '✓' : ''}</p>
+                    <p className="text-xs font-semibold">{g.words.join(', ')}</p>
+                  </div>
+                )
+              })}
+              <div className="sketch-border-grape bg-grape/10 px-4 py-3 text-center">
+                <p className="font-bold text-sm text-muted">Your mini-game score</p>
+                <p className="text-3xl font-black text-grape">{myConnState?.points ?? 0} pts</p>
+              </div>
+            </div>
+          )
+        })()}
+        <p className="text-center text-muted font-semibold mt-6">Waiting for host to continue...</p>
       </div>
     )
   }

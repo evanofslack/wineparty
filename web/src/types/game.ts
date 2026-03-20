@@ -22,6 +22,8 @@ export enum AdminActionType {
   ActionResetTimer = 8,
   ActionEndMiniGame = 9,
   ActionMiniGameNextQuestion = 10,
+  ActionMiniGameRevealAnswer = 11,
+  ActionEndMiniGameResults = 12,
 }
 
 export type Phase =
@@ -30,6 +32,7 @@ export type Phase =
   | 'scoring'
   | 'complete'
   | 'minigame'
+  | 'minigame_results'
 
 export type Role = 'player' | 'admin'
 
@@ -141,6 +144,7 @@ export interface PlayerWordleState {
 export interface PlayerConnectionsState {
   foundGroups: string[]
   points: number
+  incorrectGuesses: number
 }
 
 export interface PlayerTriviaState {
@@ -172,6 +176,7 @@ export interface MiniGameConfig {
 export interface MiniGameState {
   config: MiniGameConfig
   currentQuestion: number
+  answerRevealed?: boolean
   wordleStates?: Record<string, PlayerWordleState>
   connStates?: Record<string, PlayerConnectionsState>
   triviaStates?: Record<string, PlayerTriviaState>

@@ -277,5 +277,50 @@ export function DisplayView() {
     )
   }
 
+  // Mini-game results phase
+  if (gameState.phase === 'minigame_results' && gameState.miniGame) {
+    const mg = gameState.miniGame
+    const type = mg.config.type
+    const playerList = Object.values(gameState.players).filter((p) => p.role === 'player')
+    const miniGameScores = playerList
+      .map((p) => {
+        const pts =
+          type === 'wordle' ? (mg.wordleStates?.[p.id]?.points ?? 0) :
+          type === 'connections' ? (mg.connStates?.[p.id]?.points ?? 0) :
+          (mg.triviaStates?.[p.id]?.points ?? 0)
+        return { name: p.name, pts }
+      })
+      .sort((a, b) => b.pts - a.pts)
+
+    return (
+      <div className="grid grid-cols-2 gap-8 min-h-screen p-10">
+        <div className="fixed top-6 left-8">
+          <span className="text-2xl font-black text-grape">{APP_NAME}</span>
+        </div>
+        <div className="flex flex-col pt-12">
+          <MiniGameDisplay miniGame={mg} players={gameState.players} resultsMode={true} />
+        </div>
+        <div className="flex flex-col pt-12 gap-6">
+          <div className="sketch-border-grape bg-grape/10 px-4 py-4">
+            <h3 className="text-2xl font-black mb-4">Mini-Game Scores</h3>
+            <div className="flex flex-col gap-2">
+              {miniGameScores.map((s, i) => (
+                <div key={s.name} className="flex items-center gap-3 px-4 py-2 sketch-border bg-white">
+                  <span className="font-black text-muted w-6 text-center">#{i + 1}</span>
+                  <span className="flex-1 font-bold text-ink">{s.name}</span>
+                  <span className="font-black text-grape tabular-nums w-16 text-right">{s.pts} pts</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="sketch-border-lime bg-lime/10 px-4 py-4">
+            <h3 className="text-2xl font-black mb-4">Leaderboard</h3>
+            <Leaderboard entries={gameState.leaderboard} />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return null
 }

@@ -173,16 +173,26 @@ export function AdminView({ sendJoin, sendAdminAction }: Props) {
                     <p className="font-black text-ink capitalize">{gameState.miniGame.config.type}</p>
                   </div>
                   {gameState.miniGame.config.type === 'trivia' && (() => {
-                    const questions = gameState.miniGame.config.questions ?? []
-                    const isLast = gameState.miniGame.currentQuestion >= questions.length - 1
+                    const mg = gameState.miniGame!
+                    const questions = mg.config.questions ?? []
+                    const isLast = mg.currentQuestion >= questions.length - 1
                     return (
-                      <button
-                        className="btn-sketch bg-sky text-ink w-full disabled:opacity-40"
-                        disabled={isLast}
-                        onClick={() => action(AdminActionType.ActionMiniGameNextQuestion)}
-                      >
-                        Next Question →
-                      </button>
+                      <>
+                        <button
+                          className="btn-sketch bg-sunny text-ink w-full disabled:opacity-40"
+                          disabled={mg.answerRevealed}
+                          onClick={() => action(AdminActionType.ActionMiniGameRevealAnswer)}
+                        >
+                          Reveal Answer
+                        </button>
+                        <button
+                          className="btn-sketch bg-sky text-ink w-full disabled:opacity-40"
+                          disabled={isLast || !mg.answerRevealed}
+                          onClick={() => action(AdminActionType.ActionMiniGameNextQuestion)}
+                        >
+                          Next Question →
+                        </button>
+                      </>
                     )
                   })()}
                   <button
@@ -190,6 +200,19 @@ export function AdminView({ sendJoin, sendAdminAction }: Props) {
                     onClick={() => action(AdminActionType.ActionEndMiniGame)}
                   >
                     End Mini-Game ▶️
+                  </button>
+                </>
+              )}
+              {gameState.phase === 'minigame_results' && (
+                <>
+                  <div className="sketch-border-sky bg-sky/10 px-3 py-2 text-center">
+                    <p className="font-bold text-sm text-muted uppercase tracking-wider">Mini-Game Results</p>
+                  </div>
+                  <button
+                    className="btn-sketch bg-lime text-ink w-full"
+                    onClick={() => action(AdminActionType.ActionEndMiniGameResults)}
+                  >
+                    Continue →
                   </button>
                 </>
               )}

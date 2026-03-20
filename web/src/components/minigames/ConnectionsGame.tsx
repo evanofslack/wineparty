@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { MiniGameConfig, PlayerConnectionsState } from '../../types/game'
 
 interface Props {
@@ -14,21 +14,54 @@ const COLOR_STYLES: Record<string, string> = {
   purple: 'bg-grape/20 border-grape text-ink',
 }
 
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
+
 export function ConnectionsGame({ config, myState, onSubmitGroup }: Props) {
   const groups = config.groups ?? []
   const foundGroups = myState?.foundGroups ?? []
+  const incorrectGuesses = myState?.incorrectGuesses ?? 0
   const [selected, setSelected] = useState<Set<string>>(new Set())
-  const [wrong, setWrong] = useState(false)
+  const [wordOrder, setWordOrder] = useState<string[]>(() => shuffle(groups.flatMap((g) => g.words)))
+  const [shakingWords, setShakingWords] = useState<string[]>([])
+  const lastSubmitted = useRef<string[]>([])
+  const prevIncorrect = useRef(incorrectGuesses)
 
-  const allWords = groups.flatMap((g) => g.words)
   const foundWords = new Set(
     groups
       .filter((g) => foundGroups.includes(g.category))
       .flatMap((g) => g.words)
   )
-  const remaining = allWords.filter((w) => !foundWords.has(w))
+
+  // Remove newly found words from order
+  useEffect(() => {
+    setWordOrder((prev) => prev.filter((w) => !foundWords.has(w)))
+  }, [foundGroups.join(',')])
+
+  // Shake on wrong guess
+  useEffect(() => {
+    if (incorrectGuesses > prevIncorrect.current) {
+      const words = lastSubmitted.current
+      setShakingWords(words)
+      const t = setTimeout(() => setShakingWords([]), 400)
+      prevIncorrect.current = incorrectGuesses
+      return () => clearTimeout(t)
+    }
+    prevIncorrect.current = incorrectGuesses
+    return undefined
+  }, [incorrectGuesses])
+
+  const exhausted = incorrectGuesses >= 5
+  const remaining = wordOrder.filter((w) => !foundWords.has(w))
 
   function toggleWord(word: string) {
+    if (exhausted) return
     setSelected((prev) => {
       const next = new Set(prev)
       if (next.has(word)) {
@@ -41,10 +74,15 @@ export function ConnectionsGame({ config, myState, onSubmitGroup }: Props) {
   }
 
   function handleSubmit() {
-    if (selected.size !== 4) return
-    onSubmitGroup(Array.from(selected))
+    if (selected.size !== 4 || exhausted) return
+    const words = Array.from(selected)
+    lastSubmitted.current = words
+    onSubmitGroup(words)
     setSelected(new Set())
-    setWrong(false)
+  }
+
+  function handleShuffle() {
+    setWordOrder((prev) => shuffle(prev))
   }
 
   return (
@@ -71,14 +109,16 @@ export function ConnectionsGame({ config, myState, onSubmitGroup }: Props) {
         <div className="grid grid-cols-4 gap-2">
           {remaining.map((word) => {
             const isSelected = selected.has(word)
+            const isShaking = shakingWords.includes(word)
             return (
               <button
                 key={word}
                 onClick={() => toggleWord(word)}
-                className={`px-2 py-3 font-bold text-sm text-center border-2 ${
+                disabled={exhausted}
+                className={`px-2 py-3 font-bold text-sm text-center border-2 ${isShaking ? 'animate-shake' : ''} ${
                   isSelected
                     ? 'bg-ink text-paper border-ink'
-                    : 'bg-white text-ink border-muted/30 hover:border-ink'
+                    : 'bg-white text-ink border-muted/30 hover:border-ink disabled:opacity-50'
                 }`}
               >
                 {word}
@@ -88,17 +128,33 @@ export function ConnectionsGame({ config, myState, onSubmitGroup }: Props) {
         </div>
       )}
 
-      {wrong && (
-        <p className="text-coral font-bold text-center text-sm">Not a group — try again!</p>
-      )}
+      {/* Guess counter */}
+      <div className="text-center">
+        {exhausted ? (
+          <p className="text-coral font-bold text-sm">No guesses remaining!</p>
+        ) : (
+          <p className="text-muted font-semibold text-sm">
+            <span className="font-black text-ink">{5 - incorrectGuesses}</span> / 5 guesses remaining
+          </p>
+        )}
+      </div>
 
-      <button
-        className="btn-sketch bg-grape text-paper w-full font-bold disabled:opacity-40"
-        disabled={selected.size !== 4}
-        onClick={handleSubmit}
-      >
-        Submit Group ({selected.size}/4)
-      </button>
+      <div className="flex gap-2">
+        <button
+          className="btn-sketch bg-paper text-muted border-muted/40 flex-1 font-bold text-sm"
+          onClick={handleShuffle}
+          disabled={exhausted}
+        >
+          Shuffle
+        </button>
+        <button
+          className="btn-sketch bg-grape text-paper flex-1 font-bold disabled:opacity-40"
+          disabled={selected.size !== 4 || exhausted}
+          onClick={handleSubmit}
+        >
+          Submit ({selected.size}/4)
+        </button>
+      </div>
 
       {myState && (
         <p className="text-center font-bold text-sm text-muted">

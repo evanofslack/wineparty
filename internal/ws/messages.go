@@ -32,6 +32,8 @@ const (
 	ActionResetTimer                                 // 8
 	ActionEndMiniGame                                // 9
 	ActionMiniGameNextQuestion                       // 10
+	ActionMiniGameRevealAnswer                       // 11
+	ActionEndMiniGameResults                         // 12
 )
 
 // Envelope is the outer wrapper for all WS messages.

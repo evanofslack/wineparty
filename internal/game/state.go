@@ -22,8 +22,9 @@ type PlayerWordleState struct {
 }
 
 type PlayerConnectionsState struct {
-	FoundGroups []string `json:"foundGroups"`
-	Points      int      `json:"points"`
+	FoundGroups      []string `json:"foundGroups"`
+	Points           int      `json:"points"`
+	IncorrectGuesses int      `json:"incorrectGuesses"`
 }
 
 type PlayerTriviaState struct {
@@ -55,6 +56,7 @@ type MiniGameConfig struct {
 type MiniGameState struct {
 	Config          MiniGameConfig                     `json:"config"`
 	CurrentQuestion int                                `json:"currentQuestion"`
+	AnswerRevealed  bool                               `json:"answerRevealed"`
 	WordleStates    map[string]*PlayerWordleState      `json:"wordleStates,omitempty"`
 	ConnStates      map[string]*PlayerConnectionsState `json:"connStates,omitempty"`
 	TriviaStates    map[string]*PlayerTriviaState      `json:"triviaStates,omitempty"`
@@ -69,11 +71,12 @@ type MiniGameAnswer struct {
 type Phase string
 
 const (
-	PhaseLobby    Phase = "lobby"
-	PhaseGuessing Phase = "guessing"
-	PhaseScoring  Phase = "scoring"
-	PhaseComplete Phase = "complete"
-	PhaseMiniGame Phase = "minigame"
+	PhaseLobby           Phase = "lobby"
+	PhaseGuessing        Phase = "guessing"
+	PhaseScoring         Phase = "scoring"
+	PhaseComplete        Phase = "complete"
+	PhaseMiniGame        Phase = "minigame"
+	PhaseMiniGameResults Phase = "minigame_results"
 )
 
 type Role string

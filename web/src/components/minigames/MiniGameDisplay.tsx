@@ -3,6 +3,7 @@ import type { MiniGameState, Player } from '../../types/game'
 interface Props {
   miniGame: MiniGameState
   players: Record<string, Player>
+  resultsMode?: boolean
 }
 
 const COLOR_STYLES: Record<string, string> = {
@@ -12,7 +13,8 @@ const COLOR_STYLES: Record<string, string> = {
   purple: 'bg-grape/20 border-grape',
 }
 
-export function MiniGameDisplay({ miniGame, players }: Props) {
+
+export function MiniGameDisplay({ miniGame, players, resultsMode = false }: Props) {
   const playerList = Object.values(players).filter((p) => p.role === 'player')
   const { config } = miniGame
 
@@ -35,11 +37,18 @@ export function MiniGameDisplay({ miniGame, players }: Props) {
             <>
               <p className="text-2xl font-black text-ink mb-4">{q.text}</p>
               <div className="grid grid-cols-2 gap-3">
-                {q.options.map((opt, i) => (
-                  <div key={i} className="sketch-border bg-white px-4 py-3 text-left font-semibold">
-                    <span className="font-black text-grape mr-2">{String.fromCharCode(65 + i)}.</span> {opt}
-                  </div>
-                ))}
+                {q.options.map((opt, i) => {
+                  const isCorrect = opt.toLowerCase().trim() === q.answer.toLowerCase().trim()
+                  const highlight = resultsMode && isCorrect
+                  return (
+                    <div
+                      key={i}
+                      className={`sketch-border px-4 py-3 text-left font-semibold ${highlight ? 'bg-lime' : 'bg-white'}`}
+                    >
+                      <span className="font-black text-grape mr-2">{String.fromCharCode(65 + i)}.</span> {opt}
+                    </div>
+                  )
+                })}
               </div>
             </>
           ) : (
@@ -56,13 +65,17 @@ export function MiniGameDisplay({ miniGame, players }: Props) {
   }
 
   if (config.type === 'wordle') {
-    const wordLen = (config.word ?? '').length
+    const word = config.word ?? ''
+    const wordLen = word.length
     const maxGuesses = config.maxGuesses ?? 6
     const solved = Object.values(miniGame.wordleStates ?? {}).filter((s) => s.solved).length
 
     return (
       <div className="flex flex-col items-center gap-6">
         <p className="text-xl font-black text-ink uppercase tracking-widest">Wordle</p>
+        {resultsMode && (
+          <p className="text-3xl font-black text-grape uppercase tracking-widest">{word}</p>
+        )}
         <div className="flex gap-1">
           {Array.from({ length: wordLen }, (_, i) => (
             <div key={i} className="w-14 h-14 border-2 border-muted/30 bg-white" />
@@ -81,29 +94,38 @@ export function MiniGameDisplay({ miniGame, players }: Props) {
   if (config.type === 'connections') {
     const groups = config.groups ?? []
     const connStates = miniGame.connStates ?? {}
+
+    if (resultsMode) {
+      return (
+        <div className="flex flex-col gap-4 w-full">
+          <p className="text-xl font-black text-center text-ink">Connections — Results</p>
+          {groups.map((g) => {
+            const count = Object.values(connStates).filter((s) => s.foundGroups.includes(g.category)).length
+            return (
+              <div
+                key={g.category}
+                className={`px-4 py-3 border-2 ${COLOR_STYLES[g.color] ?? COLOR_STYLES.yellow} text-center`}
+              >
+                <p className="font-black text-sm uppercase tracking-wide">{g.category}</p>
+                <p className="text-xs font-semibold">{g.words.join(', ')}</p>
+                <p className="text-xs text-muted mt-1">{count} player{count !== 1 ? 's' : ''} found this</p>
+              </div>
+            )
+          })}
+        </div>
+      )
+    }
+
     const allWords = groups.flatMap((g) => g.words)
-    const groupFoundCount = groups.map(
-      (g) => Object.values(connStates).filter((s) => s.foundGroups.includes(g.category)).length
-    )
+    const totalFound = Object.values(connStates).reduce((sum, s) => sum + s.foundGroups.length, 0)
 
     return (
       <div className="flex flex-col gap-4 w-full">
         <p className="text-xl font-black text-center text-ink">Connections</p>
-        {/* Found groups header */}
-        {groups.map((g, i) => {
-          const count = groupFoundCount[i]
-          if (count === 0) return null
-          return (
-            <div
-              key={g.category}
-              className={`px-4 py-2 border-2 ${COLOR_STYLES[g.color] ?? COLOR_STYLES.yellow} text-center`}
-            >
-              <p className="font-black text-sm uppercase">{g.category}</p>
-              <p className="text-xs text-muted font-semibold">{count} player{count !== 1 ? 's' : ''} found this</p>
-            </div>
-          )
-        })}
-        {/* All 16 words (non-interactive) */}
+        <p className="text-center font-bold text-muted">
+          <span className="text-grape font-black">{totalFound}</span> groups found so far
+        </p>
+        {/* All 16 words (non-interactive, no category names) */}
         <div className="grid grid-cols-4 gap-2">
           {allWords.map((word) => (
             <div

@@ -8,13 +8,14 @@ import (
 )
 
 var (
-	ErrWrongPhase       = errors.New("action not allowed in current phase")
-	ErrAlreadyExists    = errors.New("player already exists")
-	ErrNotFound         = errors.New("player not found")
-	ErrAlreadySubmitted = errors.New("guess already submitted")
-	ErrTooManyFlavors   = errors.New("too many flavor notes (max 3)")
-	ErrAlreadyAnswered  = errors.New("already answered")
-	ErrInvalidAnswer    = errors.New("invalid answer")
+	ErrWrongPhase        = errors.New("action not allowed in current phase")
+	ErrAlreadyExists     = errors.New("player already exists")
+	ErrNotFound          = errors.New("player not found")
+	ErrAlreadySubmitted  = errors.New("guess already submitted")
+	ErrTooManyFlavors    = errors.New("too many flavor notes (max 3)")
+	ErrAlreadyAnswered   = errors.New("already answered")
+	ErrInvalidAnswer     = errors.New("invalid answer")
+	ErrMaxGuessesReached = errors.New("max guesses reached")
 )
 
 type Engine struct {
@@ -140,6 +141,14 @@ func (e *Engine) EndMiniGame() error {
 	if e.state.Phase != PhaseMiniGame {
 		return ErrWrongPhase
 	}
+	e.state.Phase = PhaseMiniGameResults
+	return nil
+}
+
+func (e *Engine) EndMiniGameResults() error {
+	if e.state.Phase != PhaseMiniGameResults {
+		return ErrWrongPhase
+	}
 	e.state.MiniGame = nil
 	next := e.state.CurrentRound + 1
 	if next >= len(e.state.Rounds) {
@@ -164,6 +173,18 @@ func (e *Engine) MiniGameNextQuestion() error {
 		return ErrWrongPhase
 	}
 	e.state.MiniGame.CurrentQuestion++
+	e.state.MiniGame.AnswerRevealed = false
+	return nil
+}
+
+func (e *Engine) MiniGameRevealAnswer() error {
+	if e.state.Phase != PhaseMiniGame || e.state.MiniGame == nil {
+		return ErrWrongPhase
+	}
+	if e.state.MiniGame.Config.Type != "trivia" {
+		return ErrWrongPhase
+	}
+	e.state.MiniGame.AnswerRevealed = true
 	return nil
 }
 
@@ -232,6 +253,9 @@ func (e *Engine) submitConnectionsGroup(playerID string, group []string) error {
 		ps = &PlayerConnectionsState{FoundGroups: []string{}}
 		ms.ConnStates[playerID] = ps
 	}
+	if ps.IncorrectGuesses >= 5 {
+		return ErrMaxGuessesReached
+	}
 	normalized := make([]string, len(group))
 	for i, w := range group {
 		normalized[i] = strings.ToLower(strings.TrimSpace(w))
@@ -259,6 +283,7 @@ func (e *Engine) submitConnectionsGroup(playerID string, group []string) error {
 			return nil
 		}
 	}
+	ps.IncorrectGuesses++
 	return ErrInvalidAnswer
 }
 
