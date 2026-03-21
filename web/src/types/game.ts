@@ -55,6 +55,7 @@ export interface Guess {
   country: string
   region: string
   year: number
+  price: number
   flavors: string[]
   rating: number
   submittedAt: string
@@ -70,6 +71,8 @@ export interface RoundScore {
   regionHit: boolean
   yearPoints: number
   flavorPoints: number
+  flavorMatches: string[]
+  pricePoints: number
 }
 
 export interface LeaderboardEntry {
@@ -89,6 +92,8 @@ export interface WineConfig {
   region: string
   year: number
   hint: string
+  flavors: string[]
+  price: number
 }
 
 export interface Round {
@@ -145,6 +150,7 @@ export interface PlayerConnectionsState {
   foundGroups: string[]
   points: number
   incorrectGuesses: number
+  totalGuesses: number
 }
 
 export interface PlayerTriviaState {
@@ -220,6 +226,7 @@ export interface GuessPayload {
   country: string
   region: string
   year: number
+  price: number
   flavors: string[]
   rating: number
 }

@@ -60,6 +60,7 @@ type GuessPayload struct {
 	Country string            `json:"country"`
 	Region  string            `json:"region"`
 	Year    int               `json:"year"`
+	Price   int               `json:"price"`
 	Flavors []game.FlavorNote `json:"flavors"`
 	Rating  int               `json:"rating"`
 }

@@ -98,6 +98,16 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
   // Guessing phase
   if (gameState?.phase === 'guessing' && currentRound) {
     const submittedThisRound = myGuess !== undefined || submittedRound === gameState.currentRound
+    const years = gameState.rounds.map((r) => r.wine.year).filter((y) => y > 0)
+    const rawYearMin = years.length > 0 ? Math.min(...years) : new Date().getFullYear() - 10
+    const rawYearMax = years.length > 0 ? Math.max(...years) : new Date().getFullYear()
+    const yearMin = Math.floor((rawYearMin - 5) / 5) * 5
+    const yearMax = Math.ceil((rawYearMax + 3) / 5) * 5
+    const prices = gameState.rounds.map((r) => r.wine.price).filter((p) => p > 0)
+    const rawMin = prices.length > 0 ? Math.min(...prices) : 10
+    const rawMax = prices.length > 0 ? Math.max(...prices) : 100
+    const priceMin = Math.floor((rawMin * 0.8) / 5) * 5
+    const priceMax = Math.ceil((rawMax * 1.2) / 5) * 5
     return (
       <div className="flex flex-col min-h-screen px-4 pt-6 pb-10 max-w-md mx-auto">
         <div className="flex justify-between items-center mb-4">
@@ -111,6 +121,10 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
         <BlindTastingForm
           onSubmit={handleGuess}
           submitted={submittedThisRound}
+          yearMin={yearMin}
+          yearMax={yearMax}
+          priceMin={priceMin}
+          priceMax={priceMax}
         />
         {error && <p className="text-coral font-bold mt-4 text-center">{error}</p>}
       </div>
@@ -131,18 +145,89 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
           <p className="font-semibold text-muted">{currentRound.wine.country} · {currentRound.wine.region}, {currentRound.wine.year}</p>
         </div>
 
-        {/* My score */}
-        {myScore && (
-          <div className="sketch-border-sunny bg-sunny/20 px-4 py-4 mb-4">
-            <p className="text-sm font-bold text-muted mb-2">Your score this round</p>
-            <div className="flex items-center gap-4">
+        {/* My score diff */}
+        {myScore && myGuess && (
+          <div className="mb-4">
+            <div className="flex items-baseline gap-3 mb-3">
               <span className="text-4xl font-black text-ink">+{myScore.points}</span>
-              <div className="text-sm font-semibold space-y-0.5 text-muted">
-                {myScore.varietyHit && <p>✅ Variety correct (+3)</p>}
-                {myScore.countryHit && <p>✅ Country correct (+1)</p>}
-                {myScore.regionHit && <p>✅ Region correct (+2)</p>}
-                {myScore.yearPoints > 0 && <p>📅 Year {myScore.yearPoints === 3 ? 'exact' : myScore.yearPoints === 2 ? '1yr off' : '2yr off'} (+{myScore.yearPoints})</p>}
-                {myScore.flavorPoints > 0 && <p>👃 Flavors (+{myScore.flavorPoints})</p>}
+              <span className="text-sm font-bold text-muted">this round</span>
+            </div>
+            <div className="sketch-border bg-white overflow-hidden">
+              <div className="grid grid-cols-[auto_1fr_1fr_auto] text-xs font-bold text-muted uppercase tracking-wide bg-ink/5 px-3 py-1.5 gap-2">
+                <span></span>
+                <span>Your guess</span>
+                <span>Answer</span>
+                <span>Pts</span>
+              </div>
+              {[
+                {
+                  label: 'Variety',
+                  guess: myGuess.variety || '—',
+                  answer: currentRound.wine.variety,
+                  pts: myScore.varietyHit ? 3 : 0,
+                },
+                {
+                  label: 'Country',
+                  guess: myGuess.country || '—',
+                  answer: currentRound.wine.country,
+                  pts: myScore.countryPoints,
+                },
+                {
+                  label: 'Region',
+                  guess: myGuess.region || '—',
+                  answer: currentRound.wine.region,
+                  pts: myScore.regionHit ? 2 : 0,
+                },
+                {
+                  label: 'Year',
+                  guess: String(myGuess.year),
+                  answer: String(currentRound.wine.year),
+                  pts: myScore.yearPoints,
+                },
+                ...(currentRound.wine.price > 0 ? [{
+                  label: 'Price',
+                  guess: myGuess.price > 0 ? `$${myGuess.price}` : '—',
+                  answer: `$${currentRound.wine.price}`,
+                  pts: myScore.pricePoints,
+                }] : []),
+              ].map((row) => (
+                <div
+                  key={row.label}
+                  className={`grid grid-cols-[auto_1fr_1fr_auto] px-3 py-2 gap-2 items-center border-t border-ink/10 ${row.pts > 0 ? 'bg-lime/10' : ''}`}
+                >
+                  <span className="text-xs font-bold text-muted w-14">{row.label}</span>
+                  <span className="text-sm font-semibold text-ink truncate">{row.guess}</span>
+                  <span className="text-sm font-semibold text-muted truncate">{row.answer}</span>
+                  <span className={`text-xs font-black w-8 text-right ${row.pts > 0 ? 'text-lime' : 'text-muted'}`}>
+                    {row.pts > 0 ? `+${row.pts}` : '—'}
+                  </span>
+                </div>
+              ))}
+              {/* Flavors row */}
+              <div className={`border-t border-ink/10 px-3 py-2 ${myScore.flavorPoints > 0 ? 'bg-lime/10' : ''}`}>
+                <div className="grid grid-cols-[auto_1fr_1fr_auto] gap-2 items-start">
+                  <span className="text-xs font-bold text-muted w-14">Flavors</span>
+                  <span className="text-sm font-semibold leading-snug">
+                    {myGuess.flavors.length === 0 ? (
+                      <span className="text-muted">—</span>
+                    ) : (
+                      myGuess.flavors.map((f, i) => (
+                        <span key={i}>
+                          {i > 0 && <span className="text-muted">, </span>}
+                          <span className={(myScore.flavorMatches ?? []).includes(f) ? 'text-lime font-bold' : 'text-muted'}>
+                            {f}
+                          </span>
+                        </span>
+                      ))
+                    )}
+                  </span>
+                  <span className="text-sm font-semibold text-muted leading-snug">
+                    {currentRound.wine.flavors?.join(', ') || '—'}
+                  </span>
+                  <span className={`text-xs font-black w-8 text-right ${myScore.flavorPoints > 0 ? 'text-lime' : 'text-muted'}`}>
+                    {myScore.flavorPoints > 0 ? `+${myScore.flavorPoints}` : '—'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>

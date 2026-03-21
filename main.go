@@ -31,6 +31,8 @@ func main() {
 			Region:  w.Region,
 			Year:    w.Year,
 			Hint:    w.Hint,
+			Flavors: w.Flavors,
+			Price:   w.Price,
 		}
 	}
 

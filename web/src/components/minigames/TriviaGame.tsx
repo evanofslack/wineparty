@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { MiniGameConfig, PlayerTriviaState } from '../../types/game'
 
 interface Props {
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export function TriviaGame({ config, myState, currentQuestion, answerRevealed, onAnswer }: Props) {
+  const [pendingAnswer, setPendingAnswer] = useState<number | null>(null)
   const questions = config.questions ?? []
   if (questions.length === 0) return <p className="text-muted font-semibold text-center">No questions available.</p>
 
@@ -52,6 +54,8 @@ export function TriviaGame({ config, myState, currentQuestion, answerRevealed, o
             }
           } else if (hasAnswered && isSelected) {
             cls += 'bg-ink text-paper'
+          } else if (pendingAnswer === i) {
+            cls += 'bg-grape text-white'
           } else {
             cls += 'bg-white text-ink'
           }
@@ -59,7 +63,7 @@ export function TriviaGame({ config, myState, currentQuestion, answerRevealed, o
             <button
               key={i}
               className={cls}
-              onClick={() => !hasAnswered && onAnswer(i)}
+              onClick={() => { if (!hasAnswered) setPendingAnswer(i) }}
               disabled={hasAnswered}
             >
               <span className="font-black mr-2">{String.fromCharCode(65 + i)}.</span> {opt}
@@ -68,11 +72,18 @@ export function TriviaGame({ config, myState, currentQuestion, answerRevealed, o
         })}
       </div>
 
-      {hasAnswered && (
-        <div className="text-center">
-          <p className="text-muted font-semibold text-sm">Waiting for next question...</p>
-        </div>
-      )}
+      <button
+        className="btn-sketch bg-grape text-white w-full disabled:opacity-40"
+        disabled={pendingAnswer === null || hasAnswered}
+        onClick={() => {
+          if (pendingAnswer !== null) {
+            onAnswer(pendingAnswer)
+            setPendingAnswer(null)
+          }
+        }}
+      >
+        Submit Answer
+      </button>
 
       {myState && (
         <div className="text-center">

@@ -100,8 +100,47 @@ func (e *Engine) CloseGuessing() error {
 	now := time.Now()
 	round.RevealedAt = &now
 
+	var minYear, maxYear int
+	var minPrice, maxPrice int
+	for _, r := range e.state.Rounds {
+		if r.Wine.Year > 0 {
+			if minYear == 0 || r.Wine.Year < minYear {
+				minYear = r.Wine.Year
+			}
+			if r.Wine.Year > maxYear {
+				maxYear = r.Wine.Year
+			}
+		}
+		if r.Wine.Price > 0 {
+			if minPrice == 0 || r.Wine.Price < minPrice {
+				minPrice = r.Wine.Price
+			}
+			if r.Wine.Price > maxPrice {
+				maxPrice = r.Wine.Price
+			}
+		}
+	}
+	yearRange := maxYear - minYear
+	yearTier1 := yearRange / 6
+	if yearTier1 < 1 {
+		yearTier1 = 1
+	}
+	yearTier2 := yearRange / 3
+	if yearTier2 < 1 {
+		yearTier2 = 1
+	}
+	priceRange := maxPrice - minPrice
+	priceTier1 := priceRange / 6
+	if priceTier1 < 1 {
+		priceTier1 = 1
+	}
+	priceTier2 := priceRange / 3
+	if priceTier2 < 1 {
+		priceTier2 = 1
+	}
+
 	for _, g := range round.Guesses {
-		rs := ScoreGuess(g, round.Wine)
+		rs := ScoreGuess(g, round.Wine, yearTier1, yearTier2, priceTier1, priceTier2)
 		round.Scores = append(round.Scores, rs)
 		if p, ok := e.state.Players[g.PlayerID]; ok {
 			p.TotalScore += rs.Points
@@ -184,7 +223,27 @@ func (e *Engine) MiniGameRevealAnswer() error {
 	if e.state.MiniGame.Config.Type != "trivia" {
 		return ErrWrongPhase
 	}
-	e.state.MiniGame.AnswerRevealed = true
+	ms := e.state.MiniGame
+	ms.AnswerRevealed = true
+	q := ms.CurrentQuestion
+	if q < len(ms.Config.Questions) {
+		question := ms.Config.Questions[q]
+		for playerID, ps := range ms.TriviaStates {
+			if q >= len(ps.Answers) || ps.Answers[q] == -1 {
+				continue
+			}
+			idx := ps.Answers[q]
+			if idx >= 0 && idx < len(question.Options) {
+				if strings.EqualFold(strings.TrimSpace(question.Options[idx]), strings.TrimSpace(question.Answer)) {
+					ps.Points += question.Points
+					if p, ok := e.state.Players[playerID]; ok {
+						p.MiniGameScore += question.Points
+					}
+				}
+			}
+		}
+		e.state.Leaderboard = BuildLeaderboard(e.state.Players)
+	}
 	return nil
 }
 
@@ -253,9 +312,10 @@ func (e *Engine) submitConnectionsGroup(playerID string, group []string) error {
 		ps = &PlayerConnectionsState{FoundGroups: []string{}}
 		ms.ConnStates[playerID] = ps
 	}
-	if ps.IncorrectGuesses >= 5 {
+	if ps.TotalGuesses >= 5 {
 		return ErrMaxGuessesReached
 	}
+	ps.TotalGuesses++
 	normalized := make([]string, len(group))
 	for i, w := range group {
 		normalized[i] = strings.ToLower(strings.TrimSpace(w))
@@ -315,16 +375,6 @@ func (e *Engine) submitTriviaAnswer(playerID string, answerIndex int) error {
 		return ErrAlreadyAnswered
 	}
 	ps.Answers[q] = answerIndex
-	question := ms.Config.Questions[q]
-	if answerIndex >= 0 && answerIndex < len(question.Options) {
-		if strings.EqualFold(strings.TrimSpace(question.Options[answerIndex]), strings.TrimSpace(question.Answer)) {
-			ps.Points += question.Points
-			if p, ok := e.state.Players[playerID]; ok {
-				p.MiniGameScore += question.Points
-			}
-			e.state.Leaderboard = BuildLeaderboard(e.state.Players)
-		}
-	}
 	return nil
 }
 

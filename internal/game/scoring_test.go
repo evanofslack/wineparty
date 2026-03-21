@@ -10,6 +10,8 @@ var testWine = WineConfig{
 	Variety: "Cabernet Sauvignon",
 	Region:  "Napa Valley",
 	Year:    2020,
+	Flavors: []string{"cherry", "oak", "vanilla"},
+	Price:   40,
 }
 
 func TestScoreExactMatch(t *testing.T) {
@@ -20,7 +22,7 @@ func TestScoreExactMatch(t *testing.T) {
 		Year:     2020,
 		Flavors:  []FlavorNote{"cherry", "oak", "vanilla"},
 	}
-	rs := ScoreGuess(g, testWine)
+	rs := ScoreGuess(g, testWine, 1, 2, 0, 0)
 	expected := pointsVariety + pointsRegion + pointsYearExact + 3*pointsFlavor
 	if rs.Points != expected {
 		t.Fatalf("expected %d, got %d", expected, rs.Points)
@@ -38,13 +40,13 @@ func TestScoreExactMatch(t *testing.T) {
 
 func TestScoreYearOff(t *testing.T) {
 	g := Guess{PlayerID: "p1", Year: 2021}
-	rs := ScoreGuess(g, testWine)
-	if rs.YearPoints != pointsYearOne {
-		t.Fatalf("expected %d for 1yr off, got %d", pointsYearOne, rs.YearPoints)
+	rs := ScoreGuess(g, testWine, 1, 2, 0, 0)
+	if rs.YearPoints != pointsYearMid {
+		t.Fatalf("expected %d for 1yr off, got %d", pointsYearMid, rs.YearPoints)
 	}
 
 	g2 := Guess{PlayerID: "p1", Year: 2015}
-	rs2 := ScoreGuess(g2, testWine)
+	rs2 := ScoreGuess(g2, testWine, 1, 2, 0, 0)
 	if rs2.YearPoints != 0 {
 		t.Fatalf("expected 0 for 5yr+ off, got %d", rs2.YearPoints)
 	}
@@ -52,15 +54,15 @@ func TestScoreYearOff(t *testing.T) {
 
 func TestScoreYearTwoOff(t *testing.T) {
 	g := Guess{PlayerID: "p1", Year: 2022}
-	rs := ScoreGuess(g, testWine)
-	if rs.YearPoints != pointsYearTwo {
-		t.Fatalf("expected %d for 2yr off, got %d", pointsYearTwo, rs.YearPoints)
+	rs := ScoreGuess(g, testWine, 1, 2, 0, 0)
+	if rs.YearPoints != pointsYearFar {
+		t.Fatalf("expected %d for 2yr off, got %d", pointsYearFar, rs.YearPoints)
 	}
 }
 
 func TestScoreCaseInsensitive(t *testing.T) {
 	g := Guess{PlayerID: "p1", Variety: "cabernet sauvignon", Region: "napa valley"}
-	rs := ScoreGuess(g, testWine)
+	rs := ScoreGuess(g, testWine, 1, 2, 0, 0)
 	if !rs.VarietyHit {
 		t.Fatal("variety should be case-insensitive")
 	}
@@ -72,10 +74,10 @@ func TestScoreCaseInsensitive(t *testing.T) {
 func TestScoreMaxFlavors(t *testing.T) {
 	g := Guess{
 		PlayerID: "p1",
-		Flavors:  []FlavorNote{"a", "b", "c", "d", "e"},
+		Flavors:  []FlavorNote{"cherry", "oak", "vanilla", "pepper", "spice"},
 	}
-	rs := ScoreGuess(g, testWine)
-	// Only 3 should count
+	rs := ScoreGuess(g, testWine, 1, 2, 0, 0)
+	// Only 3 should count (maxFlavors cap) and all 3 match
 	if rs.FlavorPoints != 3*pointsFlavor {
 		t.Fatalf("expected %d flavor points, got %d", 3*pointsFlavor, rs.FlavorPoints)
 	}
@@ -83,7 +85,7 @@ func TestScoreMaxFlavors(t *testing.T) {
 
 func TestScoreNoMatch(t *testing.T) {
 	g := Guess{PlayerID: "p1", Variety: "Merlot", Region: "Bordeaux", Year: 2010}
-	rs := ScoreGuess(g, testWine)
+	rs := ScoreGuess(g, testWine, 1, 2, 0, 0)
 	if rs.VarietyHit || rs.RegionHit {
 		t.Fatal("expected no hits")
 	}
@@ -241,6 +243,43 @@ func TestComputeSummaryBestRound(t *testing.T) {
 	}
 	if ps["p1"].TotalYearPoints != 2 {
 		t.Fatalf("expected 2 total year points, got %d", ps["p1"].TotalYearPoints)
+	}
+}
+
+func TestScorePrice(t *testing.T) {
+	cases := []struct {
+		guessPrice int
+		tier1      int
+		tier2      int
+		want       int
+	}{
+		{40, 3, 6, pointsPriceExact},
+		{43, 3, 6, pointsPriceMid},
+		{46, 3, 6, pointsPriceFar},
+		{47, 3, 6, 0},
+		{0, 3, 6, 0},
+	}
+	for _, tc := range cases {
+		g := Guess{PlayerID: "p1", Price: tc.guessPrice}
+		rs := ScoreGuess(g, testWine, 1, 2, tc.tier1, tc.tier2)
+		if rs.PricePoints != tc.want {
+			t.Fatalf("price %d tier1=%d tier2=%d: expected %d, got %d", tc.guessPrice, tc.tier1, tc.tier2, tc.want, rs.PricePoints)
+		}
+	}
+}
+
+func TestScoreFlavorIntersection(t *testing.T) {
+	g := Guess{
+		PlayerID: "p1",
+		Flavors:  []FlavorNote{"cherry", "pepper", "vanilla"},
+	}
+	rs := ScoreGuess(g, testWine, 1, 2, 0, 0)
+	// cherry and vanilla match; pepper does not
+	if rs.FlavorPoints != 2*pointsFlavor {
+		t.Fatalf("expected 2 flavor points, got %d", rs.FlavorPoints)
+	}
+	if len(rs.FlavorMatches) != 2 {
+		t.Fatalf("expected 2 flavor matches, got %v", rs.FlavorMatches)
 	}
 }
 

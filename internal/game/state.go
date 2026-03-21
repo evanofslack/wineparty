@@ -25,6 +25,7 @@ type PlayerConnectionsState struct {
 	FoundGroups      []string `json:"foundGroups"`
 	Points           int      `json:"points"`
 	IncorrectGuesses int      `json:"incorrectGuesses"`
+	TotalGuesses     int      `json:"totalGuesses"`
 }
 
 type PlayerTriviaState struct {
@@ -105,21 +106,24 @@ type Guess struct {
 	Country     string       `json:"country"`
 	Region      string       `json:"region"`
 	Year        int          `json:"year"`
+	Price       int          `json:"price"`
 	Flavors     []FlavorNote `json:"flavors"`
 	Rating      int          `json:"rating"` // 0 = unrated, 1–10
 	SubmittedAt time.Time    `json:"submittedAt"`
 }
 
 type RoundScore struct {
-	PlayerID     string `json:"playerId"`
-	RoundIndex   int    `json:"roundIndex"`
-	Points       int    `json:"points"`
-	VarietyHit   bool   `json:"varietyHit"`
-	CountryHit   bool   `json:"countryHit"`
-	CountryPoints int   `json:"countryPoints"`
-	RegionHit    bool   `json:"regionHit"`
-	YearPoints   int    `json:"yearPoints"`
-	FlavorPoints  int   `json:"flavorPoints"`
+	PlayerID      string   `json:"playerId"`
+	RoundIndex    int      `json:"roundIndex"`
+	Points        int      `json:"points"`
+	VarietyHit    bool     `json:"varietyHit"`
+	CountryHit    bool     `json:"countryHit"`
+	CountryPoints int      `json:"countryPoints"`
+	RegionHit     bool     `json:"regionHit"`
+	YearPoints    int      `json:"yearPoints"`
+	FlavorPoints  int      `json:"flavorPoints"`
+	FlavorMatches []string `json:"flavorMatches"`
+	PricePoints   int      `json:"pricePoints"`
 }
 
 type LeaderboardEntry struct {
@@ -132,13 +136,15 @@ type LeaderboardEntry struct {
 }
 
 type WineConfig struct {
-	ID      int    `json:"id"`
-	Name    string `json:"name"`
-	Variety string `json:"variety"`
-	Country string `json:"country"`
-	Region  string `json:"region"`
-	Year    int    `json:"year"`
-	Hint    string `json:"hint"`
+	ID      int      `json:"id"`
+	Name    string   `json:"name"`
+	Variety string   `json:"variety"`
+	Country string   `json:"country"`
+	Region  string   `json:"region"`
+	Year    int      `json:"year"`
+	Hint    string   `json:"hint"`
+	Flavors []string `json:"flavors"`
+	Price   int      `json:"price"`
 }
 
 type Round struct {

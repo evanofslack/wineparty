@@ -353,19 +353,22 @@ export function AdminView({ sendJoin, sendAdminAction }: Props) {
             <p className="font-black text-lg mb-3">Edit Scores</p>
             {players.map((p) => (
               <div key={p.id} className="flex items-center gap-2 mb-2">
-                <span className="flex-1 font-semibold truncate text-sm">{p.name}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold truncate text-sm">{p.name}</p>
+                  <p className="text-xs text-muted">wine: {p.totalScore} + mini: {p.miniGameScore}</p>
+                </div>
                 <input
                   type="number"
                   className="sketch-border px-2 py-1 w-20 text-sm font-bold"
-                  value={editScores[p.id] ?? p.totalScore}
+                  value={editScores[p.id] ?? String(p.totalScore + p.miniGameScore)}
                   onChange={(e) => setEditScores((s) => ({ ...s, [p.id]: e.target.value }))}
                 />
                 <button
                   className="btn-sketch bg-sunny text-ink text-xs px-2 py-1"
                   onClick={() => {
-                    const val = parseInt(editScores[p.id] ?? String(p.totalScore), 10)
-                    if (!isNaN(val)) {
-                      action(AdminActionType.ActionSetScore, { playerId: p.id, score: val })
+                    const combined = parseInt(editScores[p.id] ?? String(p.totalScore + p.miniGameScore), 10)
+                    if (!isNaN(combined)) {
+                      action(AdminActionType.ActionSetScore, { playerId: p.id, score: combined - p.miniGameScore })
                     }
                   }}
                 >

@@ -7,17 +7,20 @@ import (
 )
 
 const (
-	pointsVariety   = 3
-	pointsCountry   = 1
-	pointsRegion    = 2
-	pointsYearExact = 3
-	pointsYearOne   = 2
-	pointsYearTwo   = 1
-	pointsFlavor    = 1
-	maxFlavors      = 3
+	pointsVariety    = 3
+	pointsCountry    = 1
+	pointsRegion     = 2
+	pointsYearExact  = 3
+	pointsYearMid    = 2
+	pointsYearFar    = 1
+	pointsFlavor     = 1
+	maxFlavors       = 3
+	pointsPriceExact = 3
+	pointsPriceMid   = 2
+	pointsPriceFar   = 1
 )
 
-func ScoreGuess(g Guess, wine WineConfig) RoundScore {
+func ScoreGuess(g Guess, wine WineConfig, yearTier1, yearTier2, priceTier1, priceTier2 int) RoundScore {
 	rs := RoundScore{
 		PlayerID:   g.PlayerID,
 		RoundIndex: g.RoundIndex,
@@ -39,23 +42,49 @@ func ScoreGuess(g Guess, wine WineConfig) RoundScore {
 		rs.Points += pointsRegion
 	}
 
-	diff := int(math.Abs(float64(g.Year - wine.Year)))
+	yearDiff := int(math.Abs(float64(g.Year - wine.Year)))
 	switch {
-	case diff == 0:
+	case yearDiff == 0:
 		rs.YearPoints = pointsYearExact
-	case diff == 1:
-		rs.YearPoints = pointsYearOne
-	case diff == 2:
-		rs.YearPoints = pointsYearTwo
+	case yearDiff <= yearTier1:
+		rs.YearPoints = pointsYearMid
+	case yearDiff <= yearTier2:
+		rs.YearPoints = pointsYearFar
 	}
 	rs.Points += rs.YearPoints
 
-	flavors := g.Flavors
-	if len(flavors) > maxFlavors {
-		flavors = flavors[:maxFlavors]
+	wineFlavorSet := make(map[string]bool, len(wine.Flavors))
+	for _, f := range wine.Flavors {
+		wineFlavorSet[strings.ToLower(strings.TrimSpace(f))] = true
 	}
-	rs.FlavorPoints = len(flavors) * pointsFlavor
+	var matched []string
+	for _, f := range g.Flavors {
+		if wineFlavorSet[strings.ToLower(strings.TrimSpace(string(f)))] {
+			matched = append(matched, string(f))
+			if len(matched) == maxFlavors {
+				break
+			}
+		}
+	}
+	rs.FlavorMatches = matched
+	if rs.FlavorMatches == nil {
+		rs.FlavorMatches = []string{}
+	}
+	rs.FlavorPoints = len(matched) * pointsFlavor
 	rs.Points += rs.FlavorPoints
+
+	if wine.Price > 0 {
+		priceDiff := int(math.Abs(float64(g.Price - wine.Price)))
+		switch {
+		case priceDiff == 0:
+			rs.PricePoints = pointsPriceExact
+		case priceDiff <= priceTier1:
+			rs.PricePoints = pointsPriceMid
+		case priceDiff <= priceTier2:
+			rs.PricePoints = pointsPriceFar
+		}
+		rs.Points += rs.PricePoints
+	}
 
 	return rs
 }

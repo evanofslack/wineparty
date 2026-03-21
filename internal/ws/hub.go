@@ -166,6 +166,7 @@ func (h *Hub) handleGuess(c *Client, raw json.RawMessage) {
 		Country:  p.Country,
 		Region:   p.Region,
 		Year:     p.Year,
+		Price:    p.Price,
 		Flavors:  p.Flavors,
 		Rating:   p.Rating,
 	}
@@ -265,6 +266,8 @@ func (h *Hub) handleAdminAction(c *Client, raw json.RawMessage) {
 				Region:  w.Region,
 				Year:    w.Year,
 				Hint:    w.Hint,
+				Flavors: w.Flavors,
+				Price:   w.Price,
 			}
 		}
 		h.engine.ResetToLobby(wineConfigs)

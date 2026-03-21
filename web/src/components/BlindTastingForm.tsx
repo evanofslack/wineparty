@@ -25,22 +25,25 @@ const REGIONS = [
 interface Props {
   onSubmit: (guess: GuessPayload) => void
   submitted: boolean
+  yearMin: number
+  yearMax: number
+  priceMin: number
+  priceMax: number
 }
 
-const currentYear = new Date().getFullYear()
-
-export function BlindTastingForm({ onSubmit, submitted }: Props) {
+export function BlindTastingForm({ onSubmit, submitted, yearMin, yearMax, priceMin, priceMax }: Props) {
   const [variety, setVariety] = useState('')
   const [country, setCountry] = useState('')
   const [region, setRegion] = useState('')
-  const [year, setYear] = useState<number>(currentYear - 3)
+  const [year, setYear] = useState<number>(Math.round((yearMin + yearMax) / 2))
+  const [price, setPrice] = useState<number>(Math.round((priceMin + priceMax) / 2 / 5) * 5)
   const [flavors, setFlavors] = useState<string[]>([])
   const [rating, setRating] = useState<number>(5)
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
     if (!variety || !country || !region || !year) return
-    onSubmit({ variety, country, region, year, flavors, rating })
+    onSubmit({ variety, country, region, year, price, flavors, rating })
   }
 
   if (submitted) {
@@ -106,16 +109,34 @@ export function BlindTastingForm({ onSubmit, submitted }: Props) {
         <label className="font-bold text-sm text-ink">Vintage Year: {year}</label>
         <input
           type="range"
-          min={currentYear - 20}
-          max={currentYear}
+          min={yearMin}
+          max={yearMax}
           value={year}
           onChange={(e) => setYear(Number(e.target.value))}
           className="w-full accent-sunny"
         />
         <div className="flex justify-between text-xs text-muted font-semibold">
-          <span>{currentYear - 20}</span>
+          <span>{yearMin}</span>
           <span className="font-black text-sunny text-base">{year}</span>
-          <span>{currentYear}</span>
+          <span>{yearMax}</span>
+        </div>
+      </div>
+
+      <div className="sketch-border-lime bg-lime/10 px-3 py-3 rounded flex flex-col gap-1.5">
+        <label className="font-bold text-sm text-ink">Price Guess: ${price}</label>
+        <input
+          type="range"
+          min={priceMin}
+          max={priceMax}
+          step={5}
+          value={price}
+          onChange={(e) => setPrice(Number(e.target.value))}
+          className="w-full accent-lime"
+        />
+        <div className="flex justify-between text-xs text-muted font-semibold">
+          <span>${priceMin}</span>
+          <span className="font-black text-lime text-base">${price}</span>
+          <span>${priceMax}</span>
         </div>
       </div>
 
