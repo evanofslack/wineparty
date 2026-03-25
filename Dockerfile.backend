@@ -16,6 +16,5 @@ RUN CGO_ENABLED=0 go build -o wineparty .
 FROM alpine:3.19
 WORKDIR /app
 COPY --from=backend /app/wineparty .
-COPY --from=backend /app/config ./config
 EXPOSE 8080
 CMD ["./wineparty"]

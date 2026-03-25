@@ -9,6 +9,7 @@ services:
       PORT: "8080"
       ADMIN_PASSWORD: "${ADMIN_PASSWORD:-wine123}"
       WINES_FILE: "config/wines.yaml"
+      GAMES_FILE: "config/games.yaml"
       STATE_FILE: "/data/state.json"
     volumes:
       - ./config:/app/config:ro
@@ -22,7 +23,7 @@ services:
     ports:
       - "5173:5173"
     environment:
-      VITE_WS_HOST: "localhost:8080"
+      WS_PROXY_TARGET: "ws://backend:8080"
     depends_on:
       - backend
     restart: unless-stopped
