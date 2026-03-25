@@ -9,11 +9,9 @@ interface Props {
 export function DisplayPlayerBar({ players, leaderboard }: Props) {
   const rankMap = new Map(leaderboard.map((e) => [e.playerId, e]))
 
-  const sorted = [...players].sort((a, b) => {
-    const ra = rankMap.get(a.id)?.rank ?? 999
-    const rb = rankMap.get(b.id)?.rank ?? 999
-    return ra - rb
-  })
+  const sorted = [...players].sort((a, b) =>
+    new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime()
+  )
 
   if (sorted.length === 0) return null
 

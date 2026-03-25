@@ -6,7 +6,9 @@ interface Props {
 }
 
 export function PlayerAvatar({ player, size = 48 }: Props) {
-  const cellSize = size / 8
+  const padding = Math.round(size * 0.1)
+  const gridSize = size - padding * 2
+  const cellSize = gridSize / 8
   const avatar = player.avatar && player.avatar.length === 64 ? player.avatar : '0'.repeat(64)
   const color = player.color || '#888888'
 
@@ -19,14 +21,18 @@ export function PlayerAvatar({ player, size = 48 }: Props) {
         overflow: 'hidden',
         border: `3px solid ${color}`,
         flexShrink: 0,
+        backgroundColor: color,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}
     >
       <div
         style={{
           display: 'grid',
           gridTemplateColumns: `repeat(8, ${cellSize}px)`,
-          width: size,
-          height: size,
+          width: gridSize,
+          height: gridSize,
         }}
       >
         {Array.from(avatar).map((cell, i) => (

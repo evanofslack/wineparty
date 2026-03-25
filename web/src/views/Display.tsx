@@ -1,4 +1,3 @@
-import { Leaderboard } from '../components/Leaderboard'
 import { CountdownTimer } from '../components/CountdownTimer'
 import { MiniGameDisplay } from '../components/minigames/MiniGameDisplay'
 import { DisplayPlayerBar } from '../components/DisplayPlayerBar'
@@ -98,32 +97,26 @@ export function DisplayView() {
 
     return (
       <div className="flex flex-col h-screen">
-        <div className="flex-1 relative flex items-center justify-center overflow-auto">
+        <div className="flex-1 flex flex-col items-center justify-center overflow-auto px-8">
           <div className="fixed top-6 left-8">
             <span className="text-2xl font-black text-grape">{APP_NAME}</span>
           </div>
-          <div className="fixed top-6 right-8">
-            <div className="sketch-border-sunny bg-sunny/20 px-5 py-3 text-center">
-              <p className="text-sm font-bold text-muted uppercase tracking-wider">
-                Round {gameState.currentRound + 1} of {gameState.rounds.length}
-              </p>
-              <p className="text-2xl font-black text-ink">{round.wine.name}</p>
-              <p className="text-lg font-bold mt-1">
-                <span className="text-coral font-black">{submitted}</span> / <span className="text-lime font-black">{allPlayers.length}</span> guesses
-              </p>
-              {gameState.timer && gameState.timer.durationSecs > 0 && (
-                <div className="mt-3 border-t border-sunny/40 pt-3">
-                  <CountdownTimer timer={gameState.timer} size="lg" />
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="w-3/5">
-            <div className="sketch-border-sky bg-sky/10 px-6 py-4">
-              <p className="text-sm font-bold text-muted uppercase tracking-wider mb-4">Current Standings</p>
-              <Leaderboard entries={leaderboard} />
-            </div>
+          <div className="sketch-border-sunny bg-sunny/20 px-12 py-10 text-center">
+            <p className="text-base font-bold text-muted uppercase tracking-wider">
+              Round {gameState.currentRound + 1} of {gameState.rounds.length}
+            </p>
+            <p className="text-5xl font-black text-ink mt-2">{round.wine.name}</p>
+            <p className="text-3xl font-bold mt-6">
+              <span className="text-coral font-black">{submitted}</span>
+              <span className="text-muted"> / </span>
+              <span className="text-lime font-black">{allPlayers.length}</span>
+              <span className="text-xl font-bold text-muted ml-3">guesses in</span>
+            </p>
+            {gameState.timer && gameState.timer.durationSecs > 0 && (
+              <div className="mt-6 border-t border-sunny/40 pt-6">
+                <CountdownTimer timer={gameState.timer} size="lg" />
+              </div>
+            )}
           </div>
         </div>
         <DisplayPlayerBar players={allPlayers} leaderboard={leaderboard} />
@@ -137,11 +130,11 @@ export function DisplayView() {
 
     return (
       <div className="flex flex-col h-screen">
-        <div className="flex-1 grid grid-cols-2 gap-8 p-10 overflow-auto">
+        <div className="flex-1 flex flex-col items-center justify-center gap-8 p-10 overflow-auto">
           <div className="fixed top-6 left-8">
             <span className="text-2xl font-black text-grape">{APP_NAME}</span>
           </div>
-          <div className="flex flex-col gap-6 pt-12">
+          <div className="w-full max-w-2xl flex flex-col gap-6">
             <div className="sketch-border-burgundy px-6 py-6" style={{ backgroundColor: 'rgba(114,47,55,0.15)' }}>
               <p className="text-sm font-bold text-muted uppercase tracking-wider">The wine was...</p>
               <h2 className="text-4xl font-black mt-1 text-ink">{round.wine.name}</h2>
@@ -169,13 +162,6 @@ export function DisplayView() {
               )}
             </div>
           </div>
-
-          <div className="flex flex-col pt-12">
-            <div className="sketch-border-lime bg-lime/10 px-4 py-4">
-              <h3 className="text-2xl font-black mb-4">Leaderboard</h3>
-              <Leaderboard entries={gameState.leaderboard} />
-            </div>
-          </div>
         </div>
         <DisplayPlayerBar players={allPlayers} leaderboard={leaderboard} />
       </div>
@@ -189,8 +175,8 @@ export function DisplayView() {
 
     return (
       <div className="flex flex-col h-screen">
-        <div className="flex-1 flex flex-col p-10 gap-8 overflow-auto">
-          <div className="sketch-border-lg bg-sunny/30 px-8 py-6 text-center w-full">
+        <div className="flex-1 flex flex-col items-center p-10 gap-8 overflow-auto">
+          <div className="sketch-border-lg bg-sunny/30 px-8 py-6 text-center w-full max-w-2xl">
             <div className="text-6xl mb-2">🏆</div>
             <h1 className="text-5xl font-black">
               {winner ? `${winner.playerName} wins!` : 'Game Over!'}
@@ -198,56 +184,49 @@ export function DisplayView() {
             {winner && <p className="text-3xl font-black text-grape mt-1">{winner.score} points</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-8 flex-1">
-            <div className="sketch-border-sky bg-sky/10 px-4 py-4">
-              <h3 className="text-2xl font-black mb-4">Final Standings</h3>
-              <Leaderboard entries={gameState.leaderboard} />
-            </div>
-
-            {summary && (
-              <div className="flex flex-col gap-4">
-                {(summary.mostPopular || summary.leastLiked || summary.mostContested) && (
-                  <div className="flex flex-col gap-3">
-                    {summary.mostPopular && (
-                      <div className="sketch-border-lime bg-lime/15 px-4 py-4">
-                        <p className="text-xs font-bold text-muted uppercase tracking-wider mb-1">Most Popular</p>
-                        <p className="font-black text-lg text-ink leading-tight">{summary.mostPopular.wineName} ({summary.mostPopular.wineVariety}) #{summary.mostPopular.roundIndex + 1}</p>
-                        <p className="text-2xl font-black text-grape">{summary.mostPopular.avgRating.toFixed(1)}<span className="text-base font-semibold text-muted">/10</span></p>
-                        <p className="text-xs text-muted font-semibold">±{Math.sqrt(summary.mostPopular.variance).toFixed(2)} · {summary.mostPopular.ratedCount} rating{summary.mostPopular.ratedCount !== 1 ? 's' : ''}</p>
-                      </div>
-                    )}
-                    {summary.leastLiked && summary.leastLiked.wineName !== summary.mostPopular?.wineName && (
-                      <div className="sketch-border-coral bg-coral/15 px-4 py-4">
-                        <p className="text-xs font-bold text-muted uppercase tracking-wider mb-1">Least Liked</p>
-                        <p className="font-black text-lg text-ink leading-tight">{summary.leastLiked.wineName} ({summary.leastLiked.wineVariety}) #{summary.leastLiked.roundIndex + 1}</p>
-                        <p className="text-2xl font-black text-grape">{summary.leastLiked.avgRating.toFixed(1)}<span className="text-base font-semibold text-muted">/10</span></p>
-                        <p className="text-xs text-muted font-semibold">±{Math.sqrt(summary.leastLiked.variance).toFixed(2)} · {summary.leastLiked.ratedCount} rating{summary.leastLiked.ratedCount !== 1 ? 's' : ''}</p>
-                      </div>
-                    )}
-                    {summary.mostContested && (
-                      <div className="sketch-border-sky bg-sky/15 px-4 py-4">
-                        <p className="text-xs font-bold text-muted uppercase tracking-wider mb-1">Most Divisive</p>
-                        <p className="font-black text-lg text-ink leading-tight">{summary.mostContested.wineName} ({summary.mostContested.wineVariety}) #{summary.mostContested.roundIndex + 1}</p>
-                        <p className="text-2xl font-black text-grape">{summary.mostContested.avgRating.toFixed(1)}<span className="text-base font-semibold text-muted">/10</span></p>
-                        <p className="text-xs text-muted font-semibold">±{Math.sqrt(summary.mostContested.variance).toFixed(2)} · {summary.mostContested.ratedCount} rating{summary.mostContested.ratedCount !== 1 ? 's' : ''}</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-                <div className="sketch-border-sky bg-sky/10 px-4 py-4">
-                  <p className="text-sm font-bold text-muted uppercase tracking-wider mb-3">Wine Ratings</p>
-                  {summary.wineRatings.map((wr) => (
-                    <div key={wr.roundIndex} className="flex justify-between items-center py-1.5 border-b last:border-0 border-paper">
-                      <span className="font-semibold">{wr.wineName} ({wr.wineVariety}) #{wr.roundIndex + 1}</span>
-                      <span className="font-black text-grape">
-                        {wr.ratedCount > 0 ? `${wr.avgRating.toFixed(1)}/10` : '—'}
-                      </span>
+          {summary && (
+            <div className="w-full max-w-2xl flex flex-col gap-4">
+              {(summary.mostPopular || summary.leastLiked || summary.mostContested) && (
+                <div className="flex flex-col gap-3">
+                  {summary.mostPopular && (
+                    <div className="sketch-border-lime bg-lime/15 px-4 py-4">
+                      <p className="text-xs font-bold text-muted uppercase tracking-wider mb-1">Most Popular</p>
+                      <p className="font-black text-lg text-ink leading-tight">{summary.mostPopular.wineName} ({summary.mostPopular.wineVariety}) #{summary.mostPopular.roundIndex + 1}</p>
+                      <p className="text-2xl font-black text-grape">{summary.mostPopular.avgRating.toFixed(1)}<span className="text-base font-semibold text-muted">/10</span></p>
+                      <p className="text-xs text-muted font-semibold">±{Math.sqrt(summary.mostPopular.variance).toFixed(2)} · {summary.mostPopular.ratedCount} rating{summary.mostPopular.ratedCount !== 1 ? 's' : ''}</p>
                     </div>
-                  ))}
+                  )}
+                  {summary.leastLiked && summary.leastLiked.wineName !== summary.mostPopular?.wineName && (
+                    <div className="sketch-border-coral bg-coral/15 px-4 py-4">
+                      <p className="text-xs font-bold text-muted uppercase tracking-wider mb-1">Least Liked</p>
+                      <p className="font-black text-lg text-ink leading-tight">{summary.leastLiked.wineName} ({summary.leastLiked.wineVariety}) #{summary.leastLiked.roundIndex + 1}</p>
+                      <p className="text-2xl font-black text-grape">{summary.leastLiked.avgRating.toFixed(1)}<span className="text-base font-semibold text-muted">/10</span></p>
+                      <p className="text-xs text-muted font-semibold">±{Math.sqrt(summary.leastLiked.variance).toFixed(2)} · {summary.leastLiked.ratedCount} rating{summary.leastLiked.ratedCount !== 1 ? 's' : ''}</p>
+                    </div>
+                  )}
+                  {summary.mostContested && (
+                    <div className="sketch-border-sky bg-sky/15 px-4 py-4">
+                      <p className="text-xs font-bold text-muted uppercase tracking-wider mb-1">Most Divisive</p>
+                      <p className="font-black text-lg text-ink leading-tight">{summary.mostContested.wineName} ({summary.mostContested.wineVariety}) #{summary.mostContested.roundIndex + 1}</p>
+                      <p className="text-2xl font-black text-grape">{summary.mostContested.avgRating.toFixed(1)}<span className="text-base font-semibold text-muted">/10</span></p>
+                      <p className="text-xs text-muted font-semibold">±{Math.sqrt(summary.mostContested.variance).toFixed(2)} · {summary.mostContested.ratedCount} rating{summary.mostContested.ratedCount !== 1 ? 's' : ''}</p>
+                    </div>
+                  )}
                 </div>
+              )}
+              <div className="sketch-border-sky bg-sky/10 px-4 py-4">
+                <p className="text-sm font-bold text-muted uppercase tracking-wider mb-3">Wine Ratings</p>
+                {summary.wineRatings.map((wr) => (
+                  <div key={wr.roundIndex} className="flex justify-between items-center py-1.5 border-b last:border-0 border-paper">
+                    <span className="font-semibold">{wr.wineName} ({wr.wineVariety}) #{wr.roundIndex + 1}</span>
+                    <span className="font-black text-grape">
+                      {wr.ratedCount > 0 ? `${wr.avgRating.toFixed(1)}/10` : '—'}
+                    </span>
+                  </div>
+                ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
         <DisplayPlayerBar players={allPlayers} leaderboard={leaderboard} />
       </div>
@@ -258,23 +237,17 @@ export function DisplayView() {
   if (gameState.phase === 'minigame' && gameState.miniGame) {
     return (
       <div className="flex flex-col h-screen">
-        <div className="flex-1 grid grid-cols-2 gap-8 p-10 overflow-auto">
+        <div className="flex-1 flex flex-col items-center justify-center p-10 overflow-auto">
           <div className="fixed top-6 left-8">
             <span className="text-2xl font-black text-grape">{APP_NAME}</span>
           </div>
-          <div className="flex flex-col pt-12">
+          <div className="w-full max-w-2xl flex flex-col pt-12 gap-4">
             <MiniGameDisplay miniGame={gameState.miniGame} players={gameState.players} />
             {gameState.timer && gameState.timer.durationSecs > 0 && (
               <div className="mt-4">
                 <CountdownTimer timer={gameState.timer} size="lg" />
               </div>
             )}
-          </div>
-          <div className="flex flex-col pt-12">
-            <div className="sketch-border-lime bg-lime/10 px-4 py-4">
-              <h3 className="text-2xl font-black mb-4">Leaderboard</h3>
-              <Leaderboard entries={gameState.leaderboard} />
-            </div>
           </div>
         </div>
         <DisplayPlayerBar players={allPlayers} leaderboard={leaderboard} />
@@ -298,14 +271,12 @@ export function DisplayView() {
 
     return (
       <div className="flex flex-col h-screen">
-        <div className="flex-1 grid grid-cols-2 gap-8 p-10 overflow-auto">
+        <div className="flex-1 flex flex-col items-center p-10 overflow-auto">
           <div className="fixed top-6 left-8">
             <span className="text-2xl font-black text-grape">{APP_NAME}</span>
           </div>
-          <div className="flex flex-col pt-12">
+          <div className="w-full max-w-2xl flex flex-col pt-12 gap-6">
             <MiniGameDisplay miniGame={mg} players={gameState.players} resultsMode={true} />
-          </div>
-          <div className="flex flex-col pt-12 gap-6">
             <div className="sketch-border-grape bg-grape/10 px-4 py-4">
               <h3 className="text-2xl font-black mb-4">Mini-Game Scores</h3>
               <div className="flex flex-col gap-2">
@@ -317,10 +288,6 @@ export function DisplayView() {
                   </div>
                 ))}
               </div>
-            </div>
-            <div className="sketch-border-lime bg-lime/10 px-4 py-4">
-              <h3 className="text-2xl font-black mb-4">Leaderboard</h3>
-              <Leaderboard entries={gameState.leaderboard} />
             </div>
           </div>
         </div>

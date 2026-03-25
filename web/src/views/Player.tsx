@@ -119,6 +119,11 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
 
     // Step 2: Color picker
     if (step === 2) {
+      const takenColors = new Set(
+        Object.values(gameState?.players ?? {})
+          .filter((p) => p.id !== playerId && p.color)
+          .map((p) => p.color)
+      )
       return (
         <div className="flex flex-col items-center justify-center min-h-screen px-6 gap-6">
           <h1 className="text-2xl font-black text-ink text-center">Pick your color</h1>
@@ -127,25 +132,30 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
             <p className="text-muted font-semibold">Loading colors...</p>
           ) : (
             <div className="grid grid-cols-4 gap-4 max-w-xs w-full">
-              {colors.map((c) => (
-                <button
-                  key={c.hex}
-                  onClick={() => handleColorNext(c.hex)}
-                  className="flex flex-col items-center gap-1"
-                >
-                  <div
-                    style={{
-                      width: 56,
-                      height: 56,
-                      borderRadius: '50%',
-                      backgroundColor: c.hex,
-                      border: selectedColor === c.hex ? '4px solid #222' : '3px solid transparent',
-                      boxShadow: selectedColor === c.hex ? '0 0 0 2px #fff' : undefined,
-                    }}
-                  />
-                  <span className="text-xs font-bold text-ink">{c.name}</span>
-                </button>
-              ))}
+              {colors.map((c) => {
+                const taken = takenColors.has(c.hex)
+                return (
+                  <button
+                    key={c.hex}
+                    onClick={() => !taken && handleColorNext(c.hex)}
+                    disabled={taken}
+                    className="flex flex-col items-center gap-1"
+                    style={{ opacity: taken ? 0.35 : 1, cursor: taken ? 'not-allowed' : 'pointer' }}
+                  >
+                    <div
+                      style={{
+                        width: 56,
+                        height: 56,
+                        borderRadius: '50%',
+                        backgroundColor: taken ? '#aaaaaa' : c.hex,
+                        border: selectedColor === c.hex ? '4px solid #222' : '3px solid transparent',
+                        boxShadow: selectedColor === c.hex ? '0 0 0 2px #fff' : undefined,
+                      }}
+                    />
+                    <span className="text-xs font-bold text-ink">{c.name}</span>
+                  </button>
+                )
+              })}
             </div>
           )}
           <button
@@ -191,6 +201,9 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
               display: 'grid',
               gridTemplateColumns: 'repeat(8, 36px)',
               gap: 2,
+              padding: 12,
+              backgroundColor: 'rgba(0,0,0,0.04)',
+              borderRadius: 8,
             }}
           >
             {avatarCells.map((cell, i) => (
