@@ -50,15 +50,26 @@ type GamesFile struct {
 	Games []GameConfig `yaml:"games"`
 }
 
+type PlayerColor struct {
+	Name string `yaml:"name"`
+	Hex  string `yaml:"hex"`
+}
+
+type ColorsFile struct {
+	Colors []PlayerColor `yaml:"colors"`
+}
+
 type Config struct {
 	Port          string
 	AdminPassword string
 	WinesFile     string
 	GamesFile     string
+	ColorsFile    string
 	StateFile     string
 	LogDir        string
 	Wines         []Wine
 	Games         []GameConfig
+	Colors        []PlayerColor
 }
 
 func Load() *Config {
@@ -66,6 +77,7 @@ func Load() *Config {
 	adminPass := flag.String("admin-password", envOr("ADMIN_PASSWORD", "wine123"), "Admin password")
 	winesFile := flag.String("wines-file", envOr("WINES_FILE", "config/wines.yaml"), "Path to wines YAML")
 	gamesFile := flag.String("games-file", envOr("GAMES_FILE", "config/games.yaml"), "Path to games YAML")
+	colorsFile := flag.String("colors-file", envOr("COLORS_FILE", "config/colors.yaml"), "Path to colors YAML")
 	stateFile := flag.String("state-file", envOr("STATE_FILE", "state.json"), "Path to state snapshot file")
 	logDir := flag.String("log-dir", envOr("LOG_DIR", "logs"), "Directory for game event logs")
 	flag.Parse()
@@ -75,6 +87,7 @@ func Load() *Config {
 		AdminPassword: *adminPass,
 		WinesFile:     *winesFile,
 		GamesFile:     *gamesFile,
+		ColorsFile:    *colorsFile,
 		StateFile:     *stateFile,
 		LogDir:        *logDir,
 	}
@@ -102,6 +115,18 @@ func Load() *Config {
 		return cfg
 	}
 	cfg.Games = gf.Games
+
+	colorData, err := os.ReadFile(cfg.ColorsFile)
+	if err != nil {
+		slog.Warn("could not read colors file", "path", cfg.ColorsFile, "err", err)
+		return cfg
+	}
+	var cf ColorsFile
+	if err := yaml.Unmarshal(colorData, &cf); err != nil {
+		slog.Warn("could not parse colors file", "err", err)
+		return cfg
+	}
+	cfg.Colors = cf.Colors
 	return cfg
 }
 

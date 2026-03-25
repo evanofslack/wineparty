@@ -87,6 +87,11 @@ const (
 	RoleAdmin  Role = "admin"
 )
 
+type PlayerColor struct {
+	Name string `json:"name"`
+	Hex  string `json:"hex"`
+}
+
 type Player struct {
 	ID            string    `json:"id"`
 	Name          string    `json:"name"`
@@ -95,6 +100,8 @@ type Player struct {
 	JoinedAt      time.Time `json:"joinedAt"`
 	TotalScore    int       `json:"totalScore"`
 	MiniGameScore int       `json:"miniGameScore"`
+	Color         string    `json:"color"`
+	Avatar        string    `json:"avatar"`
 }
 
 type FlavorNote string
@@ -205,6 +212,7 @@ type GameState struct {
 	MiniGameSchedule []int                      `json:"miniGameSchedule"`
 	MiniGameConfigs  []MiniGameConfig           `json:"miniGameConfigs"`
 	MiniGame         *MiniGameState             `json:"miniGame,omitempty"`
+	Colors           []PlayerColor              `json:"colors"`
 }
 
 func NewGameState(wines []WineConfig) *GameState {

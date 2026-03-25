@@ -66,15 +66,21 @@ func main() {
 
 	miniGameSchedule := computeMiniGameSchedule(len(wines), len(miniGameConfigs))
 
+	playerColors := make([]game.PlayerColor, len(cfg.Colors))
+	for i, c := range cfg.Colors {
+		playerColors[i] = game.PlayerColor{Name: c.Name, Hex: c.Hex}
+	}
+
 	repo := repository.NewMemoryRepo(wines, cfg.StateFile)
 	state := repo.GetState()
 	if state.MiniGameSchedule == nil {
 		state.MiniGameSchedule = miniGameSchedule
 		state.MiniGameConfigs = miniGameConfigs
 	}
+	state.Colors = playerColors
 
 	eng := game.NewEngine(state)
-	hub := ws.NewHub(repo, eng, cfg.AdminPassword, wines, cfg.LogDir, miniGameSchedule, miniGameConfigs)
+	hub := ws.NewHub(repo, eng, cfg.AdminPassword, wines, playerColors, cfg.LogDir, miniGameSchedule, miniGameConfigs)
 	go hub.Run()
 
 	r := chi.NewRouter()

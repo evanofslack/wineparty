@@ -30,7 +30,7 @@ func (e *Engine) State() *GameState {
 	return e.state
 }
 
-func (e *Engine) AddPlayer(id, name string, role Role) (*Player, error) {
+func (e *Engine) AddPlayer(id, name, color, avatar string, role Role) (*Player, error) {
 	if p, exists := e.state.Players[id]; exists {
 		p.Connected = true
 		if name != "" {
@@ -45,6 +45,8 @@ func (e *Engine) AddPlayer(id, name string, role Role) (*Player, error) {
 		ID:        id,
 		Name:      name,
 		Role:      role,
+		Color:     color,
+		Avatar:    avatar,
 		Connected: true,
 		JoinedAt:  time.Now(),
 	}

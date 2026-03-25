@@ -44,9 +44,11 @@ type Envelope struct {
 
 // JoinPayload is sent by a client to join the game.
 type JoinPayload struct {
-	PlayerID string    `json:"playerId"`
-	Name     string    `json:"name"`
-	Password string    `json:"password,omitempty"` // set to claim admin role
+	PlayerID string `json:"playerId"`
+	Name     string `json:"name"`
+	Password string `json:"password,omitempty"` // set to claim admin role
+	Color    string `json:"color,omitempty"`
+	Avatar   string `json:"avatar,omitempty"`
 }
 
 // ErrorPayload carries an error message to the client.

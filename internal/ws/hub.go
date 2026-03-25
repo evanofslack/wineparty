@@ -28,6 +28,7 @@ type Hub struct {
 	engine           *game.Engine
 	adminPass        string
 	wines            []game.WineConfig
+	colors           []game.PlayerColor
 	logDir           string
 	eventLog         *eventlog.EventLog
 	miniGameSchedule []int
@@ -38,7 +39,7 @@ func (h *Hub) RegisterClient(c *Client) {
 	h.register <- c
 }
 
-func NewHub(repo repository.Repository, engine *game.Engine, adminPass string, wines []game.WineConfig, logDir string, miniGameSchedule []int, miniGameConfigs []game.MiniGameConfig) *Hub {
+func NewHub(repo repository.Repository, engine *game.Engine, adminPass string, wines []game.WineConfig, colors []game.PlayerColor, logDir string, miniGameSchedule []int, miniGameConfigs []game.MiniGameConfig) *Hub {
 	return &Hub{
 		clients:          make(map[*Client]struct{}),
 		register:         make(chan *Client, 16),
@@ -49,6 +50,7 @@ func NewHub(repo repository.Repository, engine *game.Engine, adminPass string, w
 		engine:           engine,
 		adminPass:        adminPass,
 		wines:            wines,
+		colors:           colors,
 		logDir:           logDir,
 		miniGameSchedule: miniGameSchedule,
 		miniGameConfigs:  miniGameConfigs,
@@ -136,7 +138,7 @@ func (h *Hub) handleJoin(c *Client, raw json.RawMessage) {
 	}
 
 	_, isReconnect := h.repo.GetState().Players[p.PlayerID]
-	player, _ := h.engine.AddPlayer(p.PlayerID, p.Name, role)
+	player, _ := h.engine.AddPlayer(p.PlayerID, p.Name, p.Color, p.Avatar, role)
 	c.PlayerID = player.ID
 	h.repo.SaveState()
 	slog.Info("player joined", "id", player.ID, "name", player.Name, "role", player.Role)
@@ -275,6 +277,7 @@ func (h *Hub) handleAdminAction(c *Client, raw json.RawMessage) {
 		state := h.engine.State()
 		state.MiniGameSchedule = h.miniGameSchedule
 		state.MiniGameConfigs = h.miniGameConfigs
+		state.Colors = h.colors
 		h.eventLog.Close()
 		h.eventLog = nil
 	case ActionEndMiniGame:

@@ -36,6 +36,11 @@ export type Phase =
 
 export type Role = 'player' | 'admin'
 
+export interface PlayerColor {
+  name: string
+  hex: string
+}
+
 export interface Player {
   id: string
   name: string
@@ -44,6 +49,8 @@ export interface Player {
   joinedAt: string
   totalScore: number
   miniGameScore: number
+  color: string
+  avatar: string
 }
 
 export interface FlavorNote extends String {}
@@ -208,6 +215,7 @@ export interface GameState {
   miniGameSchedule: number[]
   miniGameConfigs: MiniGameConfig[]
   miniGame?: MiniGameState
+  colors: PlayerColor[]
 }
 
 export interface Envelope<T = unknown> {
@@ -219,6 +227,8 @@ export interface JoinPayload {
   playerId: string
   name: string
   password?: string
+  color?: string
+  avatar?: string
 }
 
 export interface GuessPayload {

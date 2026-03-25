@@ -47,7 +47,7 @@ func TestStartGameWrongPhase(t *testing.T) {
 func TestSubmitGuess(t *testing.T) {
 	e := newTestEngine()
 	e.StartGame()
-	e.AddPlayer("p1", "Alice", RolePlayer)
+	e.AddPlayer("p1", "Alice", "", "", RolePlayer)
 
 	g := Guess{PlayerID: "p1", Variety: "Cabernet Sauvignon", Region: "Napa", Year: 2020}
 	if err := e.SubmitGuess(g); err != nil {
@@ -61,7 +61,7 @@ func TestSubmitGuess(t *testing.T) {
 func TestDuplicateGuessRejected(t *testing.T) {
 	e := newTestEngine()
 	e.StartGame()
-	e.AddPlayer("p1", "Alice", RolePlayer)
+	e.AddPlayer("p1", "Alice", "", "", RolePlayer)
 
 	g := Guess{PlayerID: "p1", Variety: "Chardonnay", Region: "Napa", Year: 2020}
 	e.SubmitGuess(g)
@@ -74,7 +74,7 @@ func TestDuplicateGuessRejected(t *testing.T) {
 func TestTooManyFlavors(t *testing.T) {
 	e := newTestEngine()
 	e.StartGame()
-	e.AddPlayer("p1", "Alice", RolePlayer)
+	e.AddPlayer("p1", "Alice", "", "", RolePlayer)
 
 	g := Guess{
 		PlayerID: "p1",
@@ -89,7 +89,7 @@ func TestTooManyFlavors(t *testing.T) {
 func TestCloseGuessing(t *testing.T) {
 	e := newTestEngine()
 	e.StartGame()
-	e.AddPlayer("p1", "Alice", RolePlayer)
+	e.AddPlayer("p1", "Alice", "", "", RolePlayer)
 	e.SubmitGuess(Guess{PlayerID: "p1", Variety: "Cabernet Sauvignon", Region: "Napa", Year: 2020})
 
 	if err := e.CloseGuessing(); err != nil {
@@ -133,12 +133,12 @@ func TestGameComplete(t *testing.T) {
 
 func TestReconnect(t *testing.T) {
 	e := newTestEngine()
-	e.AddPlayer("p1", "Alice", RolePlayer)
+	e.AddPlayer("p1", "Alice", "", "", RolePlayer)
 	e.SetPlayerDisconnected("p1")
 	if e.State().Players["p1"].Connected {
 		t.Fatal("should be disconnected")
 	}
-	e.AddPlayer("p1", "Alice", RolePlayer)
+	e.AddPlayer("p1", "Alice", "", "", RolePlayer)
 	if !e.State().Players["p1"].Connected {
 		t.Fatal("should be reconnected")
 	}
@@ -146,7 +146,7 @@ func TestReconnect(t *testing.T) {
 
 func TestSetPlayerScore(t *testing.T) {
 	e := newTestEngine()
-	e.AddPlayer("p1", "Alice", RolePlayer)
+	e.AddPlayer("p1", "Alice", "", "", RolePlayer)
 	if err := e.SetPlayerScore("p1", 42); err != nil {
 		t.Fatal(err)
 	}

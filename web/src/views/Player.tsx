@@ -4,14 +4,17 @@ import { Leaderboard } from '../components/Leaderboard'
 import { TriviaGame } from '../components/minigames/TriviaGame'
 import { WordleGame } from '../components/minigames/WordleGame'
 import { ConnectionsGame } from '../components/minigames/ConnectionsGame'
+import { PlayerAvatar } from '../components/PlayerAvatar'
 import { useGameStore } from '../store/gameStore'
-import type { GuessPayload, MiniGameAnswerPayload } from '../types/game'
+import type { JoinPayload, GuessPayload, MiniGameAnswerPayload } from '../types/game'
+
+const MAX_PAINTED = 32
 
 interface Props {
   playerId: string
   playerName: string
   setPlayerName: (name: string) => void
-  sendJoin: (payload: { playerId: string; name: string; password?: string }) => void
+  sendJoin: (payload: JoinPayload) => void
   sendGuess: (payload: GuessPayload) => void
   sendMiniGameAnswer: (payload: MiniGameAnswerPayload) => void
 }
@@ -23,6 +26,11 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
   const [hasJoined, setHasJoined] = useState(false)
   const [submittedRound, setSubmittedRound] = useState<number | null>(null)
 
+  // Join wizard state
+  const [step, setStep] = useState<1 | 2 | 3>(1)
+  const [selectedColor, setSelectedColor] = useState('')
+  const [avatarCells, setAvatarCells] = useState<number[]>(() => Array(64).fill(0))
+
   useEffect(() => {
     setSubmittedRound(null)
   }, [gameState?.startedAt])
@@ -31,18 +39,45 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
   const currentRound = gameState ? gameState.rounds[gameState.currentRound] : null
   const myGuess = currentRound?.guesses.find((g) => g.playerId === playerId)
   const myScore = currentRound?.scores.find((s) => s.playerId === playerId)
+  const colors = gameState?.colors ?? []
 
-  function handleJoin(e: React.FormEvent) {
+  const paintedCount = avatarCells.filter((c) => c !== 0).length
+
+  function handleNameNext(e: React.FormEvent) {
     e.preventDefault()
     if (!nameInput.trim()) return
     setPlayerName(nameInput.trim())
-    sendJoin({ playerId, name: nameInput.trim() })
-    setHasJoined(true)
+    setStep(2)
   }
 
-  function handleGuess(payload: GuessPayload) {
-    sendGuess(payload)
-    setSubmittedRound(gameState?.currentRound ?? null)
+  function handleColorNext(hex: string) {
+    setSelectedColor(hex)
+    setStep(3)
+  }
+
+  function toggleCell(i: number) {
+    setAvatarCells((prev) => {
+      const next = [...prev]
+      if (prev[i] === 0) {
+        if (paintedCount >= MAX_PAINTED) return prev
+        next[i] = 1
+      } else if (prev[i] === 1) {
+        next[i] = 2
+      } else {
+        next[i] = 0
+      }
+      return next
+    })
+  }
+
+  function handleJoinConfirm() {
+    sendJoin({
+      playerId,
+      name: nameInput.trim(),
+      color: selectedColor,
+      avatar: avatarCells.join(''),
+    })
+    setHasJoined(true)
   }
 
   if (!connected) {
@@ -54,29 +89,148 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
     )
   }
 
-  // Name entry / join screen
+  // Join wizard
   if (!hasJoined || !me) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen px-6 gap-6">
-        <div className="text-6xl">🍷</div>
-        <h1 className="text-3xl font-black text-ink text-center">Wine Party!</h1>
-        <form onSubmit={handleJoin} className="w-full max-w-xs flex flex-col gap-4">
-          <input
-            type="text"
-            placeholder="Your name"
-            value={nameInput}
-            onChange={(e) => setNameInput(e.target.value)}
-            className="sketch-border px-4 py-4 text-lg font-bold bg-white w-full"
-            maxLength={24}
-            autoFocus
-          />
-          <button type="submit" className="btn-sketch bg-coral text-white text-lg w-full">
-            Join Game 🎉
+    // Step 1: Name
+    if (step === 1) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-screen px-6 gap-6">
+          <div className="text-6xl">🍷</div>
+          <h1 className="text-3xl font-black text-ink text-center">Wine Party!</h1>
+          <p className="text-sm font-bold text-muted uppercase tracking-wider">Step 1 of 3 — Your name</p>
+          <form onSubmit={handleNameNext} className="w-full max-w-xs flex flex-col gap-4">
+            <input
+              type="text"
+              placeholder="Your name"
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              className="sketch-border px-4 py-4 text-lg font-bold bg-white w-full"
+              maxLength={24}
+              autoFocus
+            />
+            <button type="submit" className="btn-sketch bg-coral text-white text-lg w-full">
+              Next
+            </button>
+          </form>
+          {error && <p className="text-coral font-bold text-center">{error}</p>}
+        </div>
+      )
+    }
+
+    // Step 2: Color picker
+    if (step === 2) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-screen px-6 gap-6">
+          <h1 className="text-2xl font-black text-ink text-center">Pick your color</h1>
+          <p className="text-sm font-bold text-muted uppercase tracking-wider">Step 2 of 3 — Choose a color</p>
+          {colors.length === 0 ? (
+            <p className="text-muted font-semibold">Loading colors...</p>
+          ) : (
+            <div className="grid grid-cols-4 gap-4 max-w-xs w-full">
+              {colors.map((c) => (
+                <button
+                  key={c.hex}
+                  onClick={() => handleColorNext(c.hex)}
+                  className="flex flex-col items-center gap-1"
+                >
+                  <div
+                    style={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: '50%',
+                      backgroundColor: c.hex,
+                      border: selectedColor === c.hex ? '4px solid #222' : '3px solid transparent',
+                      boxShadow: selectedColor === c.hex ? '0 0 0 2px #fff' : undefined,
+                    }}
+                  />
+                  <span className="text-xs font-bold text-ink">{c.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          <button
+            onClick={() => setStep(1)}
+            className="text-sm font-bold text-muted underline"
+          >
+            Back
           </button>
-        </form>
-        {error && <p className="text-coral font-bold text-center">{error}</p>}
-      </div>
-    )
+        </div>
+      )
+    }
+
+    // Step 3: Pixel editor
+    if (step === 3) {
+      const previewPlayer = {
+        id: playerId,
+        name: nameInput,
+        color: selectedColor,
+        avatar: avatarCells.join(''),
+        role: 'player' as const,
+        connected: true,
+        joinedAt: '',
+        totalScore: 0,
+        miniGameScore: 0,
+      }
+      return (
+        <div className="flex flex-col items-center justify-center min-h-screen px-6 gap-4">
+          <h1 className="text-2xl font-black text-ink text-center">Design your avatar</h1>
+          <p className="text-sm font-bold text-muted uppercase tracking-wider">Step 3 of 3 — Pixel art</p>
+          <p className="text-sm font-semibold text-muted text-center">
+            Tap to cycle: color → dark → white. <span className="font-black text-ink">{paintedCount}/{MAX_PAINTED}</span> squares used.
+          </p>
+
+          {/* Preview */}
+          <div className="flex flex-col items-center gap-2">
+            <PlayerAvatar player={previewPlayer} size={80} />
+            <span className="text-sm font-bold text-muted">Preview</span>
+          </div>
+
+          {/* 8x8 grid */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(8, 36px)',
+              gap: 2,
+            }}
+          >
+            {avatarCells.map((cell, i) => (
+              <button
+                key={i}
+                onClick={() => toggleCell(i)}
+                style={{
+                  width: 36,
+                  height: 36,
+                  backgroundColor:
+                    cell === 1 ? '#333333' :
+                    cell === 2 ? '#ffffff' :
+                    selectedColor,
+                  border: '1.5px solid rgba(0,0,0,0.15)',
+                  borderRadius: 2,
+                }}
+              />
+            ))}
+          </div>
+
+          <div className="flex gap-3 mt-2">
+            <button
+              onClick={() => setStep(2)}
+              className="text-sm font-bold text-muted underline"
+            >
+              Back
+            </button>
+            <button
+              onClick={handleJoinConfirm}
+              className="btn-sketch bg-coral text-white text-lg px-8"
+            >
+              Join Game
+            </button>
+          </div>
+          {error && <p className="text-coral font-bold text-center">{error}</p>}
+        </div>
+      )
+    }
+
+    return null
   }
 
   // Lobby
@@ -108,6 +262,12 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
     const rawMax = prices.length > 0 ? Math.max(...prices) : 100
     const priceMin = Math.floor((rawMin * 0.8) / 5) * 5
     const priceMax = Math.ceil((rawMax * 1.2) / 5) * 5
+
+    function handleGuess(payload: GuessPayload) {
+      sendGuess(payload)
+      setSubmittedRound(gameState?.currentRound ?? null)
+    }
+
     return (
       <div className="flex flex-col min-h-screen px-4 pt-6 pb-10 max-w-md mx-auto">
         <div className="flex justify-between items-center mb-4">
@@ -137,7 +297,6 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
       <div className="flex flex-col min-h-screen px-4 pt-6 pb-10 max-w-md mx-auto">
         <h2 className="text-2xl font-black mb-4 text-center">Results! 🎉</h2>
 
-        {/* The wine reveal */}
         <div className="sketch-border-burgundy px-4 py-4 mb-4" style={{ backgroundColor: 'rgba(114,47,55,0.15)' }}>
           <p className="text-sm font-bold text-muted">The wine was...</p>
           <p className="text-xl font-black text-ink">{currentRound.wine.name}</p>
@@ -145,7 +304,6 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
           <p className="font-semibold text-muted">{currentRound.wine.country} · {currentRound.wine.region}, {currentRound.wine.year}</p>
         </div>
 
-        {/* My score diff */}
         {myScore && myGuess && (
           <div className="mb-4">
             <div className="flex items-baseline gap-3 mb-3">
@@ -203,7 +361,6 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
                   </span>
                 </div>
               ))}
-              {/* Flavors row */}
               <div className={`border-t border-ink/10 px-3 py-2 ${myScore.flavorPoints > 0 ? 'bg-lime/10' : ''}`}>
                 <div className="grid grid-cols-[auto_1fr_1fr_auto] gap-2 items-start">
                   <span className="text-xs font-bold text-muted w-14">Flavors</span>
