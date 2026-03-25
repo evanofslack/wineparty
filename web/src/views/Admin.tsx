@@ -9,10 +9,20 @@ import type { AdminActionPayload } from '../types/game'
 const ADMIN_ID_KEY = 'wineparty_admin_id'
 const ADMIN_PW_KEY = 'wineparty_admin_password'
 
+function generateId(): string {
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID()
+  return Array.from(crypto.getRandomValues(new Uint8Array(16)))
+    .map((b, i) => {
+      const hex = b.toString(16).padStart(2, '0')
+      return [4, 6, 8, 10].includes(i) ? '-' + hex : hex
+    })
+    .join('')
+}
+
 function getOrCreateAdminId(): string {
   let id = localStorage.getItem(ADMIN_ID_KEY)
   if (!id) {
-    id = crypto.randomUUID()
+    id = generateId()
     localStorage.setItem(ADMIN_ID_KEY, id)
   }
   return id

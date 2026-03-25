@@ -1,7 +1,13 @@
 import { useState } from 'react'
 
 function generateId(): string {
-  return crypto.randomUUID()
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID()
+  return Array.from(crypto.getRandomValues(new Uint8Array(16)))
+    .map((b, i) => {
+      const hex = b.toString(16).padStart(2, '0')
+      return [4, 6, 8, 10].includes(i) ? '-' + hex : hex
+    })
+    .join('')
 }
 
 export function useIdentity() {
