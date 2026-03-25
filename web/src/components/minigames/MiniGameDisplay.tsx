@@ -27,6 +27,39 @@ export function MiniGameDisplay({ miniGame, players, resultsMode = false }: Prop
         ).length
       : 0
 
+    if (resultsMode) {
+      return (
+        <div className="flex flex-col gap-4 w-full">
+          <p className="text-xl font-black text-center">Trivia Summary</p>
+          {questions.map((qq, qi) => (
+            <div key={qi} className="sketch-border bg-white px-4 py-3">
+              <p className="text-xs font-bold text-muted uppercase tracking-wider mb-1">
+                Q{qi + 1} · {qq.points} pts
+              </p>
+              <p className="font-black text-ink mb-1">{qq.text}</p>
+              <p className="text-xs font-semibold text-lime-700 mb-2">✓ {qq.answer}</p>
+              <div className="flex flex-wrap gap-1">
+                {playerList.map((p) => {
+                  const ps = miniGame.triviaStates?.[p.id]
+                  const idx = ps?.answers?.[qi] ?? -1
+                  const answered = idx !== -1
+                  const correct = answered && qq.options[idx]?.toLowerCase().trim() === qq.answer.toLowerCase().trim()
+                  return (
+                    <span
+                      key={p.id}
+                      className={`text-xs font-bold px-2 py-0.5 ${correct ? 'bg-lime text-ink' : answered ? 'bg-coral text-white' : 'bg-paper text-muted'}`}
+                    >
+                      {p.name}
+                    </span>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )
+    }
+
     return (
       <div className="flex flex-col gap-6 w-full">
         <div className="sketch-border-sky bg-sky/10 px-6 py-6 text-center">
@@ -39,7 +72,7 @@ export function MiniGameDisplay({ miniGame, players, resultsMode = false }: Prop
               <div className="grid grid-cols-2 gap-3">
                 {q.options.map((opt, i) => {
                   const isCorrect = opt.toLowerCase().trim() === q.answer.toLowerCase().trim()
-                  const highlight = resultsMode && isCorrect
+                  const highlight = miniGame.answerRevealed && isCorrect
                   return (
                     <div
                       key={i}
@@ -60,6 +93,30 @@ export function MiniGameDisplay({ miniGame, players, resultsMode = false }: Prop
             <span className="text-grape font-black">{totalAnswered}</span> / {playerList.length} answered
           </p>
         </div>
+        {miniGame.answerRevealed && q && (
+          <div className="flex flex-col gap-1 mt-2">
+            {playerList.map((p) => {
+              const ps = miniGame.triviaStates?.[p.id]
+              const idx = ps?.answers?.[miniGame.currentQuestion] ?? -1
+              const answered = idx !== -1
+              const correct = answered && q.options[idx]?.toLowerCase().trim() === q.answer.toLowerCase().trim()
+              return (
+                <div
+                  key={p.id}
+                  className={`flex items-center gap-2 px-3 py-1 text-sm font-semibold ${
+                    correct ? 'bg-lime/30' : answered ? 'bg-coral/20' : 'bg-paper'
+                  }`}
+                >
+                  <span className="font-black">{correct ? '✓' : answered ? '✗' : '—'}</span>
+                  <span>{p.name}</span>
+                  {answered && !correct && (
+                    <span className="text-xs text-muted ml-auto">{q.options[idx]}</span>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
     )
   }

@@ -34,6 +34,14 @@ export function Leaderboard({ entries, highlightId }: Props) {
     prevScores.current = scores
   }, [entries])
 
+  useEffect(() => {
+    function onHide() {
+      if (document.hidden) setAnimating(new Set())
+    }
+    document.addEventListener('visibilitychange', onHide)
+    return () => document.removeEventListener('visibilitychange', onHide)
+  }, [])
+
   if (entries.length === 0) {
     return <p className="text-center text-muted font-semibold">No players yet</p>
   }

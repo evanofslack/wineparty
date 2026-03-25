@@ -2,6 +2,7 @@ package ws
 
 import (
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"sync"
 	"time"
@@ -314,7 +315,10 @@ func (h *Hub) handleMiniGameAnswer(c *Client, raw json.RawMessage) {
 	}
 	if err := h.engine.SubmitMiniGameAnswer(c.PlayerID, ans); err != nil {
 		c.sendEnvelope(MsgError, ErrorPayload{Message: err.Error()})
-		return
+		if !errors.Is(err, game.ErrInvalidAnswer) {
+			return
+		}
+		// ErrInvalidAnswer from connections mutates state (counters); fall through to broadcast
 	}
 	h.repo.SaveState()
 	h.broadcastState()

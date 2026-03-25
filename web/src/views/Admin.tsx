@@ -257,10 +257,10 @@ export function AdminView({ sendJoin, sendAdminAction }: Props) {
             </div>
           )}
 
-          {/* Timer controls — guessing phase only */}
-          {gameState.phase === 'guessing' && (
+          {/* Timer controls — guessing and minigame phases */}
+          {(gameState.phase === 'guessing' || gameState.phase === 'minigame') && (
             <div className="sketch-border-sunny bg-sunny/10 px-4 py-4">
-              <p className="font-black text-lg mb-3">Round Timer</p>
+              <p className="font-black text-lg mb-3">Timer</p>
 
               {timer && timer.durationSecs > 0 ? (
                 <div className="flex flex-col items-center gap-3">
