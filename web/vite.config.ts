@@ -8,7 +8,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       "/ws": {
-        target: process.env.WS_PROXY_TARGET || "ws://localhost:8080",
+        target: "ws://localhost:8080",
         ws: true,
       },
     },

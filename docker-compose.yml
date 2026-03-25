@@ -16,17 +16,6 @@ services:
       - wineparty-data:/data
     restart: unless-stopped
 
-  frontend:
-    build:
-      context: ./web
-      dockerfile: Dockerfile.frontend
-    ports:
-      - "5173:5173"
-    environment:
-      WS_PROXY_TARGET: "ws://backend:8080"
-    depends_on:
-      - backend
-    restart: unless-stopped
 
 volumes:
   wineparty-data:
