@@ -72,11 +72,11 @@ export function DisplayView() {
                 <p className="font-black text-3xl mb-6 text-ink">
                   Players ({allPlayers.length})
                 </p>
-                <ul className="flex flex-col gap-3 overflow-hidden">
+                <ul className="flex flex-col gap-2 overflow-hidden">
                   {allPlayers.map((p) => (
-                    <li key={p.id} className="flex items-center gap-4 px-4 py-3 sketch-border bg-white/80">
+                    <li key={p.id} className="flex items-center gap-4 px-4 py-2 sketch-border bg-white/80">
                       <span className={`w-3 h-3 rounded-full shrink-0 ${p.connected ? 'bg-lime' : 'bg-muted/40'}`} />
-                      <PlayerAvatar player={p} size={48} />
+                      <PlayerAvatar player={p} size={40} />
                       <span className="text-xl font-bold text-ink truncate">{p.name}</span>
                     </li>
                   ))}
@@ -151,7 +151,7 @@ export function DisplayView() {
 
           <div className="flex flex-col p-12 overflow-hidden">
             <p className="font-black text-2xl uppercase tracking-wider text-muted mb-6">Round Scores</p>
-            <div className="flex flex-col gap-3 overflow-hidden">
+            <div className="flex flex-col gap-2 overflow-hidden">
               {round.scores.length === 0 && (
                 <p className="text-muted text-xl font-semibold">No guesses submitted</p>
               )}
@@ -161,8 +161,8 @@ export function DisplayView() {
                 .map((s) => {
                   const player = gameState.players[s.playerId]
                   return (
-                    <div key={s.playerId} className="flex items-center gap-4 px-5 py-4 sketch-border bg-white">
-                      {player && <PlayerAvatar player={player} size={44} />}
+                    <div key={s.playerId} className="flex items-center gap-4 px-5 py-3 sketch-border bg-white">
+                      {player && <PlayerAvatar player={player} size={40} />}
                       <span className="flex-1 font-bold text-2xl text-ink truncate">{player?.name ?? s.playerId}</span>
                       <span className="font-black text-3xl text-ink">+{s.points}</span>
                     </div>
@@ -186,23 +186,23 @@ export function DisplayView() {
       <div className="flex flex-col h-screen overflow-hidden">
         <div className="flex-1 grid grid-cols-2 min-h-0">
           <div className="flex flex-col p-10 gap-5 overflow-hidden border-r border-ink/10">
-            <div className="sketch-border-sunny bg-sunny/30 px-8 py-6 text-center flex flex-col items-center gap-3 shrink-0">
+            <div className="sketch-border-sunny bg-sunny/30 px-8 py-5 text-center flex flex-col items-center gap-3 shrink-0">
               <div className="text-5xl">🏆</div>
-              {winnerPlayer && <PlayerAvatar player={winnerPlayer} size={100} />}
+              {winnerPlayer && <PlayerAvatar player={winnerPlayer} size={80} />}
               <h1 className="text-5xl font-black leading-tight">
                 {winner ? `${winner.playerName} wins!` : 'Game Over!'}
               </h1>
               {winner && <p className="text-4xl font-black text-grape">{winner.score} pts</p>}
             </div>
 
-            <div className="flex flex-col gap-2 overflow-hidden flex-1 min-h-0">
+            <div className="flex flex-col gap-1 overflow-hidden flex-1 min-h-0">
               {gameState.leaderboard.map((e) => {
                 const p = gameState.players[e.playerId]
                 const rankLabel = e.rank <= 3 ? ['🥇', '🥈', '🥉'][e.rank - 1] : `#${e.rank}`
                 return (
-                  <div key={e.playerId} className="flex items-center gap-3 px-4 py-3 sketch-border bg-white shrink-0">
+                  <div key={e.playerId} className="flex items-center gap-3 px-4 py-2 sketch-border bg-white shrink-0">
                     <span className="text-2xl w-10 text-center font-black shrink-0">{rankLabel}</span>
-                    {p && <PlayerAvatar player={p} size={36} />}
+                    {p && <PlayerAvatar player={p} size={32} />}
                     <span className="flex-1 font-bold text-xl text-ink truncate">{e.playerName}</span>
                     <span className="font-black text-2xl text-grape tabular-nums">{e.score}</span>
                   </div>
@@ -303,13 +303,13 @@ export function DisplayView() {
 
           <div className="flex flex-col p-10 overflow-hidden">
             <h3 className="text-2xl font-black mb-6 uppercase tracking-wider text-muted">Mini-Game Scores</h3>
-            <div className="flex flex-col gap-3 overflow-hidden">
+            <div className="flex flex-col gap-2 overflow-hidden">
               {miniGameScores.map((s, i) => {
                 const rankLabel = i < 3 ? ['🥇', '🥈', '🥉'][i] : `#${i + 1}`
                 return (
-                  <div key={s.player.id} className="flex items-center gap-4 px-5 py-4 sketch-border bg-white">
+                  <div key={s.player.id} className="flex items-center gap-4 px-5 py-3 sketch-border bg-white">
                     <span className="text-2xl w-10 text-center font-black shrink-0 text-muted">{rankLabel}</span>
-                    <PlayerAvatar player={s.player} size={44} />
+                    <PlayerAvatar player={s.player} size={40} />
                     <span className="flex-1 font-bold text-2xl text-ink truncate">{s.player.name}</span>
                     <span className="font-black text-3xl text-grape tabular-nums">{s.pts} pts</span>
                   </div>
