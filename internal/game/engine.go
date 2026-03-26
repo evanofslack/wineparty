@@ -156,6 +156,8 @@ func (e *Engine) NextRound() error {
 	if e.state.Phase != PhaseScoring {
 		return ErrWrongPhase
 	}
+	e.PauseTimer()
+	e.ResetTimer()
 	next := e.state.CurrentRound + 1
 	if next >= len(e.state.Rounds) {
 		now := time.Now()
@@ -182,6 +184,16 @@ func (e *Engine) EndMiniGame() error {
 	if e.state.Phase != PhaseMiniGame {
 		return ErrWrongPhase
 	}
+	if ms := e.state.MiniGame; ms != nil && ms.Config.Type == "wordle" {
+		for playerID, ps := range ms.WordleStates {
+			if ps.Points > 0 {
+				if p, ok := e.state.Players[playerID]; ok {
+					p.MiniGameScore += ps.Points
+				}
+			}
+		}
+		e.state.Leaderboard = BuildLeaderboard(e.state.Players)
+	}
 	e.state.Phase = PhaseMiniGameResults
 	return nil
 }
@@ -190,6 +202,8 @@ func (e *Engine) EndMiniGameResults() error {
 	if e.state.Phase != PhaseMiniGameResults {
 		return ErrWrongPhase
 	}
+	e.PauseTimer()
+	e.ResetTimer()
 	e.state.MiniGame = nil
 	next := e.state.CurrentRound + 1
 	if next >= len(e.state.Rounds) {
@@ -293,10 +307,6 @@ func (e *Engine) submitWordleGuess(playerID, guess string) error {
 		ps.Solved = true
 		guessCount := len(ps.Guesses)
 		ps.Points = (maxGuesses - guessCount + 1) * 2
-		if p, ok := e.state.Players[playerID]; ok {
-			p.MiniGameScore += ps.Points
-		}
-		e.state.Leaderboard = BuildLeaderboard(e.state.Players)
 	}
 	return nil
 }

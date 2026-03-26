@@ -288,7 +288,7 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
             Wine #{gameState.currentRound + 1} of {gameState.rounds.length}
           </h2>
           <span className="sketch-border-sunny bg-sunny/20 px-2 py-1 text-sm font-bold text-ink">
-            {me.totalScore}pt
+            {me.totalScore + me.miniGameScore}pt
           </span>
         </div>
         <BlindTastingForm
@@ -478,7 +478,7 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-black text-ink capitalize">Mini Game: {type}</h2>
           <span className="sketch-border-sunny bg-sunny/20 px-2 py-1 text-sm font-bold text-ink">
-            {me.miniGameScore}pt
+            {me.totalScore + me.miniGameScore}pt
           </span>
         </div>
         {type === 'trivia' && (

@@ -23,7 +23,7 @@ export function PlayerList({ players }: Props) {
             }`}
           />
           <span className="font-semibold flex-1 truncate">{p.name || 'Anonymous'}</span>
-          <span className="text-sm font-bold text-grape">{p.totalScore}pt</span>
+          <span className="text-sm font-bold text-grape">{p.totalScore + p.miniGameScore}pt</span>
         </div>
       ))}
       {activePlayers.length === 0 && (
