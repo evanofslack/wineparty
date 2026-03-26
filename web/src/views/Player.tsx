@@ -410,7 +410,7 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
 
         <div className="sketch-border-sky bg-sky/10 px-4 py-3">
           <p className="text-sm font-bold text-muted uppercase tracking-wider mb-2">Leaderboard</p>
-          <Leaderboard entries={gameState.leaderboard} highlightId={playerId} />
+          <Leaderboard entries={gameState.leaderboard} highlightId={playerId} players={gameState.players} />
         </div>
 
         <p className="text-center text-muted font-semibold mt-6">Waiting for next round...</p>
@@ -437,7 +437,7 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
           </div>
         )}
         <div className="w-full">
-          <Leaderboard entries={gameState.leaderboard} highlightId={playerId} />
+          <Leaderboard entries={gameState.leaderboard} highlightId={playerId} players={gameState.players} />
         </div>
         {me && (me.totalScore > 0 || me.miniGameScore > 0) && (
           <div className="sketch-border-sunny bg-sunny/10 px-4 py-4 w-full text-left">

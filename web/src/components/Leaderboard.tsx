@@ -1,15 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
-import type { LeaderboardEntry } from '../types/game'
+import { PlayerAvatar } from './PlayerAvatar'
+import type { LeaderboardEntry, Player } from '../types/game'
 
 interface Props {
   entries: LeaderboardEntry[]
   highlightId?: string
+  players?: Record<string, Player>
 }
 
 const RANK_COLORS = ['var(--color-sunny)', 'var(--color-muted)', '#CD7F32']
 const RANK_LABELS = ['🥇', '🥈', '🥉']
 
-export function Leaderboard({ entries, highlightId }: Props) {
+export function Leaderboard({ entries, highlightId, players }: Props) {
   const prevScores = useRef<Record<string, number>>({})
   const [animating, setAnimating] = useState<Set<string>>(new Set())
 
@@ -58,6 +60,7 @@ export function Leaderboard({ entries, highlightId }: Props) {
         const bgStyle = e.rank === 1 ? 'rgba(255,230,109,0.25)' : e.rank === 2 ? 'rgba(78,205,196,0.20)' : e.rank === 3 ? 'rgba(255,107,107,0.15)' : 'white'
         const ringClass = e.rank === 1 ? 'ring-sunny' : e.rank === 2 ? 'ring-sky' : e.rank === 3 ? 'ring-coral' : 'ring-ink'
 
+        const player = players?.[e.playerId]
         return (
           <div
             key={e.playerId}
@@ -72,6 +75,7 @@ export function Leaderboard({ entries, highlightId }: Props) {
             >
               {rankLabel}
             </span>
+            {player && <PlayerAvatar player={player} size={36} />}
             <span className="flex-1 font-bold text-ink truncate">{e.playerName}</span>
             <span
               className={`text-xl font-black tabular-nums transition-[color,transform] w-16 text-right shrink-0 ${isAnimating ? 'text-grape scale-110' : 'text-ink'}`}

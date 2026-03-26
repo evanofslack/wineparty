@@ -24,7 +24,7 @@ export function DisplayPlayerBar({ players, leaderboard }: Props) {
             key={player.id}
             className={`flex flex-col items-center gap-1 transition-opacity ${!player.connected ? 'opacity-40' : ''}`}
           >
-            <PlayerAvatar player={player} size={64} />
+            <PlayerAvatar player={player} size={80} />
             <span
               className="text-sm font-black text-ink truncate text-center leading-tight"
               style={{ maxWidth: 72 }}
