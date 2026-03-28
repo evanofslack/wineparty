@@ -2,6 +2,8 @@ package game
 
 import (
 	"errors"
+	"math"
+	"math/rand"
 	"sort"
 	"strings"
 	"time"
@@ -170,7 +172,7 @@ func (e *Engine) NextRound() error {
 	}
 	for i, schedRound := range e.state.MiniGameSchedule {
 		if schedRound == e.state.CurrentRound && i < len(e.state.MiniGameConfigs) {
-			e.state.MiniGame = initMiniGame(e.state.MiniGameConfigs[i])
+			e.state.MiniGame = e.initMiniGame(e.state.MiniGameConfigs[i])
 			e.state.Phase = PhaseMiniGame
 			return nil
 		}
@@ -267,13 +269,32 @@ func (e *Engine) SubmitMiniGameAnswer(playerID string, ans MiniGameAnswer) error
 	if e.state.Phase != PhaseMiniGame || e.state.MiniGame == nil {
 		return ErrWrongPhase
 	}
-	switch e.state.MiniGame.Config.Type {
+	ms := e.state.MiniGame
+	switch ms.Config.Type {
 	case "wordle":
 		return e.submitWordleGuess(playerID, ans.WordleGuess)
 	case "connections":
 		return e.submitConnectionsGroup(playerID, ans.ConnGroup)
 	case "trivia":
 		return e.submitTriviaAnswer(playerID, ans.TriviaAnswerIndex)
+	case "fibbage":
+		switch ms.SubPhase {
+		case "submitting":
+			return e.submitFibbageAnswer(playerID, ans.FibbageSubmission)
+		case "voting":
+			return e.submitFibbageVote(playerID, ans.FibbageVoteSlot)
+		}
+		return ErrWrongPhase
+	case "quiplash":
+		switch ms.SubPhase {
+		case "submitting":
+			return e.submitQuiplashAnswer(playerID, ans.QuiplashSubmission)
+		case "voting":
+			return e.submitQuiplashVote(playerID, ans.QuiplashVoteSlot)
+		}
+		return ErrWrongPhase
+	case "emoji_decode":
+		return e.submitEmojiAnswer(playerID, ans.EmojiAnswer)
 	default:
 		return ErrInvalidAnswer
 	}
@@ -446,7 +467,7 @@ func colorPoints(color string) int {
 	}
 }
 
-func initMiniGame(cfg MiniGameConfig) *MiniGameState {
+func (e *Engine) initMiniGame(cfg MiniGameConfig) *MiniGameState {
 	ms := &MiniGameState{
 		Config:          cfg,
 		CurrentQuestion: 0,
@@ -458,8 +479,462 @@ func initMiniGame(cfg MiniGameConfig) *MiniGameState {
 		ms.ConnStates = make(map[string]*PlayerConnectionsState)
 	case "trivia":
 		ms.TriviaStates = make(map[string]*PlayerTriviaState)
+	case "fibbage":
+		ms.FibbageStates = make(map[string]*PlayerFibbageState)
+		for _, p := range e.state.Players {
+			if p.Role != RoleAdmin {
+				ms.FibbageStates[p.ID] = &PlayerFibbageState{VotedFor: -1}
+			}
+		}
+		ms.SubPhase = "submitting"
+	case "quiplash":
+		var playerIDs []string
+		for _, p := range e.state.Players {
+			if p.Role != RoleAdmin {
+				playerIDs = append(playerIDs, p.ID)
+			}
+		}
+		ms.QuiplashMatchups = generateMatchups(playerIDs, cfg.MaxRounds, cfg.Prompts)
+		ms.QuiplashStates = make(map[string]*PlayerQuiplashState)
+		for _, id := range playerIDs {
+			ms.QuiplashStates[id] = &PlayerQuiplashState{
+				Submissions: make(map[int]string),
+				Votes:       make(map[int]int),
+			}
+		}
+		ms.SubPhase = "submitting"
+	case "emoji_decode":
+		ms.EmojiStates = make(map[string]*PlayerEmojiState)
+		for _, p := range e.state.Players {
+			if p.Role != RoleAdmin {
+				ms.EmojiStates[p.ID] = &PlayerEmojiState{
+					RoundWins: make([]bool, len(cfg.EmojiRounds)),
+				}
+			}
+		}
+		now := time.Now()
+		ms.RoundStartedAt = &now
+		ms.SubPhase = "active"
 	}
 	return ms
+}
+
+func generateMatchups(playerIDs []string, maxRounds int, prompts []string) []QuiplashMatchup {
+	var pairs [][2]string
+	for i := 0; i < len(playerIDs); i++ {
+		for j := i + 1; j < len(playerIDs); j++ {
+			pairs = append(pairs, [2]string{playerIDs[i], playerIDs[j]})
+		}
+	}
+	rand.Shuffle(len(pairs), func(i, j int) { pairs[i], pairs[j] = pairs[j], pairs[i] })
+	n := len(pairs)
+	if maxRounds > 0 && maxRounds < n {
+		n = maxRounds
+	}
+	if len(prompts) < n {
+		n = len(prompts)
+	}
+	matchups := make([]QuiplashMatchup, n)
+	for i := 0; i < n; i++ {
+		matchups[i] = QuiplashMatchup{
+			PlayerA: pairs[i][0],
+			PlayerB: pairs[i][1],
+			Prompt:  prompts[i],
+		}
+	}
+	return matchups
+}
+
+func (e *Engine) submitFibbageAnswer(playerID, submission string) error {
+	ms := e.state.MiniGame
+	ps, ok := ms.FibbageStates[playerID]
+	if !ok {
+		return ErrInvalidAnswer
+	}
+	if ps.Submission != "" {
+		return ErrAlreadyAnswered
+	}
+	q := ms.Config.FibbageQuestions[ms.CurrentQuestion]
+	if strings.EqualFold(strings.TrimSpace(submission), strings.TrimSpace(q.Answer)) {
+		return ErrInvalidAnswer
+	}
+	ps.Submission = strings.TrimSpace(submission)
+	return nil
+}
+
+func (e *Engine) submitFibbageVote(playerID string, slotID int) error {
+	ms := e.state.MiniGame
+	ps, ok := ms.FibbageStates[playerID]
+	if !ok {
+		return ErrInvalidAnswer
+	}
+	if ps.VotedFor != -1 {
+		return ErrAlreadyAnswered
+	}
+	if slotID < 0 || slotID >= len(ms.FibbageSlots) {
+		return ErrInvalidAnswer
+	}
+	// prevent voting for own submission
+	slot := ms.FibbageSlots[slotID]
+	if strings.EqualFold(strings.TrimSpace(slot.Text), strings.TrimSpace(ps.Submission)) && ps.Submission != "" {
+		return ErrInvalidAnswer
+	}
+	ps.VotedFor = slotID
+	return nil
+}
+
+func (e *Engine) FibbageStartVoting() error {
+	if e.state.Phase != PhaseMiniGame || e.state.MiniGame == nil {
+		return ErrWrongPhase
+	}
+	ms := e.state.MiniGame
+	if ms.Config.Type != "fibbage" || ms.SubPhase != "submitting" {
+		return ErrWrongPhase
+	}
+	q := ms.Config.FibbageQuestions[ms.CurrentQuestion]
+	var slots []FibbageSlot
+	for _, ps := range ms.FibbageStates {
+		if ps.Submission != "" {
+			slots = append(slots, FibbageSlot{Text: ps.Submission})
+		}
+	}
+	slots = append(slots, FibbageSlot{Text: q.Answer})
+	rand.Shuffle(len(slots), func(i, j int) { slots[i], slots[j] = slots[j], slots[i] })
+	for i := range slots {
+		slots[i].ID = i
+	}
+	ms.FibbageSlots = slots
+	ms.SubPhase = "voting"
+	return nil
+}
+
+func (e *Engine) FibbageReveal() error {
+	if e.state.Phase != PhaseMiniGame || e.state.MiniGame == nil {
+		return ErrWrongPhase
+	}
+	ms := e.state.MiniGame
+	if ms.Config.Type != "fibbage" || ms.SubPhase != "voting" {
+		return ErrWrongPhase
+	}
+	q := ms.Config.FibbageQuestions[ms.CurrentQuestion]
+	correctAnswer := strings.ToLower(strings.TrimSpace(q.Answer))
+	// populate slot attributions
+	for i := range ms.FibbageSlots {
+		slot := &ms.FibbageSlots[i]
+		if strings.EqualFold(strings.TrimSpace(slot.Text), q.Answer) {
+			slot.IsCorrect = true
+		} else {
+			for pid, ps := range ms.FibbageStates {
+				if strings.EqualFold(strings.TrimSpace(ps.Submission), slot.Text) {
+					slot.PlayerID = pid
+					break
+				}
+			}
+		}
+	}
+	// score: find correct slot ID
+	correctSlotID := -1
+	for _, slot := range ms.FibbageSlots {
+		if strings.ToLower(strings.TrimSpace(slot.Text)) == correctAnswer {
+			correctSlotID = slot.ID
+			break
+		}
+	}
+	for playerID, ps := range ms.FibbageStates {
+		if ps.VotedFor == correctSlotID && correctSlotID != -1 {
+			ps.Points += 3
+			ps.VotedCorrect = true
+			if p, ok := e.state.Players[playerID]; ok {
+				p.MiniGameScore += 3
+			}
+		}
+	}
+	// count fools
+	for _, ps := range ms.FibbageStates {
+		if ps.VotedFor == -1 || ps.VotedFor == correctSlotID {
+			continue
+		}
+		// find who owns the voted slot
+		for _, slot := range ms.FibbageSlots {
+			if slot.ID == ps.VotedFor && slot.PlayerID != "" {
+				ownerState := ms.FibbageStates[slot.PlayerID]
+				if ownerState != nil {
+					ownerState.Points += 2
+					ownerState.FooledCount++
+					if p, ok := e.state.Players[slot.PlayerID]; ok {
+						p.MiniGameScore += 2
+					}
+				}
+				break
+			}
+		}
+	}
+	e.state.Leaderboard = BuildLeaderboard(e.state.Players)
+	ms.SubPhase = "revealing"
+	return nil
+}
+
+func (e *Engine) FibbageNextQuestion() error {
+	if e.state.Phase != PhaseMiniGame || e.state.MiniGame == nil {
+		return ErrWrongPhase
+	}
+	ms := e.state.MiniGame
+	if ms.Config.Type != "fibbage" || ms.SubPhase != "revealing" {
+		return ErrWrongPhase
+	}
+	ms.CurrentQuestion++
+	ms.FibbageSlots = nil
+	for _, ps := range ms.FibbageStates {
+		ps.Submission = ""
+		ps.VotedFor = -1
+	}
+	ms.SubPhase = "submitting"
+	return nil
+}
+
+func (e *Engine) submitQuiplashAnswer(playerID, submission string) error {
+	ms := e.state.MiniGame
+	if ms.CurrentQuestion >= len(ms.QuiplashMatchups) {
+		return ErrWrongPhase
+	}
+	matchup := ms.QuiplashMatchups[ms.CurrentQuestion]
+	if playerID != matchup.PlayerA && playerID != matchup.PlayerB {
+		return ErrInvalidAnswer
+	}
+	ps, ok := ms.QuiplashStates[playerID]
+	if !ok {
+		return ErrInvalidAnswer
+	}
+	if _, already := ps.Submissions[ms.CurrentQuestion]; already {
+		return ErrAlreadyAnswered
+	}
+	ps.Submissions[ms.CurrentQuestion] = strings.TrimSpace(submission)
+	return nil
+}
+
+func (e *Engine) submitQuiplashVote(playerID string, slotID int) error {
+	ms := e.state.MiniGame
+	if ms.CurrentQuestion >= len(ms.QuiplashMatchups) {
+		return ErrWrongPhase
+	}
+	matchup := ms.QuiplashMatchups[ms.CurrentQuestion]
+	if playerID == matchup.PlayerA || playerID == matchup.PlayerB {
+		return ErrInvalidAnswer
+	}
+	ps, ok := ms.QuiplashStates[playerID]
+	if !ok {
+		return ErrInvalidAnswer
+	}
+	if _, already := ps.Votes[ms.CurrentQuestion]; already {
+		return ErrAlreadyAnswered
+	}
+	if slotID != 0 && slotID != 1 {
+		return ErrInvalidAnswer
+	}
+	ps.Votes[ms.CurrentQuestion] = slotID
+	return nil
+}
+
+func (e *Engine) QuiplashStartVoting() error {
+	if e.state.Phase != PhaseMiniGame || e.state.MiniGame == nil {
+		return ErrWrongPhase
+	}
+	ms := e.state.MiniGame
+	if ms.Config.Type != "quiplash" || ms.SubPhase != "submitting" {
+		return ErrWrongPhase
+	}
+	if ms.CurrentQuestion >= len(ms.QuiplashMatchups) {
+		return ErrWrongPhase
+	}
+	matchup := ms.QuiplashMatchups[ms.CurrentQuestion]
+	psA := ms.QuiplashStates[matchup.PlayerA]
+	psB := ms.QuiplashStates[matchup.PlayerB]
+	if psA == nil || psB == nil {
+		return ErrInvalidAnswer
+	}
+	textA, okA := psA.Submissions[ms.CurrentQuestion]
+	textB, okB := psB.Submissions[ms.CurrentQuestion]
+	if !okA || !okB {
+		return ErrInvalidAnswer
+	}
+	// randomly assign slot 0 and slot 1
+	slotA, slotB := 0, 1
+	if rand.Intn(2) == 1 {
+		slotA, slotB = 1, 0
+	}
+	ms.QuiplashSlots = []QuiplashSlot{
+		{ID: slotA, Text: textA},
+		{ID: slotB, Text: textB},
+	}
+	sort.Slice(ms.QuiplashSlots, func(i, j int) bool {
+		return ms.QuiplashSlots[i].ID < ms.QuiplashSlots[j].ID
+	})
+	ms.SubPhase = "voting"
+	return nil
+}
+
+func (e *Engine) QuiplashReveal() error {
+	if e.state.Phase != PhaseMiniGame || e.state.MiniGame == nil {
+		return ErrWrongPhase
+	}
+	ms := e.state.MiniGame
+	if ms.Config.Type != "quiplash" || ms.SubPhase != "voting" {
+		return ErrWrongPhase
+	}
+	if ms.CurrentQuestion >= len(ms.QuiplashMatchups) {
+		return ErrWrongPhase
+	}
+	matchup := ms.QuiplashMatchups[ms.CurrentQuestion]
+	psA := ms.QuiplashStates[matchup.PlayerA]
+	psB := ms.QuiplashStates[matchup.PlayerB]
+	textA := psA.Submissions[ms.CurrentQuestion]
+	textB := psB.Submissions[ms.CurrentQuestion]
+	// find which slot belongs to which player
+	slotForA, slotForB := -1, -1
+	for _, slot := range ms.QuiplashSlots {
+		if slot.Text == textA {
+			slotForA = slot.ID
+		} else if slot.Text == textB {
+			slotForB = slot.ID
+		}
+	}
+	// count votes
+	votesA, votesB := 0, 0
+	for _, ps := range ms.QuiplashStates {
+		if v, ok := ps.Votes[ms.CurrentQuestion]; ok {
+			if v == slotForA {
+				votesA++
+			} else if v == slotForB {
+				votesB++
+			}
+		}
+	}
+	// populate slot attributions and vote counts
+	for i := range ms.QuiplashSlots {
+		slot := &ms.QuiplashSlots[i]
+		if slot.ID == slotForA {
+			slot.PlayerID = matchup.PlayerA
+			slot.Votes = votesA
+		} else if slot.ID == slotForB {
+			slot.PlayerID = matchup.PlayerB
+			slot.Votes = votesB
+		}
+	}
+	// award points
+	ptsA := votesA * 2
+	ptsB := votesB * 2
+	if ptsA > 0 {
+		psA.Points += ptsA
+		if p, ok := e.state.Players[matchup.PlayerA]; ok {
+			p.MiniGameScore += ptsA
+		}
+	}
+	if ptsB > 0 {
+		psB.Points += ptsB
+		if p, ok := e.state.Players[matchup.PlayerB]; ok {
+			p.MiniGameScore += ptsB
+		}
+	}
+	e.state.Leaderboard = BuildLeaderboard(e.state.Players)
+	ms.SubPhase = "revealing"
+	return nil
+}
+
+func (e *Engine) QuiplashNextRound() error {
+	if e.state.Phase != PhaseMiniGame || e.state.MiniGame == nil {
+		return ErrWrongPhase
+	}
+	ms := e.state.MiniGame
+	if ms.Config.Type != "quiplash" || ms.SubPhase != "revealing" {
+		return ErrWrongPhase
+	}
+	ms.CurrentQuestion++
+	ms.QuiplashSlots = nil
+	ms.SubPhase = "submitting"
+	return nil
+}
+
+func (e *Engine) submitEmojiAnswer(playerID, answer string) error {
+	ms := e.state.MiniGame
+	if ms.SubPhase != "active" {
+		return ErrWrongPhase
+	}
+	if ms.CurrentQuestion >= len(ms.Config.EmojiRounds) {
+		return ErrWrongPhase
+	}
+	timerSecs := ms.Config.TimerSeconds
+	if timerSecs <= 0 {
+		timerSecs = 30
+	}
+	if ms.RoundStartedAt != nil {
+		expiry := ms.RoundStartedAt.Add(time.Duration(timerSecs) * time.Second)
+		if time.Now().After(expiry) {
+			return ErrWrongPhase
+		}
+	}
+	round := ms.Config.EmojiRounds[ms.CurrentQuestion]
+	if !strings.EqualFold(strings.TrimSpace(answer), strings.TrimSpace(round.Answer)) {
+		return ErrInvalidAnswer
+	}
+	// correct answer
+	var elapsed float64
+	if ms.RoundStartedAt != nil {
+		elapsed = time.Since(*ms.RoundStartedAt).Seconds()
+	}
+	remaining := float64(timerSecs) - elapsed
+	if remaining < 0 {
+		remaining = 0
+	}
+	pts := int(math.Ceil(5 * remaining / float64(timerSecs)))
+	if pts < 1 {
+		pts = 1
+	}
+	ps := ms.EmojiStates[playerID]
+	if ps == nil {
+		ps = &PlayerEmojiState{RoundWins: make([]bool, len(ms.Config.EmojiRounds))}
+		ms.EmojiStates[playerID] = ps
+	}
+	ps.Points += pts
+	ps.RoundWins[ms.CurrentQuestion] = true
+	if p, ok := e.state.Players[playerID]; ok {
+		p.MiniGameScore += pts
+	}
+	ms.EmojiRoundWinner = playerID
+	ms.SubPhase = "round_won"
+	e.state.Leaderboard = BuildLeaderboard(e.state.Players)
+	return nil
+}
+
+func (e *Engine) EmojiExpireRound() error {
+	if e.state.Phase != PhaseMiniGame || e.state.MiniGame == nil {
+		return ErrWrongPhase
+	}
+	ms := e.state.MiniGame
+	if ms.Config.Type != "emoji_decode" || ms.SubPhase != "active" {
+		return ErrWrongPhase
+	}
+	ms.SubPhase = "round_expired"
+	ms.EmojiRoundWinner = ""
+	return nil
+}
+
+func (e *Engine) EmojiNextRound() error {
+	if e.state.Phase != PhaseMiniGame || e.state.MiniGame == nil {
+		return ErrWrongPhase
+	}
+	ms := e.state.MiniGame
+	if ms.Config.Type != "emoji_decode" {
+		return ErrWrongPhase
+	}
+	if ms.SubPhase != "round_won" && ms.SubPhase != "round_expired" {
+		return ErrWrongPhase
+	}
+	ms.CurrentQuestion++
+	ms.EmojiRoundWinner = ""
+	now := time.Now()
+	ms.RoundStartedAt = &now
+	ms.SubPhase = "active"
+	return nil
 }
 
 func (e *Engine) SetPlayerScore(playerID string, score int) error {

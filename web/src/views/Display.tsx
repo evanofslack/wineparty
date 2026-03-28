@@ -287,7 +287,11 @@ export function DisplayView() {
         const pts =
           type === 'wordle' ? (mg.wordleStates?.[p.id]?.points ?? 0) :
           type === 'connections' ? (mg.connStates?.[p.id]?.points ?? 0) :
-          (mg.triviaStates?.[p.id]?.points ?? 0)
+          type === 'trivia' ? (mg.triviaStates?.[p.id]?.points ?? 0) :
+          type === 'fibbage' ? (mg.fibbageStates?.[p.id]?.points ?? 0) :
+          type === 'quiplash' ? (mg.quiplashStates?.[p.id]?.points ?? 0) :
+          type === 'emoji_decode' ? (mg.emojiStates?.[p.id]?.points ?? 0) :
+          0
         return { player: p, pts }
       })
       .sort((a, b) => b.pts - a.pts)

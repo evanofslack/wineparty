@@ -38,12 +38,27 @@ type TriviaQuestion struct {
 	Points  int      `yaml:"points"`
 }
 
+type FibbageQuestion struct {
+	Prompt string `yaml:"prompt"`
+	Answer string `yaml:"answer"`
+}
+
+type EmojiRound struct {
+	Emoji  string `yaml:"emoji"`
+	Answer string `yaml:"answer"`
+}
+
 type GameConfig struct {
-	Type       string             `yaml:"type"`
-	Word       string             `yaml:"word,omitempty"`
-	MaxGuesses int                `yaml:"max_guesses,omitempty"`
-	Groups     []ConnectionsGroup `yaml:"groups,omitempty"`
-	Questions  []TriviaQuestion   `yaml:"questions,omitempty"`
+	Type             string             `yaml:"type"`
+	Word             string             `yaml:"word,omitempty"`
+	MaxGuesses       int                `yaml:"max_guesses,omitempty"`
+	Groups           []ConnectionsGroup `yaml:"groups,omitempty"`
+	Questions        []TriviaQuestion   `yaml:"questions,omitempty"`
+	FibbageQuestions []FibbageQuestion  `yaml:"fibbage_questions,omitempty"`
+	MaxRounds        int                `yaml:"max_rounds,omitempty"`
+	Prompts          []string           `yaml:"prompts,omitempty"`
+	TimerSeconds     int                `yaml:"timer_seconds,omitempty"`
+	EmojiRounds      []EmojiRound       `yaml:"emoji_rounds,omitempty"`
 }
 
 type GamesFile struct {

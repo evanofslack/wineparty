@@ -288,6 +288,43 @@ func (h *Hub) handleAdminAction(c *Client, raw json.RawMessage) {
 		err = h.engine.MiniGameRevealAnswer()
 	case ActionEndMiniGameResults:
 		err = h.engine.EndMiniGameResults()
+	case ActionMiniGameStartVoting:
+		mg := h.engine.State().MiniGame
+		if mg == nil {
+			err = game.ErrWrongPhase
+		} else if mg.Config.Type == "fibbage" {
+			err = h.engine.FibbageStartVoting()
+		} else if mg.Config.Type == "quiplash" {
+			err = h.engine.QuiplashStartVoting()
+		} else {
+			err = game.ErrWrongPhase
+		}
+	case ActionMiniGameReveal:
+		mg := h.engine.State().MiniGame
+		if mg == nil {
+			err = game.ErrWrongPhase
+		} else if mg.Config.Type == "fibbage" {
+			err = h.engine.FibbageReveal()
+		} else if mg.Config.Type == "quiplash" {
+			err = h.engine.QuiplashReveal()
+		} else {
+			err = game.ErrWrongPhase
+		}
+	case ActionMiniGameAdvance:
+		mg := h.engine.State().MiniGame
+		if mg == nil {
+			err = game.ErrWrongPhase
+		} else if mg.Config.Type == "fibbage" {
+			err = h.engine.FibbageNextQuestion()
+		} else if mg.Config.Type == "quiplash" {
+			err = h.engine.QuiplashNextRound()
+		} else {
+			err = game.ErrWrongPhase
+		}
+	case ActionEmojiExpireRound:
+		err = h.engine.EmojiExpireRound()
+	case ActionEmojiNextRound:
+		err = h.engine.EmojiNextRound()
 	default:
 		c.sendEnvelope(MsgError, ErrorPayload{Message: "unknown admin action"})
 		return
@@ -312,9 +349,14 @@ func (h *Hub) handleMiniGameAnswer(c *Client, raw json.RawMessage) {
 		return
 	}
 	ans := game.MiniGameAnswer{
-		WordleGuess:       p.WordleGuess,
-		ConnGroup:         p.ConnGroup,
-		TriviaAnswerIndex: p.TriviaAnswerIndex,
+		WordleGuess:        p.WordleGuess,
+		ConnGroup:          p.ConnGroup,
+		TriviaAnswerIndex:  p.TriviaAnswerIndex,
+		FibbageSubmission:  p.FibbageSubmission,
+		FibbageVoteSlot:    p.FibbageVoteSlot,
+		QuiplashSubmission: p.QuiplashSubmission,
+		QuiplashVoteSlot:   p.QuiplashVoteSlot,
+		EmojiAnswer:        p.EmojiAnswer,
 	}
 	if err := h.engine.SubmitMiniGameAnswer(c.PlayerID, ans); err != nil {
 		c.sendEnvelope(MsgError, ErrorPayload{Message: err.Error()})

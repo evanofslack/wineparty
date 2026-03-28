@@ -4,6 +4,9 @@ import { Leaderboard } from '../components/Leaderboard'
 import { TriviaGame } from '../components/minigames/TriviaGame'
 import { WordleGame } from '../components/minigames/WordleGame'
 import { ConnectionsGame } from '../components/minigames/ConnectionsGame'
+import { FibbageGame } from '../components/minigames/FibbageGame'
+import { QuiplashGame } from '../components/minigames/QuiplashGame'
+import { EmojiDecodeGame } from '../components/minigames/EmojiDecodeGame'
 import { PlayerAvatar } from '../components/PlayerAvatar'
 import { useGameStore } from '../store/gameStore'
 import type { JoinPayload, GuessPayload, MiniGameAnswerPayload } from '../types/game'
@@ -504,6 +507,44 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
             onSubmitGroup={(words) => sendMiniGameAnswer({ connGroup: words })}
           />
         )}
+        {type === 'fibbage' && (
+          <FibbageGame
+            config={mg.config}
+            myState={mg.fibbageStates?.[playerId]}
+            slots={mg.fibbageSlots ?? []}
+            subPhase={mg.subPhase ?? 'submitting'}
+            currentQuestion={mg.currentQuestion}
+            players={gameState.players}
+            onSubmit={(text) => sendMiniGameAnswer({ fibbageSubmission: text })}
+            onVote={(slotId) => sendMiniGameAnswer({ fibbageVoteSlot: slotId })}
+          />
+        )}
+        {type === 'quiplash' && (
+          <QuiplashGame
+            config={mg.config}
+            myState={mg.quiplashStates?.[playerId]}
+            matchup={mg.quiplashMatchups?.[mg.currentQuestion]}
+            slots={mg.quiplashSlots ?? []}
+            subPhase={mg.subPhase ?? 'submitting'}
+            currentRound={mg.currentQuestion}
+            playerId={playerId}
+            players={gameState.players}
+            onSubmit={(text) => sendMiniGameAnswer({ quiplashSubmission: text })}
+            onVote={(slotId) => sendMiniGameAnswer({ quiplashVoteSlot: slotId })}
+          />
+        )}
+        {type === 'emoji_decode' && (
+          <EmojiDecodeGame
+            config={mg.config}
+            currentRound={mg.currentQuestion}
+            subPhase={mg.subPhase ?? 'active'}
+            roundWinner={mg.emojiRoundWinner ?? ''}
+            roundStartedAt={mg.roundStartedAt}
+            playerId={playerId}
+            players={gameState.players}
+            onAnswer={(text) => sendMiniGameAnswer({ emojiAnswer: text })}
+          />
+        )}
         {error && <p className="text-coral font-bold mt-4 text-center">{error}</p>}
       </div>
     )
@@ -611,6 +652,59 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
               <div className="sketch-border-grape bg-grape/10 px-4 py-3 text-center">
                 <p className="font-bold text-sm text-muted">Your mini-game score</p>
                 <p className="text-3xl font-black text-grape">{myConnState?.points ?? 0} pts</p>
+              </div>
+            </div>
+          )
+        })()}
+        {type === 'fibbage' && (() => {
+          const myFibbageState = mg.fibbageStates?.[playerId]
+          const questions = mg.config.fibbageQuestions ?? []
+          return (
+            <div className="flex flex-col gap-3">
+              {questions.map((q, qi) => (
+                <div key={qi} className="sketch-border bg-white px-4 py-3">
+                  <p className="font-black text-sm text-ink mb-1">Q{qi + 1}: {q.prompt}</p>
+                  <p className="text-xs text-muted">Answer: <span className="font-bold text-ink">{q.answer}</span></p>
+                </div>
+              ))}
+              <div className="sketch-border-grape bg-grape/10 px-4 py-3 text-center">
+                <p className="font-bold text-sm text-muted">Your mini-game score</p>
+                <p className="text-3xl font-black text-grape">{myFibbageState?.points ?? 0} pts</p>
+              </div>
+            </div>
+          )
+        })()}
+        {type === 'quiplash' && (() => {
+          const myQuiplashState = mg.quiplashStates?.[playerId]
+          return (
+            <div className="flex flex-col gap-3">
+              <div className="sketch-border-grape bg-grape/10 px-4 py-3 text-center">
+                <p className="font-bold text-sm text-muted">Your mini-game score</p>
+                <p className="text-3xl font-black text-grape">{myQuiplashState?.points ?? 0} pts</p>
+              </div>
+            </div>
+          )
+        })()}
+        {type === 'emoji_decode' && (() => {
+          const myEmojiState = mg.emojiStates?.[playerId]
+          const rounds = mg.config.emojiRounds ?? []
+          return (
+            <div className="flex flex-col gap-3">
+              {rounds.map((r, ri) => {
+                const won = myEmojiState?.roundWins?.[ri] ?? false
+                return (
+                  <div key={ri} className={`sketch-border px-4 py-2 ${won ? 'bg-lime/20' : 'bg-white'}`}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xl">{r.emoji}</span>
+                      <span className="font-semibold text-sm text-ink">{r.answer}</span>
+                      {won && <span className="text-xs font-black text-lime-700">Won!</span>}
+                    </div>
+                  </div>
+                )
+              })}
+              <div className="sketch-border-grape bg-grape/10 px-4 py-3 text-center">
+                <p className="font-bold text-sm text-muted">Your mini-game score</p>
+                <p className="text-3xl font-black text-grape">{myEmojiState?.points ?? 0} pts</p>
               </div>
             </div>
           )

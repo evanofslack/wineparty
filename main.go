@@ -55,12 +55,25 @@ func main() {
 				Points:  q.Points,
 			}
 		}
+		fibbageQs := make([]game.FibbageQuestion, len(g.FibbageQuestions))
+		for j, q := range g.FibbageQuestions {
+			fibbageQs[j] = game.FibbageQuestion{Prompt: q.Prompt, Answer: q.Answer}
+		}
+		emojiRounds := make([]game.EmojiRound, len(g.EmojiRounds))
+		for j, r := range g.EmojiRounds {
+			emojiRounds[j] = game.EmojiRound{Emoji: r.Emoji, Answer: r.Answer}
+		}
 		miniGameConfigs[i] = game.MiniGameConfig{
-			Type:       g.Type,
-			Word:       g.Word,
-			MaxGuesses: g.MaxGuesses,
-			Groups:     groups,
-			Questions:  questions,
+			Type:             g.Type,
+			Word:             g.Word,
+			MaxGuesses:       g.MaxGuesses,
+			Groups:           groups,
+			Questions:        questions,
+			FibbageQuestions: fibbageQs,
+			MaxRounds:        g.MaxRounds,
+			Prompts:          g.Prompts,
+			TimerSeconds:     g.TimerSeconds,
+			EmojiRounds:      emojiRounds,
 		}
 	}
 

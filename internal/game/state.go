@@ -46,27 +46,95 @@ type TriviaQuestion struct {
 	Points  int      `json:"points"`
 }
 
+type FibbageQuestion struct {
+	Prompt string `json:"prompt"`
+	Answer string `json:"answer"`
+}
+
+type FibbageSlot struct {
+	ID        int    `json:"id"`
+	Text      string `json:"text"`
+	PlayerID  string `json:"playerId,omitempty"`
+	IsCorrect bool   `json:"isCorrect,omitempty"`
+}
+
+type PlayerFibbageState struct {
+	Submission   string `json:"submission"`
+	VotedFor     int    `json:"votedFor"`
+	Points       int    `json:"points"`
+	VotedCorrect bool   `json:"votedCorrect"`
+	FooledCount  int    `json:"fooledCount"`
+}
+
+type QuiplashMatchup struct {
+	PlayerA string `json:"playerA"`
+	PlayerB string `json:"playerB"`
+	Prompt  string `json:"prompt"`
+}
+
+type QuiplashSlot struct {
+	ID       int    `json:"id"`
+	Text     string `json:"text"`
+	PlayerID string `json:"playerId,omitempty"`
+	Votes    int    `json:"votes,omitempty"`
+}
+
+type PlayerQuiplashState struct {
+	Submissions map[int]string `json:"submissions"`
+	Votes       map[int]int    `json:"votes"`
+	Points      int            `json:"points"`
+}
+
+type EmojiRound struct {
+	Emoji  string `json:"emoji"`
+	Answer string `json:"answer"`
+}
+
+type PlayerEmojiState struct {
+	RoundWins []bool `json:"roundWins"`
+	Points    int    `json:"points"`
+}
+
 type MiniGameConfig struct {
-	Type       string             `json:"type"`
-	Word       string             `json:"word,omitempty"`
-	MaxGuesses int                `json:"maxGuesses,omitempty"`
-	Groups     []ConnectionsGroup `json:"groups,omitempty"`
-	Questions  []TriviaQuestion   `json:"questions,omitempty"`
+	Type             string             `json:"type"`
+	Word             string             `json:"word,omitempty"`
+	MaxGuesses       int                `json:"maxGuesses,omitempty"`
+	Groups           []ConnectionsGroup `json:"groups,omitempty"`
+	Questions        []TriviaQuestion   `json:"questions,omitempty"`
+	FibbageQuestions []FibbageQuestion  `json:"fibbageQuestions,omitempty"`
+	MaxRounds        int                `json:"maxRounds,omitempty"`
+	Prompts          []string           `json:"prompts,omitempty"`
+	TimerSeconds     int                `json:"timerSeconds,omitempty"`
+	EmojiRounds      []EmojiRound       `json:"emojiRounds,omitempty"`
 }
 
 type MiniGameState struct {
-	Config          MiniGameConfig                     `json:"config"`
-	CurrentQuestion int                                `json:"currentQuestion"`
-	AnswerRevealed  bool                               `json:"answerRevealed"`
-	WordleStates    map[string]*PlayerWordleState      `json:"wordleStates,omitempty"`
-	ConnStates      map[string]*PlayerConnectionsState `json:"connStates,omitempty"`
-	TriviaStates    map[string]*PlayerTriviaState      `json:"triviaStates,omitempty"`
+	Config          MiniGameConfig                      `json:"config"`
+	CurrentQuestion int                                 `json:"currentQuestion"`
+	AnswerRevealed  bool                                `json:"answerRevealed"`
+	SubPhase        string                              `json:"subPhase,omitempty"`
+	WordleStates    map[string]*PlayerWordleState       `json:"wordleStates,omitempty"`
+	ConnStates      map[string]*PlayerConnectionsState  `json:"connStates,omitempty"`
+	TriviaStates    map[string]*PlayerTriviaState       `json:"triviaStates,omitempty"`
+	FibbageSlots    []FibbageSlot                       `json:"fibbageSlots,omitempty"`
+	FibbageStates   map[string]*PlayerFibbageState      `json:"fibbageStates,omitempty"`
+	QuiplashMatchups []QuiplashMatchup                  `json:"quiplashMatchups,omitempty"`
+	QuiplashSlots   []QuiplashSlot                      `json:"quiplashSlots,omitempty"`
+	QuiplashStates  map[string]*PlayerQuiplashState     `json:"quiplashStates,omitempty"`
+	EmojiRoundWinner string                             `json:"emojiRoundWinner,omitempty"`
+	RoundStartedAt  *time.Time                          `json:"roundStartedAt,omitempty"`
+	EmojiStates     map[string]*PlayerEmojiState        `json:"emojiStates,omitempty"`
 }
 
 type MiniGameAnswer struct {
-	WordleGuess       string
-	ConnGroup         []string
-	TriviaAnswerIndex int
+	WordleGuess        string
+	ConnGroup          []string
+	TriviaAnswerIndex  int
+	FibbageSubmission  string
+	FibbageVoteSlot    int
+	QuiplashSubmission string
+	QuiplashVoteSlot   int
+	EmojiAnswer        string
 }
 
 type Phase string

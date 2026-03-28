@@ -24,6 +24,11 @@ export enum AdminActionType {
   ActionMiniGameNextQuestion = 10,
   ActionMiniGameRevealAnswer = 11,
   ActionEndMiniGameResults = 12,
+  ActionMiniGameStartVoting = 13,
+  ActionMiniGameReveal = 14,
+  ActionMiniGameAdvance = 15,
+  ActionEmojiExpireRound = 16,
+  ActionEmojiNextRound = 17,
 }
 
 export type Phase =
@@ -178,27 +183,95 @@ export interface TriviaQuestion {
   points: number
 }
 
+export interface FibbageQuestion {
+  prompt: string
+  answer: string
+}
+
+export interface FibbageSlot {
+  id: number
+  text: string
+  playerId?: string
+  isCorrect?: boolean
+}
+
+export interface PlayerFibbageState {
+  submission: string
+  votedFor: number
+  points: number
+  votedCorrect: boolean
+  fooledCount: number
+}
+
+export interface QuiplashMatchup {
+  playerA: string
+  playerB: string
+  prompt: string
+}
+
+export interface QuiplashSlot {
+  id: number
+  text: string
+  playerId?: string
+  votes?: number
+}
+
+export interface PlayerQuiplashState {
+  submissions: Record<number, string>
+  votes: Record<number, number>
+  points: number
+}
+
+export interface EmojiRound {
+  emoji: string
+  answer: string
+}
+
+export interface PlayerEmojiState {
+  roundWins: boolean[]
+  points: number
+}
+
 export interface MiniGameConfig {
-  type: 'wordle' | 'connections' | 'trivia'
+  type: 'wordle' | 'connections' | 'trivia' | 'fibbage' | 'quiplash' | 'emoji_decode'
   word?: string
   maxGuesses?: number
   groups?: ConnectionsGroup[]
   questions?: TriviaQuestion[]
+  fibbageQuestions?: FibbageQuestion[]
+  maxRounds?: number
+  prompts?: string[]
+  timerSeconds?: number
+  emojiRounds?: EmojiRound[]
 }
 
 export interface MiniGameState {
   config: MiniGameConfig
   currentQuestion: number
   answerRevealed?: boolean
+  subPhase?: string
   wordleStates?: Record<string, PlayerWordleState>
   connStates?: Record<string, PlayerConnectionsState>
   triviaStates?: Record<string, PlayerTriviaState>
+  fibbageSlots?: FibbageSlot[]
+  fibbageStates?: Record<string, PlayerFibbageState>
+  quiplashMatchups?: QuiplashMatchup[]
+  quiplashSlots?: QuiplashSlot[]
+  quiplashStates?: Record<string, PlayerQuiplashState>
+  emojiRoundWinner?: string
+  roundStartedAt?: string
+  emojiStates?: Record<string, PlayerEmojiState>
 }
 
 export interface MiniGameAnswerPayload {
   wordleGuess?: string
   connGroup?: string[]
   triviaAnswerIndex?: number
+  fibbageSubmission?: string
+  fibbageVoteSlot?: number
+  quiplashSubmission?: string
+  quiplashVoteSlot?: number
+  emojiAnswer?: string
 }
 
 export interface GameState {

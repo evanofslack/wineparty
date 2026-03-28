@@ -205,6 +205,86 @@ export function AdminView({ sendJoin, sendAdminAction }: Props) {
                       </>
                     )
                   })()}
+                  {(gameState.miniGame.config.type === 'fibbage' || gameState.miniGame.config.type === 'quiplash') && (() => {
+                    const mg = gameState.miniGame!
+                    const subPhase = mg.subPhase ?? 'submitting'
+                    const isFibbage = mg.config.type === 'fibbage'
+                    const totalItems = isFibbage
+                      ? (mg.config.fibbageQuestions?.length ?? 0)
+                      : (mg.quiplashMatchups?.length ?? 0)
+                    const isLastItem = mg.currentQuestion >= totalItems - 1
+                    const submittedCount = isFibbage
+                      ? Object.values(mg.fibbageStates ?? {}).filter((s) => s.submission !== '').length
+                      : (() => {
+                          const matchup = mg.quiplashMatchups?.[mg.currentQuestion]
+                          if (!matchup) return 0
+                          const stateA = mg.quiplashStates?.[matchup.playerA]
+                          const stateB = mg.quiplashStates?.[matchup.playerB]
+                          return (stateA?.submissions?.[mg.currentQuestion] !== undefined ? 1 : 0) +
+                                 (stateB?.submissions?.[mg.currentQuestion] !== undefined ? 1 : 0)
+                        })()
+                    const totalSubmitters = isFibbage
+                      ? Object.keys(mg.fibbageStates ?? {}).length
+                      : 2
+                    return (
+                      <>
+                        <div className="text-xs font-bold text-muted text-center">
+                          {subPhase === 'submitting' && `${submittedCount} / ${totalSubmitters} submitted`}
+                          {subPhase === 'voting' && 'Voting in progress'}
+                          {subPhase === 'revealing' && 'Results shown'}
+                        </div>
+                        <button
+                          className="btn-sketch bg-sunny text-ink w-full disabled:opacity-40"
+                          disabled={subPhase !== 'submitting'}
+                          onClick={() => action(AdminActionType.ActionMiniGameStartVoting)}
+                        >
+                          Start Voting
+                        </button>
+                        <button
+                          className="btn-sketch bg-sky text-ink w-full disabled:opacity-40"
+                          disabled={subPhase !== 'voting'}
+                          onClick={() => action(AdminActionType.ActionMiniGameReveal)}
+                        >
+                          Reveal
+                        </button>
+                        <button
+                          className="btn-sketch bg-grape text-white w-full disabled:opacity-40"
+                          disabled={subPhase !== 'revealing' || isLastItem}
+                          onClick={() => action(AdminActionType.ActionMiniGameAdvance)}
+                        >
+                          {isFibbage ? 'Next Question →' : 'Next Round →'}
+                        </button>
+                      </>
+                    )
+                  })()}
+                  {gameState.miniGame.config.type === 'emoji_decode' && (() => {
+                    const mg = gameState.miniGame!
+                    const subPhase = mg.subPhase ?? 'active'
+                    const totalRounds = mg.config.emojiRounds?.length ?? 0
+                    const isLastRound = mg.currentQuestion >= totalRounds - 1
+                    const roundDone = subPhase === 'round_won' || subPhase === 'round_expired'
+                    return (
+                      <>
+                        <div className="text-xs font-bold text-muted text-center">
+                          Round {mg.currentQuestion + 1} of {totalRounds} — {subPhase.replace('_', ' ')}
+                        </div>
+                        <button
+                          className="btn-sketch bg-coral text-white w-full disabled:opacity-40"
+                          disabled={subPhase !== 'active'}
+                          onClick={() => action(AdminActionType.ActionEmojiExpireRound)}
+                        >
+                          Expire Round
+                        </button>
+                        <button
+                          className="btn-sketch bg-sky text-ink w-full disabled:opacity-40"
+                          disabled={!roundDone || isLastRound}
+                          onClick={() => action(AdminActionType.ActionEmojiNextRound)}
+                        >
+                          Next Round →
+                        </button>
+                      </>
+                    )
+                  })()}
                   <button
                     className="btn-sketch bg-coral text-white w-full"
                     onClick={() => action(AdminActionType.ActionEndMiniGame)}

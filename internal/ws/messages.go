@@ -34,6 +34,11 @@ const (
 	ActionMiniGameNextQuestion                       // 10
 	ActionMiniGameRevealAnswer                       // 11
 	ActionEndMiniGameResults                         // 12
+	ActionMiniGameStartVoting                        // 13
+	ActionMiniGameReveal                             // 14
+	ActionMiniGameAdvance                            // 15
+	ActionEmojiExpireRound                           // 16
+	ActionEmojiNextRound                             // 17
 )
 
 // Envelope is the outer wrapper for all WS messages.
@@ -77,7 +82,12 @@ type AdminActionPayload struct {
 
 // MiniGameAnswerPayload carries a player's mini-game answer.
 type MiniGameAnswerPayload struct {
-	WordleGuess       string   `json:"wordleGuess,omitempty"`
-	ConnGroup         []string `json:"connGroup,omitempty"`
-	TriviaAnswerIndex int      `json:"triviaAnswerIndex"`
+	WordleGuess        string   `json:"wordleGuess,omitempty"`
+	ConnGroup          []string `json:"connGroup,omitempty"`
+	TriviaAnswerIndex  int      `json:"triviaAnswerIndex"`
+	FibbageSubmission  string   `json:"fibbageSubmission,omitempty"`
+	FibbageVoteSlot    int      `json:"fibbageVoteSlot"`
+	QuiplashSubmission string   `json:"quiplashSubmission,omitempty"`
+	QuiplashVoteSlot   int      `json:"quiplashVoteSlot"`
+	EmojiAnswer        string   `json:"emojiAnswer,omitempty"`
 }
