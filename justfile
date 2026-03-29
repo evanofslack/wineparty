@@ -7,21 +7,26 @@ set dotenv-load
 default:
     just --list
 
-# Start backend (direct, no docker)
+# Start backend server
 backend:
-    go run ./...
+    go run ./cmd/server
 
-# Start frontend dev server (direct, no docker)
+# Start frontend dev server
 frontend:
     cd web && npm run dev
 
-# Run both backend and frontend concurrently (requires process-runner or two terminals)
+# Run backend and frontend concurrently
 dev:
     #!/usr/bin/env bash
     trap 'kill %1 %2 2>/dev/null' EXIT
-    go run . &
+    go run ./cmd/server &
     cd web && npm run dev &
     wait
+
+# Run bot simulation (pass flags after --)
+# Example: just bot -- --players 4 --strategy correct --loglevel debug
+bot *args='':
+    go run ./cmd/simbot {{args}}
 
 # Run Go tests
 test:
@@ -34,7 +39,7 @@ test-v:
 # Build production binary (frontend first, then Go with embed)
 build:
     cd web && npm run build
-    go build -o wineparty .
+    go build -o wineparty ./cmd/server
 
 # Build and run production binary
 run: build

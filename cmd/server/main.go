@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
+	wineparty "wineparty"
 	"wineparty/internal/config"
 	"wineparty/internal/game"
 	"wineparty/internal/handlers"
@@ -106,8 +107,7 @@ func main() {
 		w.Write([]byte("ok"))
 	})
 
-	// SPA handler: serve static assets directly, fall back to index.html for routes
-	fsys := getFrontendFS()
+	fsys := wineparty.GetFrontendFS()
 	r.Handle("/*", spaHandler(fsys))
 
 	slog.Info("starting wineparty server", "port", cfg.Port)
@@ -141,14 +141,12 @@ func computeMiniGameSchedule(numRounds, numGames int) []int {
 func spaHandler(fsys http.FileSystem) http.Handler {
 	fileServer := http.FileServer(fsys)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Try to open the requested path
 		f, err := fsys.Open(r.URL.Path)
 		if err == nil {
 			f.Close()
 			fileServer.ServeHTTP(w, r)
 			return
 		}
-		// For paths without a file extension, serve index.html (SPA routing)
 		if !strings.Contains(r.URL.Path, ".") {
 			r2 := *r
 			r2.URL.Path = "/"

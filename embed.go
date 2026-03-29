@@ -1,4 +1,4 @@
-package main
+package wineparty
 
 import (
 	"embed"
@@ -9,7 +9,7 @@ import (
 //go:embed web/dist
 var embeddedFS embed.FS
 
-func getFrontendFS() http.FileSystem {
+func GetFrontendFS() http.FileSystem {
 	sub, err := fs.Sub(embeddedFS, "web/dist")
 	if err != nil {
 		panic(err)
