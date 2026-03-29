@@ -538,10 +538,9 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
             config={mg.config}
             currentRound={mg.currentQuestion}
             subPhase={mg.subPhase ?? 'active'}
-            roundWinner={mg.emojiRoundWinner ?? ''}
+            correctAnswerers={mg.emojiCorrectAnswerers ?? []}
             roundStartedAt={mg.roundStartedAt}
             playerId={playerId}
-            players={gameState.players}
             onAnswer={(text) => sendMiniGameAnswer({ emojiAnswer: text })}
           />
         )}

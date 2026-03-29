@@ -1,6 +1,5 @@
 import { useState, useEffect, FormEvent } from 'react'
 import { PlayerList } from '../components/PlayerList'
-import { Leaderboard } from '../components/Leaderboard'
 import { CountdownTimer } from '../components/CountdownTimer'
 import { useGameStore } from '../store/gameStore'
 import { AdminActionType } from '../types/game'
@@ -171,7 +170,8 @@ export function AdminView({ sendJoin, sendAdminAction }: Props) {
                   className="btn-sketch bg-sky text-ink w-full"
                   onClick={() => action(AdminActionType.ActionNextRound)}
                 >
-                  {gameState.currentRound + 1 >= gameState.rounds.length
+                  {gameState.currentRound + 1 >= gameState.rounds.length &&
+                  !gameState.miniGameSchedule.includes(gameState.currentRound)
                     ? 'Finish Game 🏁'
                     : 'Next Round ➡️'}
                 </button>
@@ -239,7 +239,16 @@ export function AdminView({ sendJoin, sendAdminAction }: Props) {
                       <>
                         <div className="text-xs font-bold text-muted text-center">
                           {subPhase === 'submitting' && `${submittedCount} / ${totalSubmitters} submitted`}
-                          {subPhase === 'voting' && 'Voting in progress'}
+                          {subPhase === 'voting' && (() => {
+                            if (isFibbage) return 'Voting in progress'
+                            const qs = mg.quiplashStates ?? {}
+                            const allMatchedIds = new Set(matchups.flatMap((m) => [m.playerA, m.playerB]))
+                            const voterIds = Object.keys(qs).filter((id) => !allMatchedIds.has(id))
+                            const votedCount = voterIds.filter(
+                              (id) => qs[id]?.votes?.[mg.currentQuestion] !== undefined
+                            ).length
+                            return `${votedCount} / ${voterIds.length} voted`
+                          })()}
                           {subPhase === 'revealing' && 'Results shown'}
                         </div>
                         <button
@@ -271,11 +280,13 @@ export function AdminView({ sendJoin, sendAdminAction }: Props) {
                     const subPhase = mg.subPhase ?? 'active'
                     const totalRounds = mg.config.emojiRounds?.length ?? 0
                     const isLastRound = mg.currentQuestion >= totalRounds - 1
-                    const roundDone = subPhase === 'round_won' || subPhase === 'round_expired'
+                    const roundDone = subPhase === 'round_expired'
+                    const correctCount = mg.emojiCorrectAnswerers?.length ?? 0
                     return (
                       <>
                         <div className="text-xs font-bold text-muted text-center">
                           Round {mg.currentQuestion + 1} of {totalRounds} — {subPhase.replace('_', ' ')}
+                          {subPhase === 'active' && correctCount > 0 && ` · ${correctCount} correct`}
                         </div>
                         <button
                           className="btn-sketch bg-coral text-white w-full disabled:opacity-40"
@@ -479,11 +490,7 @@ export function AdminView({ sendJoin, sendAdminAction }: Props) {
         </div>
       </div>
 
-      {/* Leaderboard */}
-      <div className="mt-6 sketch-border bg-white px-4 py-4">
-        <p className="font-black text-lg mb-3">Leaderboard</p>
-        <Leaderboard entries={gameState.leaderboard} />
-      </div>
+
     </div>
   )
 }

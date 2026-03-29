@@ -134,7 +134,7 @@ type MiniGameState struct {
 	QuiplashSlots    []QuiplashSlot                     `json:"quiplashSlots,omitempty"`
 	QuiplashStates   map[string]*PlayerQuiplashState    `json:"quiplashStates,omitempty"`
 	QuiplashResults  []QuiplashRoundResult              `json:"quiplashResults,omitempty"`
-	EmojiRoundWinner string                             `json:"emojiRoundWinner,omitempty"`
+	EmojiCorrectAnswerers []string                      `json:"emojiCorrectAnswerers,omitempty"`
 	RoundStartedAt  *time.Time                          `json:"roundStartedAt,omitempty"`
 	EmojiStates     map[string]*PlayerEmojiState        `json:"emojiStates,omitempty"`
 }

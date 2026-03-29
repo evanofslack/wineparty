@@ -271,7 +271,7 @@ export interface MiniGameState {
   quiplashSlots?: QuiplashSlot[]
   quiplashStates?: Record<string, PlayerQuiplashState>
   quiplashResults?: QuiplashRoundResult[]
-  emojiRoundWinner?: string
+  emojiCorrectAnswerers?: string[]
   roundStartedAt?: string
   emojiStates?: Record<string, PlayerEmojiState>
 }

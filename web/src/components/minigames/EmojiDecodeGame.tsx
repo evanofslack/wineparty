@@ -1,14 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
-import type { MiniGameConfig, Player } from '../../types/game'
+import type { MiniGameConfig } from '../../types/game'
 
 interface Props {
   config: MiniGameConfig
   currentRound: number
   subPhase: string
-  roundWinner: string
+  correctAnswerers: string[]
   roundStartedAt: string | undefined
   playerId: string
-  players: Record<string, Player>
   onAnswer: (text: string) => void
 }
 
@@ -16,10 +15,9 @@ export function EmojiDecodeGame({
   config,
   currentRound,
   subPhase,
-  roundWinner,
+  correctAnswerers,
   roundStartedAt,
   playerId,
-  players,
   onAnswer,
 }: Props) {
   const [input, setInput] = useState('')
@@ -62,6 +60,8 @@ export function EmojiDecodeGame({
 
   if (!round) return null
 
+  const alreadyCorrect = correctAnswerers.includes(playerId)
+
   if (subPhase === 'active') {
     const timerPct = secondsLeft !== null ? (secondsLeft / timerSecs) * 100 : 100
     const timerColor = timerPct > 50 ? 'bg-lime' : timerPct > 25 ? 'bg-sunny' : 'bg-coral'
@@ -82,46 +82,29 @@ export function EmojiDecodeGame({
         {secondsLeft !== null && (
           <p className="text-center font-black text-2xl text-ink">{secondsLeft}s</p>
         )}
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <input
-            type="text"
-            placeholder="Type your answer..."
-            value={input}
-            onChange={(e) => { setInput(e.target.value); setIncorrect(false) }}
-            className="sketch-border px-4 py-3 font-semibold bg-white w-full"
-            maxLength={60}
-            autoFocus
-          />
-          {incorrect && (
-            <p className="text-coral font-bold text-sm text-center">Incorrect, try again</p>
-          )}
-          <button type="submit" className="btn-sketch bg-coral text-white w-full font-bold">
-            Submit
-          </button>
-        </form>
-      </div>
-    )
-  }
-
-  if (subPhase === 'round_won') {
-    const winner = players[roundWinner]
-    const iWon = roundWinner === playerId
-    return (
-      <div className="flex flex-col gap-4 items-center text-center">
-        <div className="sketch-border-sky bg-sky/10 px-4 py-4 w-full">
-          <p className="text-4xl">{round.emoji}</p>
-        </div>
-        <div className="sketch-border-lime bg-lime/20 px-6 py-4 w-full">
-          <p className="text-sm font-bold text-muted">Answer</p>
-          <p className="text-2xl font-black text-ink">{round.answer}</p>
-        </div>
-        {winner && (
-          <div className="sketch-border-sunny bg-sunny/20 px-6 py-4 w-full">
-            <p className="text-sm font-bold text-muted">{iWon ? 'You got it!' : 'Winner'}</p>
-            <p className="text-xl font-black text-ink">{winner.name}</p>
+        {alreadyCorrect ? (
+          <div className="sketch-border-lime bg-lime/20 px-6 py-4 text-center w-full">
+            <p className="font-black text-xl text-ink">Got it! Waiting for round to end...</p>
           </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+            <input
+              type="text"
+              placeholder="Type your answer..."
+              value={input}
+              onChange={(e) => { setInput(e.target.value); setIncorrect(false) }}
+              className="sketch-border px-4 py-3 font-semibold bg-white w-full"
+              maxLength={60}
+              autoFocus
+            />
+            {incorrect && (
+              <p className="text-coral font-bold text-sm text-center">Incorrect, try again</p>
+            )}
+            <button type="submit" className="btn-sketch bg-coral text-white w-full font-bold">
+              Submit
+            </button>
+          </form>
         )}
-        <p className="text-muted font-semibold">Waiting for host...</p>
       </div>
     )
   }
@@ -136,7 +119,9 @@ export function EmojiDecodeGame({
           <p className="text-sm font-bold text-muted">Time's up! The answer was</p>
           <p className="text-2xl font-black text-ink">{round.answer}</p>
         </div>
-        <p className="text-muted font-semibold">No winner this round. Waiting for host...</p>
+        <p className="text-muted font-semibold">
+          {alreadyCorrect ? 'You got it! Waiting for host...' : 'Waiting for host...'}
+        </p>
       </div>
     )
   }

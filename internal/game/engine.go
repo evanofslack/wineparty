@@ -719,6 +719,9 @@ func (e *Engine) submitQuiplashAnswer(playerID, submission string) error {
 
 func (e *Engine) submitQuiplashVote(playerID string, slotID int) error {
 	ms := e.state.MiniGame
+	if p, ok := e.state.Players[playerID]; ok && p.Role == RoleAdmin {
+		return ErrInvalidAnswer
+	}
 	if ms.CurrentQuestion >= len(ms.QuiplashMatchups) {
 		return ErrWrongPhase
 	}
@@ -924,13 +927,15 @@ func (e *Engine) submitEmojiAnswer(playerID, answer string) error {
 		ps = &PlayerEmojiState{RoundWins: make([]bool, len(ms.Config.EmojiRounds))}
 		ms.EmojiStates[playerID] = ps
 	}
+	if ps.RoundWins[ms.CurrentQuestion] {
+		return ErrAlreadyAnswered
+	}
 	ps.Points += pts
 	ps.RoundWins[ms.CurrentQuestion] = true
 	if p, ok := e.state.Players[playerID]; ok {
 		p.MiniGameScore += pts
 	}
-	ms.EmojiRoundWinner = playerID
-	ms.SubPhase = "round_won"
+	ms.EmojiCorrectAnswerers = append(ms.EmojiCorrectAnswerers, playerID)
 	e.state.Leaderboard = BuildLeaderboard(e.state.Players)
 	return nil
 }
@@ -944,7 +949,6 @@ func (e *Engine) EmojiExpireRound() error {
 		return ErrWrongPhase
 	}
 	ms.SubPhase = "round_expired"
-	ms.EmojiRoundWinner = ""
 	return nil
 }
 
@@ -956,11 +960,11 @@ func (e *Engine) EmojiNextRound() error {
 	if ms.Config.Type != "emoji_decode" {
 		return ErrWrongPhase
 	}
-	if ms.SubPhase != "round_won" && ms.SubPhase != "round_expired" {
+	if ms.SubPhase != "round_expired" {
 		return ErrWrongPhase
 	}
 	ms.CurrentQuestion++
-	ms.EmojiRoundWinner = ""
+	ms.EmojiCorrectAnswerers = nil
 	now := time.Now()
 	ms.RoundStartedAt = &now
 	ms.SubPhase = "active"

@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import type { MiniGameState, Player } from '../../types/game'
 
 interface Props {
@@ -173,7 +174,19 @@ export function MiniGameDisplay({ miniGame, players, resultsMode = false }: Prop
       )
     }
 
-    const allWords = groups.flatMap((g) => g.words)
+    const allWords = useMemo(() => {
+      const words = groups.flatMap((g) => g.words)
+      const seed = words.slice().sort().join('')
+      let h = 0
+      for (let i = 0; i < seed.length; i++) h = (Math.imul(31, h) + seed.charCodeAt(i)) | 0
+      const arr = [...words]
+      for (let i = arr.length - 1; i > 0; i--) {
+        h = (Math.imul(h ^ (h >>> 13), 0x9e3779b9) | 0) >>> 0
+        const j = h % (i + 1)
+        ;[arr[i], arr[j]] = [arr[j], arr[i]]
+      }
+      return arr
+    }, [groups])
     const totalFound = Object.values(connStates).reduce((sum, s) => sum + s.foundGroups.length, 0)
 
     return (
@@ -254,26 +267,38 @@ export function MiniGameDisplay({ miniGame, players, resultsMode = false }: Prop
             </p>
           </>
         )}
-        {subPhase === 'revealing' && q && (
-          <div className="flex flex-col gap-2">
-            {slots.map((slot) => {
-              const owner = slot.playerId ? players[slot.playerId] : null
-              return (
-                <div
-                  key={slot.id}
-                  className={`sketch-border px-4 py-3 flex items-start gap-3 ${slot.isCorrect ? 'bg-lime/30 border-lime' : 'bg-white'}`}
-                >
-                  <span className="font-black text-grape w-6 shrink-0">{slot.id + 1}.</span>
-                  <div className="flex-1">
-                    <p className="font-semibold text-ink">{slot.text}</p>
-                    {slot.isCorrect && <p className="text-xs font-black text-lime-700">REAL ANSWER</p>}
-                    {owner && <p className="text-xs text-muted">{owner.name}</p>}
+        {subPhase === 'revealing' && q && (() => {
+          const slotVoteCounts: Record<number, number> = {}
+          for (const ps of Object.values(miniGame.fibbageStates ?? {})) {
+            if (ps.votedFor !== -1) {
+              slotVoteCounts[ps.votedFor] = (slotVoteCounts[ps.votedFor] ?? 0) + 1
+            }
+          }
+          return (
+            <div className="flex flex-col gap-2">
+              {slots.map((slot) => {
+                const owner = slot.playerId ? players[slot.playerId] : null
+                const voteCount = slotVoteCounts[slot.id] ?? 0
+                return (
+                  <div
+                    key={slot.id}
+                    className={`sketch-border px-4 py-3 flex items-start gap-3 ${slot.isCorrect ? 'bg-lime/30 border-lime' : 'bg-white'}`}
+                  >
+                    <span className="font-black text-grape w-6 shrink-0">{slot.id + 1}.</span>
+                    <div className="flex-1">
+                      <p className="font-semibold text-ink">{slot.text}</p>
+                      {slot.isCorrect && <p className="text-xs font-black text-lime-700">REAL ANSWER</p>}
+                      {owner && <p className="text-xs text-muted">{owner.name}</p>}
+                    </div>
+                    <span className="text-xs font-black text-grape shrink-0">
+                      {'● '.repeat(voteCount).trim() || '○'}
+                    </span>
                   </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
+                )
+              })}
+            </div>
+          )
+        })()}
       </div>
     )
   }
@@ -343,16 +368,26 @@ export function MiniGameDisplay({ miniGame, players, resultsMode = false }: Prop
         {subPhase === 'submitting' && (
           <p className="text-center font-bold text-lg text-muted">Players are responding...</p>
         )}
-        {subPhase === 'voting' && slots.length > 0 && (
-          <div className="flex flex-col gap-3">
-            {slots.map((slot) => (
-              <div key={slot.id} className="sketch-border bg-white px-5 py-4 text-lg font-semibold">
-                {slot.text}
-              </div>
-            ))}
-            <p className="text-center font-bold text-muted">Others are voting...</p>
-          </div>
-        )}
+        {subPhase === 'voting' && slots.length > 0 && (() => {
+          const qStates = miniGame.quiplashStates ?? {}
+          const matchedIds = new Set(matchups.flatMap((m) => [m.playerA, m.playerB]))
+          const voterIds = Object.keys(qStates).filter((id) => !matchedIds.has(id))
+          const votedCount = voterIds.filter(
+            (id) => qStates[id]?.votes?.[miniGame.currentQuestion] !== undefined
+          ).length
+          return (
+            <div className="flex flex-col gap-3">
+              {slots.map((slot) => (
+                <div key={slot.id} className="sketch-border bg-white px-5 py-4 text-lg font-semibold">
+                  {slot.text}
+                </div>
+              ))}
+              <p className="text-center font-bold text-muted">
+                <span className="text-grape font-black">{votedCount}</span> / {voterIds.length} voted
+              </p>
+            </div>
+          )
+        })()}
         {subPhase === 'revealing' && slots.length > 0 && (
           <div className="flex flex-col gap-3">
             {slots.map((slot) => {
@@ -384,16 +419,19 @@ export function MiniGameDisplay({ miniGame, players, resultsMode = false }: Prop
         <div className="flex flex-col gap-4 w-full">
           <p className="text-xl font-black text-center">Emoji Decode Summary</p>
           {rounds.map((r, i) => {
-            const winnerId = miniGame.emojiStates
-              ? Object.entries(miniGame.emojiStates).find(([, s]) => s.roundWins?.[i])?.[0]
-              : undefined
-            const winner = winnerId ? players[winnerId] : null
+            const winners = miniGame.emojiStates
+              ? Object.entries(miniGame.emojiStates)
+                  .filter(([, s]) => s.roundWins?.[i])
+                  .map(([id]) => players[id]?.name ?? id)
+              : []
             return (
               <div key={i} className="sketch-border bg-white px-4 py-3 flex items-center gap-4">
                 <span className="text-3xl">{r.emoji}</span>
                 <div className="flex-1">
                   <p className="font-black text-ink">{r.answer}</p>
-                  <p className="text-xs text-muted">{winner ? `Won by ${winner.name}` : 'No winner'}</p>
+                  <p className="text-xs text-muted">
+                    {winners.length > 0 ? `Got by ${winners.join(', ')}` : 'No one got it'}
+                  </p>
                 </div>
               </div>
             )
@@ -414,22 +452,34 @@ export function MiniGameDisplay({ miniGame, players, resultsMode = false }: Prop
           </div>
         )}
         {subPhase === 'active' && (
-          <p className="font-bold text-lg text-muted">
-            {timerSecs}s timer — first correct answer wins
-          </p>
-        )}
-        {subPhase === 'round_won' && miniGame.emojiRoundWinner && (
-          <div className="sketch-border-lime bg-lime/20 px-6 py-3 text-center w-full">
-            <p className="font-black text-xl text-ink">
-              {players[miniGame.emojiRoundWinner]?.name ?? miniGame.emojiRoundWinner} got it!
-            </p>
-            {round && <p className="font-bold text-muted">{round.answer}</p>}
+          <div className="flex flex-col items-center gap-3 w-full">
+            <p className="font-bold text-lg text-muted">{timerSecs}s timer — answer in your app</p>
+            {(miniGame.emojiCorrectAnswerers ?? []).length > 0 && (
+              <div className="flex flex-wrap gap-1 justify-center">
+                {(miniGame.emojiCorrectAnswerers ?? []).map((id) => (
+                  <span key={id} className="text-xs font-black px-2 py-0.5 bg-lime text-ink">
+                    {players[id]?.name ?? id} ✓
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         )}
         {subPhase === 'round_expired' && (
           <div className="sketch-border-coral bg-coral/20 px-6 py-3 text-center w-full">
             <p className="font-black text-xl text-coral">Time's up!</p>
             {round && <p className="font-bold text-ink">{round.answer}</p>}
+            {(miniGame.emojiCorrectAnswerers ?? []).length > 0 ? (
+              <div className="flex flex-wrap gap-1 justify-center mt-2">
+                {(miniGame.emojiCorrectAnswerers ?? []).map((id) => (
+                  <span key={id} className="text-xs font-black px-2 py-0.5 bg-lime text-ink">
+                    {players[id]?.name ?? id}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm font-bold text-muted mt-1">No one got it</p>
+            )}
           </div>
         )}
       </div>
