@@ -285,18 +285,38 @@ export function MiniGameDisplay({ miniGame, players, resultsMode = false }: Prop
     const slots = miniGame.quiplashSlots ?? []
 
     if (resultsMode) {
+      const results = miniGame.quiplashResults ?? []
       return (
         <div className="flex flex-col gap-4 w-full">
           <p className="text-xl font-black text-center">Quiplash Summary</p>
-          {matchups.map((m, i) => {
-            const pA = players[m.playerA]
-            const pB = players[m.playerB]
+          {results.map((r, i) => {
+            const pA = players[r.playerA]
+            const pB = players[r.playerB]
+            const winnerIsA = r.winnerId === r.playerA
+            const winnerIsB = r.winnerId === r.playerB
+            const isTie = !r.winnerId
+            const winningText = winnerIsA ? r.textA : winnerIsB ? r.textB : null
+            const filledPrompt = winningText
+              ? r.prompt.replace('___', `"${winningText}"`)
+              : r.prompt
             return (
               <div key={i} className="sketch-border bg-white px-4 py-3">
                 <p className="text-xs font-bold text-muted uppercase tracking-wider mb-1">
-                  Round {i + 1}: {pA?.name ?? m.playerA} vs {pB?.name ?? m.playerB}
+                  Round {i + 1}:{' '}
+                  <span className={winnerIsA ? 'text-ink font-black' : ''}>{pA?.name ?? r.playerA}</span>
+                  {' vs '}
+                  <span className={winnerIsB ? 'text-ink font-black' : ''}>{pB?.name ?? r.playerB}</span>
+                  {isTie && ' — tie'}
                 </p>
-                <p className="font-semibold text-ink text-sm">{m.prompt}</p>
+                <p className="font-semibold text-ink text-sm mb-2">{filledPrompt}</p>
+                <div className="flex flex-col gap-1">
+                  <p className={`text-xs ${winnerIsA ? 'font-black text-grape' : 'text-muted'}`}>
+                    {pA?.name ?? r.playerA}: "{r.textA}" — {r.votesA} vote{r.votesA !== 1 ? 's' : ''}
+                  </p>
+                  <p className={`text-xs ${winnerIsB ? 'font-black text-grape' : 'text-muted'}`}>
+                    {pB?.name ?? r.playerB}: "{r.textB}" — {r.votesB} vote{r.votesB !== 1 ? 's' : ''}
+                  </p>
+                </div>
               </div>
             )
           })}

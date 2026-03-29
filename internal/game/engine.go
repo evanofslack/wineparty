@@ -160,6 +160,14 @@ func (e *Engine) NextRound() error {
 	}
 	e.PauseTimer()
 	e.ResetTimer()
+	// Check for minigame first so the last round can trigger one before completing.
+	for i, schedRound := range e.state.MiniGameSchedule {
+		if schedRound == e.state.CurrentRound && i < len(e.state.MiniGameConfigs) {
+			e.state.MiniGame = e.initMiniGame(e.state.MiniGameConfigs[i])
+			e.state.Phase = PhaseMiniGame
+			return nil
+		}
+	}
 	next := e.state.CurrentRound + 1
 	if next >= len(e.state.Rounds) {
 		now := time.Now()
@@ -169,13 +177,6 @@ func (e *Engine) NextRound() error {
 		e.state.Summary = summary
 		e.state.PlayerSummaries = playerSummaries
 		return nil
-	}
-	for i, schedRound := range e.state.MiniGameSchedule {
-		if schedRound == e.state.CurrentRound && i < len(e.state.MiniGameConfigs) {
-			e.state.MiniGame = e.initMiniGame(e.state.MiniGameConfigs[i])
-			e.state.Phase = PhaseMiniGame
-			return nil
-		}
 	}
 	e.state.CurrentRound = next
 	e.state.Phase = PhaseGuessing
@@ -699,11 +700,15 @@ func (e *Engine) submitQuiplashAnswer(playerID, submission string) error {
 	}
 	matchup := ms.QuiplashMatchups[ms.CurrentQuestion]
 	if playerID != matchup.PlayerA && playerID != matchup.PlayerB {
-		return ErrInvalidAnswer
+		return ErrInvalidAnswer // not a matched player this round
 	}
 	ps, ok := ms.QuiplashStates[playerID]
 	if !ok {
-		return ErrInvalidAnswer
+		ms.QuiplashStates[playerID] = &PlayerQuiplashState{
+			Submissions: make(map[int]string),
+			Votes:       make(map[int]int),
+		}
+		ps = ms.QuiplashStates[playerID]
 	}
 	if _, already := ps.Submissions[ms.CurrentQuestion]; already {
 		return ErrAlreadyAnswered
@@ -719,11 +724,15 @@ func (e *Engine) submitQuiplashVote(playerID string, slotID int) error {
 	}
 	matchup := ms.QuiplashMatchups[ms.CurrentQuestion]
 	if playerID == matchup.PlayerA || playerID == matchup.PlayerB {
-		return ErrInvalidAnswer
+		return ErrInvalidAnswer // matched players cannot vote
 	}
 	ps, ok := ms.QuiplashStates[playerID]
 	if !ok {
-		return ErrInvalidAnswer
+		ms.QuiplashStates[playerID] = &PlayerQuiplashState{
+			Submissions: make(map[int]string),
+			Votes:       make(map[int]int),
+		}
+		ps = ms.QuiplashStates[playerID]
 	}
 	if _, already := ps.Votes[ms.CurrentQuestion]; already {
 		return ErrAlreadyAnswered
@@ -749,13 +758,17 @@ func (e *Engine) QuiplashStartVoting() error {
 	matchup := ms.QuiplashMatchups[ms.CurrentQuestion]
 	psA := ms.QuiplashStates[matchup.PlayerA]
 	psB := ms.QuiplashStates[matchup.PlayerB]
-	if psA == nil || psB == nil {
-		return ErrInvalidAnswer
+	textA := "(no answer)"
+	textB := "(no answer)"
+	if psA != nil {
+		if t, ok := psA.Submissions[ms.CurrentQuestion]; ok && t != "" {
+			textA = t
+		}
 	}
-	textA, okA := psA.Submissions[ms.CurrentQuestion]
-	textB, okB := psB.Submissions[ms.CurrentQuestion]
-	if !okA || !okB {
-		return ErrInvalidAnswer
+	if psB != nil {
+		if t, ok := psB.Submissions[ms.CurrentQuestion]; ok && t != "" {
+			textB = t
+		}
 	}
 	// randomly assign slot 0 and slot 1
 	slotA, slotB := 0, 1
@@ -836,6 +849,23 @@ func (e *Engine) QuiplashReveal() error {
 		}
 	}
 	e.state.Leaderboard = BuildLeaderboard(e.state.Players)
+	winnerID := ""
+	if votesA > votesB {
+		winnerID = matchup.PlayerA
+	} else if votesB > votesA {
+		winnerID = matchup.PlayerB
+	}
+	ms.QuiplashResults = append(ms.QuiplashResults, QuiplashRoundResult{
+		RoundIndex: ms.CurrentQuestion,
+		PlayerA:    matchup.PlayerA,
+		PlayerB:    matchup.PlayerB,
+		Prompt:     matchup.Prompt,
+		TextA:      textA,
+		TextB:      textB,
+		VotesA:     votesA,
+		VotesB:     votesB,
+		WinnerID:   winnerID,
+	})
 	ms.SubPhase = "revealing"
 	return nil
 }

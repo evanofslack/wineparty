@@ -209,23 +209,32 @@ export function AdminView({ sendJoin, sendAdminAction }: Props) {
                     const mg = gameState.miniGame!
                     const subPhase = mg.subPhase ?? 'submitting'
                     const isFibbage = mg.config.type === 'fibbage'
+                    const matchups = mg.quiplashMatchups ?? []
                     const totalItems = isFibbage
                       ? (mg.config.fibbageQuestions?.length ?? 0)
-                      : (mg.quiplashMatchups?.length ?? 0)
+                      : matchups.length
                     const isLastItem = mg.currentQuestion >= totalItems - 1
+                    const currentMatchup = matchups[mg.currentQuestion]
                     const submittedCount = isFibbage
                       ? Object.values(mg.fibbageStates ?? {}).filter((s) => s.submission !== '').length
                       : (() => {
-                          const matchup = mg.quiplashMatchups?.[mg.currentQuestion]
-                          if (!matchup) return 0
-                          const stateA = mg.quiplashStates?.[matchup.playerA]
-                          const stateB = mg.quiplashStates?.[matchup.playerB]
+                          if (!currentMatchup) return 0
+                          const stateA = mg.quiplashStates?.[currentMatchup.playerA]
+                          const stateB = mg.quiplashStates?.[currentMatchup.playerB]
                           return (stateA?.submissions?.[mg.currentQuestion] !== undefined ? 1 : 0) +
                                  (stateB?.submissions?.[mg.currentQuestion] !== undefined ? 1 : 0)
                         })()
                     const totalSubmitters = isFibbage
                       ? Object.keys(mg.fibbageStates ?? {}).length
                       : 2
+                    const noMatchups = !isFibbage && matchups.length === 0
+                    if (noMatchups) {
+                      return (
+                        <div className="text-sm font-bold text-coral text-center">
+                          Not enough players for Quiplash (need 2+)
+                        </div>
+                      )
+                    }
                     return (
                       <>
                         <div className="text-xs font-bold text-muted text-center">
@@ -289,7 +298,7 @@ export function AdminView({ sendJoin, sendAdminAction }: Props) {
                     className="btn-sketch bg-coral text-white w-full"
                     onClick={() => action(AdminActionType.ActionEndMiniGame)}
                   >
-                    End Mini-Game ▶️
+                    End Mini-Game → Results
                   </button>
                 </>
               )}

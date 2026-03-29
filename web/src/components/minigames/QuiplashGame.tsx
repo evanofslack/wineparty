@@ -38,16 +38,16 @@ export function QuiplashGame({
     setInput('')
   }
 
+  const playerAName = matchup ? (players[matchup.playerA]?.name ?? matchup.playerA) : ''
+  const playerBName = matchup ? (players[matchup.playerB]?.name ?? matchup.playerB) : ''
+
   if (!matchup) {
     return (
       <div className="sketch-border bg-white px-4 py-6 text-center">
-        <p className="font-bold text-muted">Waiting for round to start...</p>
+        <p className="font-bold text-muted">Waiting for host...</p>
       </div>
     )
   }
-
-  const playerAName = players[matchup.playerA]?.name ?? matchup.playerA
-  const playerBName = players[matchup.playerB]?.name ?? matchup.playerB
 
   if (subPhase === 'submitting') {
     if (!isMatched) {
@@ -58,6 +58,7 @@ export function QuiplashGame({
               Round {currentRound + 1} of {totalRounds}
             </p>
             <p className="font-black text-lg text-ink">{playerAName} vs {playerBName}</p>
+            <p className="font-semibold text-ink mt-2">{matchup.prompt}</p>
           </div>
           <div className="sketch-border bg-white px-4 py-6 text-center">
             <p className="font-bold text-muted">Waiting for players to respond...</p>

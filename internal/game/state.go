@@ -85,6 +85,18 @@ type PlayerQuiplashState struct {
 	Points      int            `json:"points"`
 }
 
+type QuiplashRoundResult struct {
+	RoundIndex int    `json:"roundIndex"`
+	PlayerA    string `json:"playerA"`
+	PlayerB    string `json:"playerB"`
+	Prompt     string `json:"prompt"`
+	TextA      string `json:"textA"`
+	TextB      string `json:"textB"`
+	VotesA     int    `json:"votesA"`
+	VotesB     int    `json:"votesB"`
+	WinnerID   string `json:"winnerId,omitempty"`
+}
+
 type EmojiRound struct {
 	Emoji  string `json:"emoji"`
 	Answer string `json:"answer"`
@@ -119,8 +131,9 @@ type MiniGameState struct {
 	FibbageSlots    []FibbageSlot                       `json:"fibbageSlots,omitempty"`
 	FibbageStates   map[string]*PlayerFibbageState      `json:"fibbageStates,omitempty"`
 	QuiplashMatchups []QuiplashMatchup                  `json:"quiplashMatchups,omitempty"`
-	QuiplashSlots   []QuiplashSlot                      `json:"quiplashSlots,omitempty"`
-	QuiplashStates  map[string]*PlayerQuiplashState     `json:"quiplashStates,omitempty"`
+	QuiplashSlots    []QuiplashSlot                     `json:"quiplashSlots,omitempty"`
+	QuiplashStates   map[string]*PlayerQuiplashState    `json:"quiplashStates,omitempty"`
+	QuiplashResults  []QuiplashRoundResult              `json:"quiplashResults,omitempty"`
 	EmojiRoundWinner string                             `json:"emojiRoundWinner,omitempty"`
 	RoundStartedAt  *time.Time                          `json:"roundStartedAt,omitempty"`
 	EmojiStates     map[string]*PlayerEmojiState        `json:"emojiStates,omitempty"`

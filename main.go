@@ -86,7 +86,7 @@ func main() {
 
 	repo := repository.NewMemoryRepo(wines, cfg.StateFile)
 	state := repo.GetState()
-	if state.MiniGameSchedule == nil {
+	if len(state.MiniGameSchedule) != len(miniGameSchedule) {
 		state.MiniGameSchedule = miniGameSchedule
 		state.MiniGameConfigs = miniGameConfigs
 	}
@@ -118,15 +118,15 @@ func main() {
 }
 
 func computeMiniGameSchedule(numRounds, numGames int) []int {
-	if numRounds <= 1 || numGames == 0 {
+	if numRounds <= 0 || numGames == 0 {
 		return nil
 	}
 	effective := numGames
-	if effective > numRounds-1 {
-		effective = numRounds - 1
+	if effective > numRounds {
+		effective = numRounds
 	}
 	spacing := numRounds / effective
-	cap := numRounds - 2
+	cap := numRounds - 1
 	schedule := make([]int, effective)
 	for i := range effective {
 		s := spacing*(i+1) - 1

@@ -222,6 +222,18 @@ export interface PlayerQuiplashState {
   points: number
 }
 
+export interface QuiplashRoundResult {
+  roundIndex: number
+  playerA: string
+  playerB: string
+  prompt: string
+  textA: string
+  textB: string
+  votesA: number
+  votesB: number
+  winnerId?: string
+}
+
 export interface EmojiRound {
   emoji: string
   answer: string
@@ -258,6 +270,7 @@ export interface MiniGameState {
   quiplashMatchups?: QuiplashMatchup[]
   quiplashSlots?: QuiplashSlot[]
   quiplashStates?: Record<string, PlayerQuiplashState>
+  quiplashResults?: QuiplashRoundResult[]
   emojiRoundWinner?: string
   roundStartedAt?: string
   emojiStates?: Record<string, PlayerEmojiState>
