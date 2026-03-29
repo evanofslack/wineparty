@@ -287,6 +287,12 @@ export interface MiniGameAnswerPayload {
   emojiAnswer?: string
 }
 
+export interface MiniGameWinner {
+  gameType: string
+  winnerId: string
+  points: number
+}
+
 export interface GameState {
   phase: Phase
   currentRound: number
@@ -301,6 +307,7 @@ export interface GameState {
   miniGameSchedule: number[]
   miniGameConfigs: MiniGameConfig[]
   miniGame?: MiniGameState
+  miniGameWinners?: MiniGameWinner[]
   colors: PlayerColor[]
 }
 

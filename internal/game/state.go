@@ -120,23 +120,30 @@ type MiniGameConfig struct {
 	EmojiRounds      []EmojiRound       `json:"emojiRounds,omitempty"`
 }
 
+type MiniGameWinner struct {
+	GameType string `json:"gameType"`
+	WinnerID string `json:"winnerId"`
+	Points   int    `json:"points"`
+}
+
 type MiniGameState struct {
-	Config          MiniGameConfig                      `json:"config"`
-	CurrentQuestion int                                 `json:"currentQuestion"`
-	AnswerRevealed  bool                                `json:"answerRevealed"`
-	SubPhase        string                              `json:"subPhase,omitempty"`
-	WordleStates    map[string]*PlayerWordleState       `json:"wordleStates,omitempty"`
-	ConnStates      map[string]*PlayerConnectionsState  `json:"connStates,omitempty"`
-	TriviaStates    map[string]*PlayerTriviaState       `json:"triviaStates,omitempty"`
-	FibbageSlots    []FibbageSlot                       `json:"fibbageSlots,omitempty"`
-	FibbageStates   map[string]*PlayerFibbageState      `json:"fibbageStates,omitempty"`
-	QuiplashMatchups []QuiplashMatchup                  `json:"quiplashMatchups,omitempty"`
-	QuiplashSlots    []QuiplashSlot                     `json:"quiplashSlots,omitempty"`
-	QuiplashStates   map[string]*PlayerQuiplashState    `json:"quiplashStates,omitempty"`
-	QuiplashResults  []QuiplashRoundResult              `json:"quiplashResults,omitempty"`
-	EmojiCorrectAnswerers []string                      `json:"emojiCorrectAnswerers,omitempty"`
-	RoundStartedAt  *time.Time                          `json:"roundStartedAt,omitempty"`
-	EmojiStates     map[string]*PlayerEmojiState        `json:"emojiStates,omitempty"`
+	Config                MiniGameConfig                     `json:"config"`
+	CurrentQuestion       int                                `json:"currentQuestion"`
+	AnswerRevealed        bool                               `json:"answerRevealed"`
+	SubPhase              string                             `json:"subPhase,omitempty"`
+	ScoreSnapshot         map[string]int                     `json:"scoreSnapshot,omitempty"`
+	WordleStates          map[string]*PlayerWordleState      `json:"wordleStates,omitempty"`
+	ConnStates            map[string]*PlayerConnectionsState `json:"connStates,omitempty"`
+	TriviaStates          map[string]*PlayerTriviaState      `json:"triviaStates,omitempty"`
+	FibbageSlots          []FibbageSlot                      `json:"fibbageSlots,omitempty"`
+	FibbageStates         map[string]*PlayerFibbageState     `json:"fibbageStates,omitempty"`
+	QuiplashMatchups      []QuiplashMatchup                  `json:"quiplashMatchups,omitempty"`
+	QuiplashSlots         []QuiplashSlot                     `json:"quiplashSlots,omitempty"`
+	QuiplashStates        map[string]*PlayerQuiplashState    `json:"quiplashStates,omitempty"`
+	QuiplashResults       []QuiplashRoundResult              `json:"quiplashResults,omitempty"`
+	EmojiCorrectAnswerers []string                           `json:"emojiCorrectAnswerers,omitempty"`
+	RoundStartedAt        *time.Time                         `json:"roundStartedAt,omitempty"`
+	EmojiStates           map[string]*PlayerEmojiState       `json:"emojiStates,omitempty"`
 }
 
 type MiniGameAnswer struct {
@@ -293,6 +300,7 @@ type GameState struct {
 	MiniGameSchedule []int                      `json:"miniGameSchedule"`
 	MiniGameConfigs  []MiniGameConfig           `json:"miniGameConfigs"`
 	MiniGame         *MiniGameState             `json:"miniGame,omitempty"`
+	MiniGameWinners  []MiniGameWinner           `json:"miniGameWinners,omitempty"`
 	Colors           []PlayerColor              `json:"colors"`
 }
 

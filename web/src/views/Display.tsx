@@ -146,6 +146,11 @@ export function DisplayView() {
               {round.wine.price > 0 && (
                 <p className="text-2xl font-bold mt-2 text-muted">${round.wine.price}</p>
               )}
+              {round.wine.flavors && round.wine.flavors.length > 0 && (
+                <p className="text-xl font-semibold mt-2 text-muted">
+                  {round.wine.flavors.join(' · ')}
+                </p>
+              )}
             </div>
           </div>
 
@@ -186,29 +191,48 @@ export function DisplayView() {
       <div className="flex flex-col h-screen overflow-hidden">
         <div className="flex-1 grid grid-cols-2 min-h-0">
           <div className="flex flex-col p-10 gap-5 overflow-hidden border-r border-ink/10">
-            <div className="sketch-border-sunny bg-sunny/30 px-8 py-5 text-center flex flex-col items-center gap-3 shrink-0">
-              <div className="text-5xl">🏆</div>
-              {winnerPlayer && <PlayerAvatar player={winnerPlayer} size={80} />}
-              <h1 className="text-5xl font-black leading-tight">
+            <div className="sketch-border-sunny bg-sunny/30 px-6 py-3 text-center flex flex-col items-center gap-2 shrink-0">
+              <div className="text-4xl">🏆</div>
+              {winnerPlayer && <PlayerAvatar player={winnerPlayer} size={64} />}
+              <h1 className="text-4xl font-black leading-tight">
                 {winner ? `${winner.playerName} wins!` : 'Game Over!'}
               </h1>
-              {winner && <p className="text-4xl font-black text-grape">{winner.score} pts</p>}
+              {winner && <p className="text-3xl font-black text-grape">{winner.score} pts</p>}
             </div>
 
-            <div className="flex flex-col gap-1 overflow-hidden flex-1 min-h-0">
+            <div className="flex flex-wrap justify-center gap-4 shrink-0">
               {gameState.leaderboard.map((e) => {
                 const p = gameState.players[e.playerId]
                 const rankLabel = e.rank <= 3 ? ['🥇', '🥈', '🥉'][e.rank - 1] : `#${e.rank}`
                 return (
-                  <div key={e.playerId} className="flex items-center gap-3 px-4 py-2 sketch-border bg-white shrink-0">
-                    <span className="text-2xl w-10 text-center font-black shrink-0">{rankLabel}</span>
-                    {p && <PlayerAvatar player={p} size={32} />}
-                    <span className="flex-1 font-bold text-xl text-ink truncate">{e.playerName}</span>
-                    <span className="font-black text-2xl text-grape tabular-nums">{e.score}</span>
+                  <div key={e.playerId} className="relative flex flex-col items-center gap-1">
+                    {p && <PlayerAvatar player={p} size={64} />}
+                    <span className="absolute -top-1 -left-1 text-sm font-black leading-none">{rankLabel}</span>
+                    <span className="font-bold text-sm text-ink truncate text-center" style={{ maxWidth: 72 }}>
+                      {e.playerName}
+                    </span>
+                    <span className="font-black text-sm tabular-nums" style={{ color: p?.color || 'inherit' }}>
+                      {e.combinedScore}
+                    </span>
                   </div>
                 )
               })}
             </div>
+
+            {(gameState.miniGameWinners?.length ?? 0) > 0 && (
+              <div className="sketch-border bg-white/80 px-4 py-3 flex-1 min-h-0 overflow-hidden">
+                <p className="text-sm font-black uppercase tracking-wider text-muted mb-2">Mini-Game Highlights</p>
+                {gameState.miniGameWinners!.map((w, i) => {
+                  const p = gameState.players[w.winnerId]
+                  return (
+                    <div key={i} className="flex justify-between items-center py-1 border-b last:border-0 border-paper">
+                      <span className="font-semibold text-base capitalize">{w.gameType.replace('_', ' ')}</span>
+                      <span className="font-black text-base text-grape">{p?.name ?? '—'}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col p-10 gap-4 overflow-hidden">
@@ -264,7 +288,7 @@ export function DisplayView() {
     return (
       <div className="flex flex-col h-screen overflow-hidden">
         <div className="flex-1 flex flex-col items-center justify-center min-h-0 p-10">
-          <div className="w-full max-w-4xl flex flex-col gap-6">
+          <div className="w-full max-w-5xl flex flex-col gap-6">
             <MiniGameDisplay miniGame={gameState.miniGame} players={gameState.players} />
             {gameState.timer && gameState.timer.durationSecs > 0 && (
               <div className="mt-4">
@@ -300,7 +324,7 @@ export function DisplayView() {
       <div className="flex flex-col h-screen overflow-hidden">
         <div className="flex-1 grid grid-cols-2 min-h-0">
           <div className="flex flex-col items-center justify-center p-10 border-r border-ink/10 overflow-hidden">
-            <div className="w-full max-w-xl">
+            <div className="w-full max-w-2xl">
               <MiniGameDisplay miniGame={mg} players={gameState.players} resultsMode={true} />
             </div>
           </div>

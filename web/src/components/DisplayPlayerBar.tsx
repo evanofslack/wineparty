@@ -26,13 +26,13 @@ export function DisplayPlayerBar({ players, leaderboard }: Props) {
           >
             <PlayerAvatar player={player} size={80} />
             <span
-              className="text-sm font-black text-ink truncate text-center leading-tight"
-              style={{ maxWidth: 72 }}
+              className="text-base font-black text-ink truncate text-center leading-tight"
+              style={{ maxWidth: 84 }}
             >
               {player.name || 'Anon'}
             </span>
             <span
-              className="text-sm font-black tabular-nums"
+              className="text-base font-black tabular-nums"
               style={{ color: player.color || 'inherit' }}
             >
               {entry?.combinedScore ?? player.totalScore + player.miniGameScore}
