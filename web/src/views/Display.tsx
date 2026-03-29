@@ -191,43 +191,26 @@ export function DisplayView() {
       <div className="flex flex-col h-screen overflow-hidden">
         <div className="flex-1 grid grid-cols-2 min-h-0">
           <div className="flex flex-col p-10 gap-5 overflow-hidden border-r border-ink/10">
-            <div className="sketch-border-sunny bg-sunny/30 px-6 py-3 text-center flex flex-col items-center gap-2 shrink-0">
-              <div className="text-4xl">🏆</div>
+            <div className="sketch-border-sunny bg-sunny/30 px-6 py-4 flex items-center gap-4 shrink-0">
+              <div className="text-4xl shrink-0">🏆</div>
               {winnerPlayer && <PlayerAvatar player={winnerPlayer} size={64} />}
-              <h1 className="text-4xl font-black leading-tight">
-                {winner ? `${winner.playerName} wins!` : 'Game Over!'}
-              </h1>
-              {winner && <p className="text-3xl font-black text-grape">{winner.score} pts</p>}
-            </div>
-
-            <div className="flex flex-wrap justify-center gap-4 shrink-0">
-              {gameState.leaderboard.map((e) => {
-                const p = gameState.players[e.playerId]
-                const rankLabel = e.rank <= 3 ? ['🥇', '🥈', '🥉'][e.rank - 1] : `#${e.rank}`
-                return (
-                  <div key={e.playerId} className="relative flex flex-col items-center gap-1">
-                    {p && <PlayerAvatar player={p} size={64} />}
-                    <span className="absolute -top-1 -left-1 text-sm font-black leading-none">{rankLabel}</span>
-                    <span className="font-bold text-sm text-ink truncate text-center" style={{ maxWidth: 72 }}>
-                      {e.playerName}
-                    </span>
-                    <span className="font-black text-sm tabular-nums" style={{ color: p?.color || 'inherit' }}>
-                      {e.combinedScore}
-                    </span>
-                  </div>
-                )
-              })}
+              <div>
+                <h1 className="text-4xl font-black leading-tight">
+                  {winner ? `${winner.playerName} wins!` : 'Game Over!'}
+                </h1>
+                {winner && <p className="text-3xl font-black text-grape">{winner.score} pts</p>}
+              </div>
             </div>
 
             {(gameState.miniGameWinners?.length ?? 0) > 0 && (
               <div className="sketch-border bg-white/80 px-4 py-3 flex-1 min-h-0 overflow-hidden">
                 <p className="text-sm font-black uppercase tracking-wider text-muted mb-2">Mini-Game Highlights</p>
                 {gameState.miniGameWinners!.map((w, i) => {
-                  const p = gameState.players[w.winnerId]
+                  const names = w.winnerIds.map((id) => gameState.players[id]?.name ?? '—').join(', ')
                   return (
                     <div key={i} className="flex justify-between items-center py-1 border-b last:border-0 border-paper">
-                      <span className="font-semibold text-base capitalize">{w.gameType.replace('_', ' ')}</span>
-                      <span className="font-black text-base text-grape">{p?.name ?? '—'}</span>
+                      <span className="font-semibold text-base capitalize">{w.gameType.replace(/_/g, ' ')}</span>
+                      <span className="font-black text-base text-grape">{names}</span>
                     </div>
                   )
                 })}
@@ -238,37 +221,52 @@ export function DisplayView() {
           <div className="flex flex-col p-10 gap-4 overflow-hidden">
             {summary ? (
               <>
-                {summary.mostPopular && (
-                  <div className="sketch-border-lime bg-lime/15 px-5 py-4 shrink-0">
-                    <p className="text-sm font-bold text-muted uppercase tracking-wider mb-1">Most Popular</p>
-                    <p className="font-black text-xl text-ink leading-tight">{summary.mostPopular.wineName} ({summary.mostPopular.wineVariety})</p>
-                    <p className="text-3xl font-black text-grape">{summary.mostPopular.avgRating.toFixed(1)}<span className="text-lg font-semibold text-muted">/10</span></p>
-                  </div>
-                )}
-                {summary.leastLiked && summary.leastLiked.wineName !== summary.mostPopular?.wineName && (
-                  <div className="sketch-border-coral bg-coral/15 px-5 py-4 shrink-0">
-                    <p className="text-sm font-bold text-muted uppercase tracking-wider mb-1">Least Liked</p>
-                    <p className="font-black text-xl text-ink leading-tight">{summary.leastLiked.wineName} ({summary.leastLiked.wineVariety})</p>
-                    <p className="text-3xl font-black text-grape">{summary.leastLiked.avgRating.toFixed(1)}<span className="text-lg font-semibold text-muted">/10</span></p>
-                  </div>
-                )}
-                {summary.mostContested && (
-                  <div className="sketch-border-sky bg-sky/15 px-5 py-4 shrink-0">
-                    <p className="text-sm font-bold text-muted uppercase tracking-wider mb-1">Most Divisive</p>
-                    <p className="font-black text-xl text-ink leading-tight">{summary.mostContested.wineName} ({summary.mostContested.wineVariety})</p>
-                    <p className="text-3xl font-black text-grape">{summary.mostContested.avgRating.toFixed(1)}<span className="text-lg font-semibold text-muted">/10</span></p>
-                  </div>
-                )}
+                <div className="grid grid-cols-3 gap-3 shrink-0">
+                  {summary.mostPopular && (
+                    <div className="sketch-border-lime bg-lime/15 px-3 py-3">
+                      <p className="text-xs font-bold text-muted uppercase tracking-wider mb-1">Most Popular</p>
+                      <p className="font-black text-sm text-ink leading-tight">{summary.mostPopular.wineName}</p>
+                      <p className="text-xs text-muted">{summary.mostPopular.wineVariety}</p>
+                      <p className="text-2xl font-black text-grape mt-1">{summary.mostPopular.avgRating.toFixed(1)}<span className="text-sm font-semibold text-muted">/10</span></p>
+                    </div>
+                  )}
+                  {summary.leastLiked && summary.leastLiked.wineName !== summary.mostPopular?.wineName && (
+                    <div className="sketch-border-coral bg-coral/15 px-3 py-3">
+                      <p className="text-xs font-bold text-muted uppercase tracking-wider mb-1">Least Liked</p>
+                      <p className="font-black text-sm text-ink leading-tight">{summary.leastLiked.wineName}</p>
+                      <p className="text-xs text-muted">{summary.leastLiked.wineVariety}</p>
+                      <p className="text-2xl font-black text-grape mt-1">{summary.leastLiked.avgRating.toFixed(1)}<span className="text-sm font-semibold text-muted">/10</span></p>
+                    </div>
+                  )}
+                  {summary.mostContested && (
+                    <div className="sketch-border-sky bg-sky/15 px-3 py-3">
+                      <p className="text-xs font-bold text-muted uppercase tracking-wider mb-1">Most Divisive</p>
+                      <p className="font-black text-sm text-ink leading-tight">{summary.mostContested.wineName}</p>
+                      <p className="text-xs text-muted">{summary.mostContested.wineVariety}</p>
+                      <p className="text-2xl font-black text-grape mt-1">{summary.mostContested.avgRating.toFixed(1)}<span className="text-sm font-semibold text-muted">/10</span></p>
+                    </div>
+                  )}
+                </div>
                 <div className="sketch-border-sky bg-sky/10 px-5 py-4 flex-1 min-h-0 overflow-hidden">
                   <p className="text-sm font-bold text-muted uppercase tracking-wider mb-3">Wine Ratings</p>
-                  {summary.wineRatings.map((wr) => (
-                    <div key={wr.roundIndex} className="flex justify-between items-center py-2 border-b last:border-0 border-paper">
-                      <span className="font-semibold text-lg">{wr.wineName} ({wr.wineVariety})</span>
-                      <span className="font-black text-xl text-grape">
-                        {wr.ratedCount > 0 ? `${wr.avgRating.toFixed(1)}/10` : '—'}
-                      </span>
-                    </div>
-                  ))}
+                  {summary.wineRatings.map((wr) => {
+                    const stdDev = wr.variance > 0 ? Math.sqrt(wr.variance) : 0
+                    return (
+                      <div key={wr.roundIndex} className="flex justify-between items-center py-2 border-b last:border-0 border-paper">
+                        <span className="font-semibold text-lg">{wr.wineName} ({wr.wineVariety})</span>
+                        <span className="font-black text-xl text-grape">
+                          {wr.ratedCount > 0 ? (
+                            <>
+                              {wr.avgRating.toFixed(1)}/10
+                              {stdDev > 0 && (
+                                <span className="text-sm font-semibold text-muted ml-1">±{stdDev.toFixed(1)}</span>
+                              )}
+                            </>
+                          ) : '—'}
+                        </span>
+                      </div>
+                    )
+                  })}
                 </div>
               </>
             ) : (
@@ -278,7 +276,7 @@ export function DisplayView() {
             )}
           </div>
         </div>
-        <DisplayPlayerBar players={allPlayers} leaderboard={leaderboard} />
+        <DisplayPlayerBar players={allPlayers} leaderboard={leaderboard} showRanks />
       </div>
     )
   }

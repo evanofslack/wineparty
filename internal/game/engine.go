@@ -198,11 +198,11 @@ func (e *Engine) EndMiniGame() error {
 		e.state.Leaderboard = BuildLeaderboard(e.state.Players)
 	}
 	if e.state.MiniGame != nil {
-		if winnerID, pts := e.computeMiniGameWinner(); winnerID != "" {
+		if winners, pts := e.computeMiniGameWinner(); len(winners) > 0 {
 			e.state.MiniGameWinners = append(e.state.MiniGameWinners, MiniGameWinner{
-				GameType: e.state.MiniGame.Config.Type,
-				WinnerID: winnerID,
-				Points:   pts,
+				GameType:  e.state.MiniGame.Config.Type,
+				WinnerIDs: winners,
+				Points:    pts,
 			})
 		}
 	}
@@ -535,12 +535,12 @@ func (e *Engine) initMiniGame(cfg MiniGameConfig) *MiniGameState {
 	return ms
 }
 
-func (e *Engine) computeMiniGameWinner() (string, int) {
+func (e *Engine) computeMiniGameWinner() ([]string, int) {
 	ms := e.state.MiniGame
 	if ms == nil || ms.ScoreSnapshot == nil {
-		return "", 0
+		return nil, 0
 	}
-	var winnerID string
+	var winners []string
 	maxDelta := 0
 	for id, p := range e.state.Players {
 		if p.Role == RoleAdmin {
@@ -549,10 +549,12 @@ func (e *Engine) computeMiniGameWinner() (string, int) {
 		delta := p.MiniGameScore - ms.ScoreSnapshot[id]
 		if delta > maxDelta {
 			maxDelta = delta
-			winnerID = id
+			winners = []string{id}
+		} else if delta == maxDelta && delta > 0 {
+			winners = append(winners, id)
 		}
 	}
-	return winnerID, maxDelta
+	return winners, maxDelta
 }
 
 func generateMatchups(playerIDs []string, maxRounds int, prompts []string) []QuiplashMatchup {

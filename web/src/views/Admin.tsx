@@ -240,10 +240,15 @@ export function AdminView({ sendJoin, sendAdminAction }: Props) {
                         <div className="text-xs font-bold text-muted text-center">
                           {subPhase === 'submitting' && `${submittedCount} / ${totalSubmitters} submitted`}
                           {subPhase === 'voting' && (() => {
-                            if (isFibbage) return 'Voting in progress'
+                            if (isFibbage) {
+                              const states = mg.fibbageStates ?? {}
+                              const total = Object.keys(states).length
+                              const voted = Object.values(states).filter((s) => s.votedFor !== -1).length
+                              return `${voted} / ${total} voted`
+                            }
                             const qs = mg.quiplashStates ?? {}
-                            const allMatchedIds = new Set(matchups.flatMap((m) => [m.playerA, m.playerB]))
-                            const voterIds = Object.keys(qs).filter((id) => !allMatchedIds.has(id))
+                            const currentMatchedIds = new Set([currentMatchup?.playerA, currentMatchup?.playerB].filter(Boolean) as string[])
+                            const voterIds = Object.keys(qs).filter((id) => !currentMatchedIds.has(id))
                             const votedCount = voterIds.filter(
                               (id) => qs[id]?.votes?.[mg.currentQuestion] !== undefined
                             ).length
@@ -280,7 +285,7 @@ export function AdminView({ sendJoin, sendAdminAction }: Props) {
                     const subPhase = mg.subPhase ?? 'active'
                     const totalRounds = mg.config.emojiRounds?.length ?? 0
                     const isLastRound = mg.currentQuestion >= totalRounds - 1
-                    const roundDone = subPhase === 'round_expired'
+                    const roundDone = subPhase === 'round_expired' || subPhase === 'round_won'
                     const correctCount = mg.emojiCorrectAnswerers?.length ?? 0
                     return (
                       <>

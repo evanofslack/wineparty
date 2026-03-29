@@ -121,9 +121,9 @@ type MiniGameConfig struct {
 }
 
 type MiniGameWinner struct {
-	GameType string `json:"gameType"`
-	WinnerID string `json:"winnerId"`
-	Points   int    `json:"points"`
+	GameType  string   `json:"gameType"`
+	WinnerIDs []string `json:"winnerIds"`
+	Points    int      `json:"points"`
 }
 
 type MiniGameState struct {

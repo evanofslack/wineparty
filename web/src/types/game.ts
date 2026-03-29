@@ -289,7 +289,7 @@ export interface MiniGameAnswerPayload {
 
 export interface MiniGameWinner {
   gameType: string
-  winnerId: string
+  winnerIds: string[]
   points: number
 }
 

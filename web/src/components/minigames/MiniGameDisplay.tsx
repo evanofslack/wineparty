@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import type { MiniGameState, Player } from '../../types/game'
+import { useMemo, useState, useEffect } from 'react'
+import type { MiniGameState, Player, EmojiRound } from '../../types/game'
 
 interface Props {
   miniGame: MiniGameState
@@ -14,6 +14,104 @@ const COLOR_STYLES: Record<string, string> = {
   purple: 'bg-grape/20 border-grape',
 }
 
+interface EmojiLiveProps {
+  round: EmojiRound | undefined
+  subPhase: string
+  timerSecs: number
+  roundStartedAt: string | undefined
+  currentQuestion: number
+  totalRounds: number
+  emojiCorrectAnswerers: string[]
+  players: Record<string, Player>
+}
+
+function EmojiLiveDisplay({
+  round, subPhase, timerSecs, roundStartedAt, currentQuestion, totalRounds, emojiCorrectAnswerers, players
+}: EmojiLiveProps) {
+  const [remaining, setRemaining] = useState<number>(timerSecs)
+
+  useEffect(() => {
+    if (subPhase !== 'active' || !roundStartedAt) {
+      setRemaining(timerSecs)
+      return
+    }
+    const tick = () => {
+      const elapsed = (Date.now() - new Date(roundStartedAt).getTime()) / 1000
+      setRemaining(Math.max(0, timerSecs - elapsed))
+    }
+    tick()
+    const id = setInterval(tick, 250)
+    return () => clearInterval(id)
+  }, [subPhase, roundStartedAt, timerSecs])
+
+  const pct = timerSecs > 0 ? remaining / timerSecs : 0
+  const barColor = pct > 0.5 ? 'bg-lime' : pct > 0.25 ? 'bg-sunny' : 'bg-coral'
+
+  return (
+    <div className="flex flex-col items-center gap-8 w-full">
+      <p className="text-3xl font-black text-ink uppercase tracking-widest">Emoji Decode</p>
+      <p className="text-sm font-bold text-muted uppercase tracking-wider">
+        Round {currentQuestion + 1} of {totalRounds}
+      </p>
+      {round && (
+        <div className="sketch-border-sky bg-sky/10 px-10 py-12 text-center w-full">
+          <p className="text-9xl leading-relaxed">{round.emoji}</p>
+        </div>
+      )}
+      {subPhase === 'active' && (
+        <div className="flex flex-col items-center gap-3 w-full">
+          <div className="w-full bg-paper border-2 border-muted/20 h-4">
+            <div
+              className={`h-full transition-all ${barColor}`}
+              style={{ width: `${pct * 100}%` }}
+            />
+          </div>
+          <p className="font-black text-2xl tabular-nums">{Math.ceil(remaining)}s</p>
+          {emojiCorrectAnswerers.length > 0 && (
+            <div className="flex flex-wrap gap-1 justify-center">
+              {emojiCorrectAnswerers.map((id) => (
+                <span key={id} className="text-sm font-black px-2 py-0.5 bg-lime text-ink">
+                  {players[id]?.name ?? id} ✓
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+      {subPhase === 'round_won' && round && (
+        <div className="sketch-border-lime bg-lime/20 px-6 py-3 text-center w-full">
+          <p className="font-black text-2xl text-lime-700">{round.answer}</p>
+          {emojiCorrectAnswerers.length > 0 && (
+            <div className="flex flex-wrap gap-1 justify-center mt-2">
+              {emojiCorrectAnswerers.map((id) => (
+                <span key={id} className="text-sm font-black px-2 py-0.5 bg-lime text-ink">
+                  {players[id]?.name ?? id}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+      {subPhase === 'round_expired' && (
+        <div className="sketch-border-coral bg-coral/20 px-6 py-3 text-center w-full">
+          <p className="font-black text-3xl text-coral">Time's up!</p>
+          {round && <p className="text-2xl font-black text-ink">{round.answer}</p>}
+          {emojiCorrectAnswerers.length > 0 ? (
+            <div className="flex flex-wrap gap-1 justify-center mt-2">
+              {emojiCorrectAnswerers.map((id) => (
+                <span key={id} className="text-sm font-black px-2 py-0.5 bg-lime text-ink">
+                  {players[id]?.name ?? id}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm font-bold text-muted mt-1">No one got it</p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
 
 export function MiniGameDisplay({ miniGame, players, resultsMode = false }: Props) {
   const playerList = Object.values(players).filter((p) => p.role === 'player')
@@ -365,9 +463,16 @@ export function MiniGameDisplay({ miniGame, players, resultsMode = false }: Prop
             </>
           )}
         </div>
-        {subPhase === 'submitting' && (
-          <p className="text-center font-bold text-xl text-muted">Players are responding...</p>
-        )}
+        {subPhase === 'submitting' && currentMatchup && (() => {
+          const qStates = miniGame.quiplashStates ?? {}
+          const submittedCount = [currentMatchup.playerA, currentMatchup.playerB]
+            .filter((id) => qStates[id]?.submissions?.[miniGame.currentQuestion] !== undefined).length
+          return (
+            <p className="text-center font-bold text-xl text-muted">
+              <span className="text-grape font-black">{submittedCount}</span> / 2 submitted
+            </p>
+          )
+        })()}
         {subPhase === 'voting' && slots.length > 0 && (() => {
           const qStates = miniGame.quiplashStates ?? {}
           const matchedIds = new Set([currentMatchup?.playerA, currentMatchup?.playerB].filter(Boolean) as string[])
@@ -441,48 +546,16 @@ export function MiniGameDisplay({ miniGame, players, resultsMode = false }: Prop
     }
 
     return (
-      <div className="flex flex-col items-center gap-8 w-full">
-        <p className="text-3xl font-black text-ink uppercase tracking-widest">Emoji Decode</p>
-        <p className="text-sm font-bold text-muted uppercase tracking-wider">
-          Round {miniGame.currentQuestion + 1} of {rounds.length}
-        </p>
-        {round && (
-          <div className="sketch-border-sky bg-sky/10 px-10 py-12 text-center w-full">
-            <p className="text-9xl leading-relaxed">{round.emoji}</p>
-          </div>
-        )}
-        {subPhase === 'active' && (
-          <div className="flex flex-col items-center gap-3 w-full">
-            <p className="font-bold text-xl text-muted">{timerSecs}s timer — answer in your app</p>
-            {(miniGame.emojiCorrectAnswerers ?? []).length > 0 && (
-              <div className="flex flex-wrap gap-1 justify-center">
-                {(miniGame.emojiCorrectAnswerers ?? []).map((id) => (
-                  <span key={id} className="text-sm font-black px-2 py-0.5 bg-lime text-ink">
-                    {players[id]?.name ?? id} ✓
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-        {subPhase === 'round_expired' && (
-          <div className="sketch-border-coral bg-coral/20 px-6 py-3 text-center w-full">
-            <p className="font-black text-3xl text-coral">Time's up!</p>
-            {round && <p className="text-2xl font-black text-ink">{round.answer}</p>}
-            {(miniGame.emojiCorrectAnswerers ?? []).length > 0 ? (
-              <div className="flex flex-wrap gap-1 justify-center mt-2">
-                {(miniGame.emojiCorrectAnswerers ?? []).map((id) => (
-                  <span key={id} className="text-sm font-black px-2 py-0.5 bg-lime text-ink">
-                    {players[id]?.name ?? id}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm font-bold text-muted mt-1">No one got it</p>
-            )}
-          </div>
-        )}
-      </div>
+      <EmojiLiveDisplay
+        round={round}
+        subPhase={subPhase}
+        timerSecs={timerSecs}
+        roundStartedAt={miniGame.roundStartedAt}
+        currentQuestion={miniGame.currentQuestion}
+        totalRounds={rounds.length}
+        emojiCorrectAnswerers={miniGame.emojiCorrectAnswerers ?? []}
+        players={players}
+      />
     )
   }
 
