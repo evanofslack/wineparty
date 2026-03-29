@@ -143,7 +143,7 @@ export function AdminView({ sendJoin, sendAdminAction }: Props) {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-3 gap-6">
         {/* Controls */}
         <div className="flex flex-col gap-4">
           <div className="sketch-border bg-white px-4 py-4">
@@ -457,13 +457,15 @@ export function AdminView({ sendJoin, sendAdminAction }: Props) {
           )}
         </div>
 
-        {/* Players + scores */}
+        {/* Players */}
         <div className="flex flex-col gap-4">
           <div className="sketch-border bg-white px-4 py-4">
             <PlayerList players={Object.values(gameState.players)} />
           </div>
+        </div>
 
-          {/* Score editor */}
+        {/* Score editor */}
+        <div className="flex flex-col gap-4">
           <div className="sketch-border bg-white px-4 py-4">
             <p className="font-black text-lg mb-3">Edit Scores</p>
             {players.map((p) => (
