@@ -41,6 +41,7 @@ type botConfig struct {
 	lobbyToken string
 	wines      []config.Wine
 	games      []config.GameConfig
+	colors     []config.PlayerColor
 }
 
 type inboundMsg struct {
@@ -70,6 +71,7 @@ func main() {
 	logLevel := flag.String("loglevel", "info", "Log level: debug, info, warn, error")
 	winesFile := flag.String("wines-file", "config/wines.yaml", "Path to wines YAML")
 	gamesFile := flag.String("games-file", "config/games.yaml", "Path to games YAML")
+	colorsFile := flag.String("colors-file", "config/colors.yaml", "Path to colors YAML")
 	flag.Parse()
 
 	var level slog.Level
@@ -85,8 +87,8 @@ func main() {
 	}
 	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: level})))
 
-	if *players < 2 || *players > 10 {
-		slog.Error("--players must be between 2 and 10")
+	if *players < 1 || *players > 12 {
+		slog.Error("--players must be between 1 and 12")
 		os.Exit(1)
 	}
 	if *strategy != "random" && *strategy != "correct" {
@@ -94,7 +96,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	wines, games := loadConfigs(*winesFile, *gamesFile)
+	wines, games, colors := loadConfigs(*winesFile, *gamesFile, *colorsFile)
 
 	cfg := botConfig{
 		addr:       *addr,
@@ -105,6 +107,7 @@ func main() {
 		lobbyToken: *lobbyToken,
 		wines:      wines,
 		games:      games,
+		colors:     colors,
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -139,7 +142,7 @@ func main() {
 	slog.Info("all bots exited")
 }
 
-func loadConfigs(winesPath, gamesPath string) ([]config.Wine, []config.GameConfig) {
+func loadConfigs(winesPath, gamesPath, colorsPath string) ([]config.Wine, []config.GameConfig, []config.PlayerColor) {
 	var wines []config.Wine
 	if data, err := os.ReadFile(winesPath); err != nil {
 		slog.Warn("could not read wines file", "path", winesPath, "err", err)
@@ -166,7 +169,45 @@ func loadConfigs(winesPath, gamesPath string) ([]config.Wine, []config.GameConfi
 		}
 	}
 
-	return wines, games
+	var colors []config.PlayerColor
+	if data, err := os.ReadFile(colorsPath); err != nil {
+		slog.Warn("could not read colors file", "path", colorsPath, "err", err)
+	} else {
+		var cf config.ColorsFile
+		if err := yaml.Unmarshal(data, &cf); err != nil {
+			slog.Warn("could not parse colors file", "err", err)
+		} else {
+			colors = cf.Colors
+		}
+	}
+
+	return wines, games, colors
+}
+
+// randomColor picks a random hex color from the loaded palette, falling back
+// to a hardcoded set if the file wasn't loaded.
+func randomColor(colors []config.PlayerColor) string {
+	if len(colors) > 0 {
+		return colors[rand.Intn(len(colors))].Hex
+	}
+	fallback := []string{"#C0392B", "#2980B9", "#27AE60", "#8E44AD", "#E67E22", "#E91E8C", "#16A085", "#F1C40F"}
+	return fallback[rand.Intn(len(fallback))]
+}
+
+// randomAvatar generates a 64-char avatar string for an 8×8 pixel grid.
+// Left 4 columns are random; right 4 are mirrored left→right for symmetry.
+// '0' = player color, '1' = dark, '2' = white.
+func randomAvatar() string {
+	cells := make([]byte, 64)
+	weights := []byte{'0', '0', '0', '1', '1', '2'} // mostly color, some dark, a little white
+	for row := 0; row < 8; row++ {
+		for col := 0; col < 4; col++ {
+			v := weights[rand.Intn(len(weights))]
+			cells[row*8+col] = v
+			cells[row*8+(7-col)] = v
+		}
+	}
+	return string(cells)
 }
 
 func (b *bot) run(ctx context.Context) {
@@ -185,7 +226,9 @@ func (b *bot) run(ctx context.Context) {
 		return conn.WriteControl(websocket.PongMessage, []byte(data), time.Now().Add(10*time.Second))
 	})
 
-	if err := b.send(ws.MsgJoin, ws.JoinPayload{PlayerID: b.id, Name: b.name, LobbyToken: b.cfg.lobbyToken}); err != nil {
+	color := randomColor(b.cfg.colors)
+	avatar := randomAvatar()
+	if err := b.send(ws.MsgJoin, ws.JoinPayload{PlayerID: b.id, Name: b.name, Color: color, Avatar: avatar, LobbyToken: b.cfg.lobbyToken}); err != nil {
 		b.log.Error("failed to send join", "err", err)
 		return
 	}
