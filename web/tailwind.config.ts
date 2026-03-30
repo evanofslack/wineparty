@@ -10,7 +10,7 @@ export default {
         sky: '#4ECDC4',
         lime: '#95E06C',
         sunny: '#FFE66D',
-        grape: '#9B59B6',
+        grape: '#2563EB',
         ink: '#2C1A1D',
         muted: '#8B7D7F',
       },

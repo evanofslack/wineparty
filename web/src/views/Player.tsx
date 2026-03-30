@@ -256,7 +256,7 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
       <div className="flex flex-col items-center justify-center min-h-screen px-6 gap-6 text-center">
         <div className="text-6xl">🥂</div>
         <h1 className="text-3xl font-black">Welcome, {me.name}!</h1>
-        <div className="sketch-border-sky bg-sky/15 px-6 py-4 w-full max-w-sm">
+        <div className="sketch-border bg-white px-6 py-4 w-full max-w-sm">
           <p className="text-muted font-semibold">Waiting for host to start...</p>
           <p className="text-xl font-black text-grape mt-2">{playerCount} player{playerCount !== 1 ? 's' : ''} ready</p>
         </div>
@@ -290,7 +290,7 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
           <h2 className="text-xl font-black text-ink">
             Wine #{gameState.currentRound + 1} of {gameState.rounds.length}
           </h2>
-          <span className="sketch-border-sunny bg-sunny/20 px-2 py-1 text-sm font-bold text-ink">
+          <span className="sketch-border bg-white px-2 py-1 text-sm font-bold text-ink">
             {me.totalScore + me.miniGameScore}pt
           </span>
         </div>
@@ -313,11 +313,11 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
       <div className="flex flex-col min-h-screen px-4 pt-6 pb-10 max-w-md mx-auto">
         <h2 className="text-2xl font-black mb-4 text-center">Results! 🎉</h2>
 
-        <div className="sketch-border-burgundy px-4 py-4 mb-4" style={{ backgroundColor: 'rgba(114,47,55,0.15)' }}>
+        <div className="sketch-border-sunny bg-sunny/20 px-4 py-4 mb-4">
           <p className="text-sm font-bold text-muted">The wine was...</p>
           <p className="text-xl font-black text-ink">{currentRound.wine.name}</p>
           <p className="text-lg font-bold mt-0.5 text-ink">{currentRound.wine.variety}</p>
-          <p className="font-semibold text-muted">{currentRound.wine.country} · {currentRound.wine.region}, {currentRound.wine.year}</p>
+          <p className="font-semibold text-muted">{currentRound.wine.country} · {currentRound.wine.region}, <span className="font-black text-[#722F37]">{currentRound.wine.year}</span></p>
         </div>
 
         {myScore && myGuess && (
@@ -367,7 +367,7 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
               ].map((row) => (
                 <div
                   key={row.label}
-                  className={`grid grid-cols-[auto_1fr_1fr_auto] px-3 py-2 gap-2 items-center border-t border-ink/10 ${row.pts > 0 ? 'bg-lime/10' : ''}`}
+                  className="grid grid-cols-[auto_1fr_1fr_auto] px-3 py-2 gap-2 items-center border-t border-ink/10"
                 >
                   <span className="text-xs font-bold text-muted w-14">{row.label}</span>
                   <span className="text-sm font-semibold text-ink truncate">{row.guess}</span>
@@ -377,7 +377,7 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
                   </span>
                 </div>
               ))}
-              <div className={`border-t border-ink/10 px-3 py-2 ${myScore.flavorPoints > 0 ? 'bg-lime/10' : ''}`}>
+              <div className="border-t border-ink/10 px-3 py-2">
                 <div className="grid grid-cols-[auto_1fr_1fr_auto] gap-2 items-start">
                   <span className="text-xs font-bold text-muted w-14">Flavors</span>
                   <span className="text-sm font-semibold leading-snug">
@@ -406,12 +406,12 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
           </div>
         )}
         {!myScore && myGuess === undefined && (
-          <div className="sketch-border-sunny bg-sunny/30 px-4 py-3 mb-4">
+          <div className="sketch-border bg-white px-4 py-3 mb-4">
             <p className="font-semibold text-muted">You didn't submit a guess this round.</p>
           </div>
         )}
 
-        <div className="sketch-border-sky bg-sky/10 px-4 py-3">
+        <div className="sketch-border bg-white px-4 py-3">
           <p className="text-sm font-bold text-muted uppercase tracking-wider mb-2">Leaderboard</p>
           <Leaderboard entries={gameState.leaderboard} highlightId={playerId} players={gameState.players} />
         </div>
@@ -433,7 +433,7 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
           {isWinner ? 'You won!' : 'Game Over!'}
         </h1>
         {winner && (
-          <div className="sketch-border-lime bg-lime/20 px-6 py-4 w-full">
+          <div className="sketch-border-sunny bg-sunny/20 px-6 py-4 w-full">
             <p className="text-sm font-bold text-muted">Winner</p>
             <p className="text-2xl font-black">{winner.playerName}</p>
             <p className="text-lg font-bold text-grape">{winner.score} points</p>
@@ -443,17 +443,17 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
           <Leaderboard entries={gameState.leaderboard} highlightId={playerId} players={gameState.players} />
         </div>
         {me && (me.totalScore > 0 || me.miniGameScore > 0) && (
-          <div className="sketch-border-sunny bg-sunny/10 px-4 py-4 w-full text-left">
+          <div className="sketch-border bg-white px-4 py-4 w-full text-left">
             <p className="font-bold text-sm text-muted uppercase tracking-wider mb-3">Score Breakdown</p>
             <div className="space-y-1.5 text-sm font-semibold">
               <p>Wine tasting: <span className="font-black">{me.totalScore} pts</span></p>
               <p>Mini-games: <span className="font-black">{me.miniGameScore} pts</span></p>
-              <p className="border-t border-sunny/40 pt-1">Combined: <span className="text-grape font-black">{me.totalScore + me.miniGameScore} pts</span></p>
+              <p className="border-t border-ink/10 pt-1">Combined: <span className="text-grape font-black">{me.totalScore + me.miniGameScore} pts</span></p>
             </div>
           </div>
         )}
         {mySummary && (
-          <div className="sketch-border-sky bg-sky/10 px-4 py-4 w-full text-left">
+          <div className="sketch-border bg-white px-4 py-4 w-full text-left">
             <p className="font-bold text-sm text-muted uppercase tracking-wider mb-3">Your Stats</p>
             <div className="space-y-1.5 text-sm font-semibold">
               {mySummary.favoriteWine && (
@@ -480,7 +480,7 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
       <div className="flex flex-col min-h-screen px-4 pt-6 pb-10 max-w-md mx-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-black text-ink capitalize">Mini Game: {type}</h2>
-          <span className="sketch-border-sunny bg-sunny/20 px-2 py-1 text-sm font-bold text-ink">
+          <span className="sketch-border bg-white px-2 py-1 text-sm font-bold text-ink">
             {me.totalScore + me.miniGameScore}pt
           </span>
         </div>
@@ -640,7 +640,7 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
                       g.color === 'yellow' ? 'bg-sunny/30 border-sunny' :
                       g.color === 'green' ? 'bg-lime/30 border-lime' :
                       g.color === 'blue' ? 'bg-sky/30 border-sky' :
-                      'bg-grape/20 border-grape'
+                      'bg-[#E9D5FF] border-[#A855F7]'
                     } ${!found ? 'opacity-50' : ''}`}
                   >
                     <p className="font-black text-sm uppercase tracking-wide">{g.category} {found ? '✓' : ''}</p>

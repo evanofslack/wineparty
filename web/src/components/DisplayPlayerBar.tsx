@@ -31,7 +31,7 @@ export function DisplayPlayerBar({ players, leaderboard, showRanks }: Props) {
   }
 
   return (
-    <div className="flex items-end justify-center gap-5 px-8 py-3 border-t-2 border-ink/15 bg-ink/5 flex-shrink-0">
+    <div className="flex items-end justify-center gap-5 px-8 py-3 sketch-border bg-sunny/15 mx-4 mb-4">
       {sorted.map((player) => {
         const entry = rankMap.get(player.id)
         const label = rankLabel(entry?.rank)

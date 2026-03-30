@@ -36,7 +36,7 @@ export function TriviaGame({ config, myState, currentQuestion, answerRevealed, o
           Question {currentQuestion + 1} of {questions.length}
         </p>
         <p className="text-lg font-black text-ink">{question.text}</p>
-        <p className="text-xs font-semibold text-grape mt-1">{question.points} pts</p>
+        <p className="text-xs font-semibold text-muted mt-1">{question.points} pts</p>
       </div>
 
       <div className="flex flex-col gap-2">
@@ -55,7 +55,7 @@ export function TriviaGame({ config, myState, currentQuestion, answerRevealed, o
           } else if (hasAnswered && isSelected) {
             cls += 'bg-ink text-paper'
           } else if (pendingAnswer === i) {
-            cls += 'bg-grape text-white'
+            cls += 'bg-ink text-paper'
           } else {
             cls += 'bg-white text-ink'
           }

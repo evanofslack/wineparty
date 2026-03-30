@@ -67,7 +67,7 @@ export function EmojiDecodeGame({
     const timerColor = timerPct > 50 ? 'bg-lime' : timerPct > 25 ? 'bg-sunny' : 'bg-coral'
     return (
       <div className="flex flex-col gap-4">
-        <div className="sketch-border-sky bg-sky/10 px-4 py-6 text-center">
+        <div className="sketch-border bg-white px-4 py-6 text-center">
           <p className="text-xs font-bold text-muted uppercase tracking-wider mb-3">
             Round {currentRound + 1} of {rounds.length} — What does this represent?
           </p>
@@ -100,7 +100,7 @@ export function EmojiDecodeGame({
             {incorrect && (
               <p className="text-coral font-bold text-sm text-center">Incorrect, try again</p>
             )}
-            <button type="submit" className="btn-sketch bg-coral text-white w-full font-bold">
+            <button type="submit" className="btn-sketch bg-grape text-white w-full font-bold">
               Submit
             </button>
           </form>
@@ -112,7 +112,7 @@ export function EmojiDecodeGame({
   if (subPhase === 'round_expired') {
     return (
       <div className="flex flex-col gap-4 items-center text-center">
-        <div className="sketch-border-sky bg-sky/10 px-4 py-4 w-full">
+        <div className="sketch-border bg-white px-4 py-4 w-full">
           <p className="text-4xl">{round.emoji}</p>
         </div>
         <div className="sketch-border-coral bg-coral/20 px-6 py-4 w-full">

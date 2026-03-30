@@ -8,7 +8,7 @@
   --color-sky: #4ECDC4;
   --color-lime: #95E06C;
   --color-sunny: #FFE66D;
-  --color-grape: #9B59B6;
+  --color-grape: #2563EB;
   --color-ink: #2C1A1D;
   --color-muted: #8B7D7F;
   --border-radius-sketch: 12px 8px 14px 10px / 8px 14px 10px 12px;
@@ -34,7 +34,7 @@ html, body, #root {
   box-shadow: 6px 6px 0px 0px rgba(44,26,29,0.2);
 }
 
-.sketch-border-grape    { border: 2.5px solid var(--color-grape);    border-radius: 12px 8px 14px 10px / 8px 14px 10px 12px; box-shadow: 4px 4px 0px 0px rgba(155,89,182,0.2); }
+.sketch-border-grape    { border: 2.5px solid var(--color-grape);    border-radius: 12px 8px 14px 10px / 8px 14px 10px 12px; box-shadow: 4px 4px 0px 0px rgba(37,99,235,0.2); }
 .sketch-border-burgundy { border: 2.5px solid #722F37;              border-radius: 12px 8px 14px 10px / 8px 14px 10px 12px; box-shadow: 4px 4px 0px 0px rgba(114,47,55,0.2); }
 .sketch-border-sky   { border: 2.5px solid var(--color-sky);   border-radius: 12px 8px 14px 10px / 8px 14px 10px 12px; box-shadow: 4px 4px 0px 0px rgba(78,205,196,0.2); }
 .sketch-border-sunny { border: 2.5px solid var(--color-sunny); border-radius: 12px 8px 14px 10px / 8px 14px 10px 12px; box-shadow: 4px 4px 0px 0px rgba(255,230,109,0.3); }

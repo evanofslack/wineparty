@@ -68,7 +68,7 @@ export function DisplayView() {
 
           <div className="flex flex-col justify-center p-12">
             {allPlayers.length > 0 ? (
-              <div className="sketch-border-sky bg-sky/15 p-8 h-full flex flex-col">
+              <div className="sketch-border bg-white p-8 h-full flex flex-col">
                 <p className="font-black text-3xl mb-6 text-ink">
                   Players ({allPlayers.length})
                 </p>
@@ -103,7 +103,7 @@ export function DisplayView() {
     return (
       <div className="flex flex-col h-screen overflow-hidden">
         <div className="flex-1 flex items-center justify-center min-h-0 p-12">
-          <div className="sketch-border-sunny bg-sunny/20 px-16 py-12 text-center w-full max-w-4xl">
+          <div className="sketch-border bg-white px-16 py-12 text-center w-full max-w-4xl">
             <p className="text-2xl font-bold text-muted uppercase tracking-wider">
               Round {gameState.currentRound + 1} of {gameState.rounds.length}
             </p>
@@ -133,11 +133,8 @@ export function DisplayView() {
     return (
       <div className="flex flex-col h-screen overflow-hidden">
         <div className="flex-1 grid grid-cols-2 min-h-0">
-          <div
-            className="flex flex-col justify-center p-12 border-r border-ink/10"
-            style={{ backgroundColor: 'rgba(114,47,55,0.06)' }}
-          >
-            <div className="sketch-border-burgundy px-8 py-10" style={{ backgroundColor: 'rgba(114,47,55,0.15)' }}>
+          <div className="flex flex-col justify-center p-12 border-r border-ink/10">
+            <div className="sketch-border-sunny bg-sunny/20 px-8 py-10">
               <p className="text-lg font-bold text-muted uppercase tracking-wider mb-4">The wine was...</p>
               <h2 className="text-6xl font-black text-ink leading-tight">{round.wine.name}</h2>
               <p className="text-4xl font-bold mt-4 text-ink">{round.wine.variety}</p>
@@ -166,10 +163,13 @@ export function DisplayView() {
                 .map((s) => {
                   const player = gameState.players[s.playerId]
                   return (
-                    <div key={s.playerId} className="flex items-center gap-4 px-5 py-3 sketch-border bg-white">
-                      {player && <PlayerAvatar player={player} size={40} />}
-                      <span className="flex-1 font-bold text-2xl text-ink truncate">{player?.name ?? s.playerId}</span>
-                      <span className="font-black text-3xl text-ink">+{s.points}</span>
+                    <div key={s.playerId} className="flex items-center sketch-border bg-white overflow-hidden">
+                      <div className="w-1.5 self-stretch shrink-0" style={{ backgroundColor: player?.color ?? '#ccc' }} />
+                      <div className="flex items-center gap-4 px-4 py-3 flex-1">
+                        {player && <PlayerAvatar player={player} size={40} />}
+                        <span className="flex-1 font-bold text-2xl text-ink truncate">{player?.name ?? s.playerId}</span>
+                        <span className="font-black text-3xl text-ink">+{s.points}</span>
+                      </div>
                     </div>
                   )
                 })}
@@ -210,7 +210,7 @@ export function DisplayView() {
                   return (
                     <div key={i} className="flex justify-between items-center py-1 border-b last:border-0 border-paper">
                       <span className="font-semibold text-base capitalize">{w.gameType.replace(/_/g, ' ')}</span>
-                      <span className="font-black text-base text-grape">{names}</span>
+                      <span className="font-black text-base text-ink">{names}</span>
                     </div>
                   )
                 })}
@@ -223,31 +223,31 @@ export function DisplayView() {
               <>
                 <div className="grid grid-cols-3 gap-3 shrink-0">
                   {summary.mostPopular && (
-                    <div className="sketch-border-lime bg-lime/15 px-3 py-3">
+                    <div className="sketch-border-lime bg-white px-3 py-3">
                       <p className="text-xs font-bold text-muted uppercase tracking-wider mb-1">Most Popular</p>
                       <p className="font-black text-sm text-ink leading-tight">{summary.mostPopular.wineName}</p>
                       <p className="text-xs text-muted">{summary.mostPopular.wineVariety}</p>
-                      <p className="text-2xl font-black text-grape mt-1">{summary.mostPopular.avgRating.toFixed(1)}<span className="text-sm font-semibold text-muted">/10</span></p>
+                      <p className="text-2xl font-black text-lime-700 mt-1">{summary.mostPopular.avgRating.toFixed(1)}<span className="text-sm font-semibold text-muted">/10</span></p>
                     </div>
                   )}
                   {summary.leastLiked && summary.leastLiked.wineName !== summary.mostPopular?.wineName && (
-                    <div className="sketch-border-coral bg-coral/15 px-3 py-3">
+                    <div className="sketch-border-coral bg-white px-3 py-3">
                       <p className="text-xs font-bold text-muted uppercase tracking-wider mb-1">Least Liked</p>
                       <p className="font-black text-sm text-ink leading-tight">{summary.leastLiked.wineName}</p>
                       <p className="text-xs text-muted">{summary.leastLiked.wineVariety}</p>
-                      <p className="text-2xl font-black text-grape mt-1">{summary.leastLiked.avgRating.toFixed(1)}<span className="text-sm font-semibold text-muted">/10</span></p>
+                      <p className="text-2xl font-black text-coral mt-1">{summary.leastLiked.avgRating.toFixed(1)}<span className="text-sm font-semibold text-muted">/10</span></p>
                     </div>
                   )}
                   {summary.mostContested && (
-                    <div className="sketch-border-sky bg-sky/15 px-3 py-3">
+                    <div className="sketch-border-sky bg-white px-3 py-3">
                       <p className="text-xs font-bold text-muted uppercase tracking-wider mb-1">Most Divisive</p>
                       <p className="font-black text-sm text-ink leading-tight">{summary.mostContested.wineName}</p>
                       <p className="text-xs text-muted">{summary.mostContested.wineVariety}</p>
-                      <p className="text-2xl font-black text-grape mt-1">{summary.mostContested.avgRating.toFixed(1)}<span className="text-sm font-semibold text-muted">/10</span></p>
+                      <p className="text-2xl font-black text-sky mt-1">{summary.mostContested.avgRating.toFixed(1)}<span className="text-sm font-semibold text-muted">/10</span></p>
                     </div>
                   )}
                 </div>
-                <div className="sketch-border-sky bg-sky/10 px-5 py-4 flex-1 min-h-0 overflow-hidden">
+                <div className="sketch-border bg-white px-5 py-4 flex-1 min-h-0 overflow-hidden">
                   <p className="text-sm font-bold text-muted uppercase tracking-wider mb-3">Wine Ratings</p>
                   {summary.wineRatings.map((wr) => {
                     const stdDev = wr.variance > 0 ? Math.sqrt(wr.variance) : 0
@@ -333,11 +333,14 @@ export function DisplayView() {
               {miniGameScores.map((s, i) => {
                 const rankLabel = i < 3 ? ['🥇', '🥈', '🥉'][i] : `#${i + 1}`
                 return (
-                  <div key={s.player.id} className="flex items-center gap-4 px-5 py-3 sketch-border bg-white">
-                    <span className="text-2xl w-10 text-center font-black shrink-0 text-muted">{rankLabel}</span>
-                    <PlayerAvatar player={s.player} size={40} />
-                    <span className="flex-1 font-bold text-2xl text-ink truncate">{s.player.name}</span>
-                    <span className="font-black text-3xl text-grape tabular-nums">{s.pts} pts</span>
+                  <div key={s.player.id} className="flex items-center sketch-border bg-white overflow-hidden">
+                    <div className="w-1.5 self-stretch shrink-0" style={{ backgroundColor: s.player.color ?? '#ccc' }} />
+                    <div className="flex items-center gap-4 px-4 py-3 flex-1">
+                      <span className="text-2xl w-10 text-center font-black shrink-0 text-muted">{rankLabel}</span>
+                      <PlayerAvatar player={s.player} size={40} />
+                      <span className="flex-1 font-bold text-2xl text-ink truncate">{s.player.name}</span>
+                      <span className="font-black text-3xl text-grape tabular-nums">{s.pts} pts</span>
+                    </div>
                   </div>
                 )
               })}

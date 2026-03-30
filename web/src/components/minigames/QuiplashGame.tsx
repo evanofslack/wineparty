@@ -53,7 +53,7 @@ export function QuiplashGame({
     if (!isMatched) {
       return (
         <div className="flex flex-col gap-4">
-          <div className="sketch-border-sky bg-sky/10 px-4 py-4 text-center">
+          <div className="sketch-border bg-white px-4 py-4 text-center">
             <p className="text-xs font-bold text-muted uppercase tracking-wider mb-1">
               Round {currentRound + 1} of {totalRounds}
             </p>
@@ -70,7 +70,7 @@ export function QuiplashGame({
     const hasSubmitted = myState?.submissions?.[currentRound] !== undefined
     return (
       <div className="flex flex-col gap-4">
-        <div className="sketch-border-sky bg-sky/10 px-4 py-4 text-center">
+        <div className="sketch-border bg-white px-4 py-4 text-center">
           <p className="text-xs font-bold text-muted uppercase tracking-wider mb-1">
             Round {currentRound + 1} of {totalRounds} — Head to Head
           </p>
@@ -91,7 +91,7 @@ export function QuiplashGame({
               maxLength={100}
               autoFocus
             />
-            <button type="submit" className="btn-sketch bg-coral text-white w-full font-bold">
+            <button type="submit" className="btn-sketch bg-grape text-white w-full font-bold">
               Submit Answer
             </button>
           </form>
@@ -104,7 +104,7 @@ export function QuiplashGame({
     if (isMatched) {
       return (
         <div className="flex flex-col gap-4">
-          <div className="sketch-border-sky bg-sky/10 px-4 py-4 text-center">
+          <div className="sketch-border bg-white px-4 py-4 text-center">
             <p className="text-xl font-black text-ink">{matchup.prompt}</p>
           </div>
           <div className="sketch-border bg-white px-4 py-6 text-center">
@@ -117,7 +117,7 @@ export function QuiplashGame({
     const hasVoted = myState?.votes?.[currentRound] !== undefined
     return (
       <div className="flex flex-col gap-4">
-        <div className="sketch-border-sky bg-sky/10 px-4 py-4 text-center">
+        <div className="sketch-border bg-white px-4 py-4 text-center">
           <p className="text-xs font-bold text-muted uppercase tracking-wider mb-1">Vote for your favorite</p>
           <p className="text-xl font-black text-ink">{matchup.prompt}</p>
         </div>
@@ -145,7 +145,7 @@ export function QuiplashGame({
   if (subPhase === 'revealing') {
     return (
       <div className="flex flex-col gap-4">
-        <div className="sketch-border-sky bg-sky/10 px-4 py-4 text-center">
+        <div className="sketch-border bg-white px-4 py-4 text-center">
           <p className="text-xl font-black text-ink">{matchup.prompt}</p>
         </div>
         <div className="flex flex-col gap-2">

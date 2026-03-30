@@ -44,7 +44,7 @@ export function FibbageGame({
     const submitted = myState?.submission && myState.submission !== ''
     return (
       <div className="flex flex-col gap-4">
-        <div className="sketch-border-sky bg-sky/10 px-4 py-4 text-center">
+        <div className="sketch-border bg-white px-4 py-4 text-center">
           <p className="text-xs font-bold text-muted uppercase tracking-wider mb-2">
             Question {currentQuestion + 1} of {questions.length}
           </p>
@@ -70,7 +70,7 @@ export function FibbageGame({
                 That's the real answer! Enter something different.
               </p>
             )}
-            <button type="submit" className="btn-sketch bg-coral text-white w-full font-bold">
+            <button type="submit" className="btn-sketch bg-grape text-white w-full font-bold">
               Submit Answer
             </button>
           </form>
@@ -84,7 +84,7 @@ export function FibbageGame({
     const mySubmission = myState?.submission ?? ''
     return (
       <div className="flex flex-col gap-4">
-        <div className="sketch-border-sky bg-sky/10 px-4 py-4 text-center">
+        <div className="sketch-border bg-white px-4 py-4 text-center">
           <p className="text-xl font-black text-ink">{prompt}</p>
           <p className="text-sm font-bold text-muted mt-1">Vote for the real answer</p>
         </div>
@@ -121,7 +121,7 @@ export function FibbageGame({
     const myPts = myState?.points ?? 0
     return (
       <div className="flex flex-col gap-4">
-        <div className="sketch-border-sky bg-sky/10 px-4 py-4 text-center">
+        <div className="sketch-border bg-white px-4 py-4 text-center">
           <p className="text-xl font-black text-ink">{prompt}</p>
         </div>
         <div className="flex flex-col gap-2">
