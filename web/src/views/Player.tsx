@@ -74,11 +74,13 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
   }
 
   function handleJoinConfirm() {
+    const lobbyToken = new URLSearchParams(window.location.search).get('lobby') ?? ''
     sendJoin({
       playerId,
       name: nameInput.trim(),
       color: selectedColor,
       avatar: avatarCells.join(''),
+      lobbyToken,
     })
     setHasJoined(true)
   }

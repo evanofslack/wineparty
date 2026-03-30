@@ -77,6 +77,8 @@ type ColorsFile struct {
 type Config struct {
 	Port          string
 	AdminPassword string
+	LobbyToken    string
+	BaseURL       string
 	WinesFile     string
 	GamesFile     string
 	ColorsFile    string
@@ -90,6 +92,8 @@ type Config struct {
 func Load() *Config {
 	port := flag.String("port", envOr("PORT", "8080"), "HTTP port")
 	adminPass := flag.String("admin-password", envOr("ADMIN_PASSWORD", "wine123"), "Admin password")
+	lobbyToken := flag.String("lobby-token", envOr("LOBBY_TOKEN", "changeme"), "Secret token required to join as a player")
+	baseURL := flag.String("base-url", envOr("BASE_URL", ""), "Public base URL (e.g. https://wineparty.evanslack.dev)")
 	winesFile := flag.String("wines-file", envOr("WINES_FILE", "config/wines.yaml"), "Path to wines YAML")
 	gamesFile := flag.String("games-file", envOr("GAMES_FILE", "config/games.yaml"), "Path to games YAML")
 	colorsFile := flag.String("colors-file", envOr("COLORS_FILE", "config/colors.yaml"), "Path to colors YAML")
@@ -100,6 +104,8 @@ func Load() *Config {
 	cfg := &Config{
 		Port:          *port,
 		AdminPassword: *adminPass,
+		LobbyToken:    *lobbyToken,
+		BaseURL:       *baseURL,
 		WinesFile:     *winesFile,
 		GamesFile:     *gamesFile,
 		ColorsFile:    *colorsFile,

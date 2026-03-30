@@ -27,6 +27,7 @@ type Hub struct {
 	repo             repository.Repository
 	engine           *game.Engine
 	adminPass        string
+	lobbyToken       string
 	wines            []game.WineConfig
 	colors           []game.PlayerColor
 	logDir           string
@@ -39,7 +40,7 @@ func (h *Hub) RegisterClient(c *Client) {
 	h.register <- c
 }
 
-func NewHub(repo repository.Repository, engine *game.Engine, adminPass string, wines []game.WineConfig, colors []game.PlayerColor, logDir string, miniGameSchedule []int, miniGameConfigs []game.MiniGameConfig) *Hub {
+func NewHub(repo repository.Repository, engine *game.Engine, adminPass, lobbyToken string, wines []game.WineConfig, colors []game.PlayerColor, logDir string, miniGameSchedule []int, miniGameConfigs []game.MiniGameConfig) *Hub {
 	return &Hub{
 		clients:          make(map[*Client]struct{}),
 		register:         make(chan *Client, 16),
@@ -49,6 +50,7 @@ func NewHub(repo repository.Repository, engine *game.Engine, adminPass string, w
 		repo:             repo,
 		engine:           engine,
 		adminPass:        adminPass,
+		lobbyToken:       lobbyToken,
 		wines:            wines,
 		colors:           colors,
 		logDir:           logDir,
@@ -135,6 +137,9 @@ func (h *Hub) handleJoin(c *Client, raw json.RawMessage) {
 			c.sendEnvelope(MsgError, ErrorPayload{Message: "wrong admin password"})
 			return
 		}
+	} else if p.LobbyToken != h.lobbyToken {
+		c.sendEnvelope(MsgError, ErrorPayload{Message: "invalid lobby token"})
+		return
 	}
 
 	_, isReconnect := h.repo.GetState().Players[p.PlayerID]

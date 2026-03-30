@@ -33,13 +33,14 @@ var (
 )
 
 type botConfig struct {
-	addr     string
-	prefix   string
-	minDelay int
-	maxDelay int
-	strategy string
-	wines    []config.Wine
-	games    []config.GameConfig
+	addr       string
+	prefix     string
+	minDelay   int
+	maxDelay   int
+	strategy   string
+	lobbyToken string
+	wines      []config.Wine
+	games      []config.GameConfig
 }
 
 type inboundMsg struct {
@@ -65,6 +66,7 @@ func main() {
 	minDelay := flag.Int("min-delay", 500, "Minimum action delay in milliseconds")
 	maxDelay := flag.Int("max-delay", 3000, "Maximum action delay in milliseconds")
 	strategy := flag.String("strategy", "random", "Answer strategy: random or correct")
+	lobbyToken := flag.String("lobby-token", "changeme", "Lobby token required to join")
 	logLevel := flag.String("loglevel", "info", "Log level: debug, info, warn, error")
 	winesFile := flag.String("wines-file", "config/wines.yaml", "Path to wines YAML")
 	gamesFile := flag.String("games-file", "config/games.yaml", "Path to games YAML")
@@ -95,13 +97,14 @@ func main() {
 	wines, games := loadConfigs(*winesFile, *gamesFile)
 
 	cfg := botConfig{
-		addr:     *addr,
-		prefix:   *prefix,
-		minDelay: *minDelay,
-		maxDelay: *maxDelay,
-		strategy: *strategy,
-		wines:    wines,
-		games:    games,
+		addr:       *addr,
+		prefix:     *prefix,
+		minDelay:   *minDelay,
+		maxDelay:   *maxDelay,
+		strategy:   *strategy,
+		lobbyToken: *lobbyToken,
+		wines:      wines,
+		games:      games,
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -182,7 +185,7 @@ func (b *bot) run(ctx context.Context) {
 		return conn.WriteControl(websocket.PongMessage, []byte(data), time.Now().Add(10*time.Second))
 	})
 
-	if err := b.send(ws.MsgJoin, ws.JoinPayload{PlayerID: b.id, Name: b.name}); err != nil {
+	if err := b.send(ws.MsgJoin, ws.JoinPayload{PlayerID: b.id, Name: b.name, LobbyToken: b.cfg.lobbyToken}); err != nil {
 		b.log.Error("failed to send join", "err", err)
 		return
 	}

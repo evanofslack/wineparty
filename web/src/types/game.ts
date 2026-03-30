@@ -324,6 +324,7 @@ export interface JoinPayload {
   playerId: string
   name: string
   password?: string
+  lobbyToken?: string
   color?: string
   avatar?: string
 }
