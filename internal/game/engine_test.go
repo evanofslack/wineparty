@@ -15,6 +15,12 @@ func newTestEngine() *Engine {
 	return NewEngine(NewGameState(testWines()))
 }
 
+func startAndAdvance(e *Engine) {
+	e.StartGame()
+	e.AdvanceIntro() // game_intro -> tasting_intro
+	e.AdvanceIntro() // tasting_intro -> guessing
+}
+
 func TestInitialPhase(t *testing.T) {
 	e := newTestEngine()
 	if e.State().Phase != PhaseLobby {
@@ -27,8 +33,8 @@ func TestStartGame(t *testing.T) {
 	if err := e.StartGame(); err != nil {
 		t.Fatal(err)
 	}
-	if e.State().Phase != PhaseGuessing {
-		t.Fatalf("expected PhaseGuessing, got %v", e.State().Phase)
+	if e.State().Phase != PhaseGameIntro {
+		t.Fatalf("expected PhaseGameIntro, got %v", e.State().Phase)
 	}
 	if e.State().StartedAt == nil {
 		t.Fatal("StartedAt should be set")
@@ -37,7 +43,7 @@ func TestStartGame(t *testing.T) {
 
 func TestStartGameWrongPhase(t *testing.T) {
 	e := newTestEngine()
-	e.StartGame()
+	startAndAdvance(e)
 	err := e.StartGame()
 	if err != ErrWrongPhase {
 		t.Fatalf("expected ErrWrongPhase, got %v", err)
@@ -46,7 +52,7 @@ func TestStartGameWrongPhase(t *testing.T) {
 
 func TestSubmitGuess(t *testing.T) {
 	e := newTestEngine()
-	e.StartGame()
+	startAndAdvance(e)
 	e.AddPlayer("p1", "Alice", "", "", RolePlayer)
 
 	g := Guess{PlayerID: "p1", Variety: "Cabernet Sauvignon", Region: "Napa", Year: 2020}
@@ -60,7 +66,7 @@ func TestSubmitGuess(t *testing.T) {
 
 func TestDuplicateGuessRejected(t *testing.T) {
 	e := newTestEngine()
-	e.StartGame()
+	startAndAdvance(e)
 	e.AddPlayer("p1", "Alice", "", "", RolePlayer)
 
 	g := Guess{PlayerID: "p1", Variety: "Chardonnay", Region: "Napa", Year: 2020}
@@ -73,7 +79,7 @@ func TestDuplicateGuessRejected(t *testing.T) {
 
 func TestTooManyFlavors(t *testing.T) {
 	e := newTestEngine()
-	e.StartGame()
+	startAndAdvance(e)
 	e.AddPlayer("p1", "Alice", "", "", RolePlayer)
 
 	g := Guess{
@@ -88,7 +94,7 @@ func TestTooManyFlavors(t *testing.T) {
 
 func TestCloseGuessing(t *testing.T) {
 	e := newTestEngine()
-	e.StartGame()
+	startAndAdvance(e)
 	e.AddPlayer("p1", "Alice", "", "", RolePlayer)
 	e.SubmitGuess(Guess{PlayerID: "p1", Variety: "Cabernet Sauvignon", Region: "Napa", Year: 2020})
 
@@ -102,7 +108,7 @@ func TestCloseGuessing(t *testing.T) {
 
 func TestNextRoundAdvances(t *testing.T) {
 	e := newTestEngine()
-	e.StartGame()
+	startAndAdvance(e)
 	e.CloseGuessing()
 	if err := e.NextRound(); err != nil {
 		t.Fatal(err)
@@ -117,7 +123,7 @@ func TestNextRoundAdvances(t *testing.T) {
 
 func TestGameComplete(t *testing.T) {
 	e := newTestEngine()
-	e.StartGame()
+	startAndAdvance(e)
 	e.CloseGuessing()
 	e.NextRound() // round 1
 	e.CloseGuessing()

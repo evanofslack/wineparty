@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { MiniGameConfig, PlayerQuiplashState, QuiplashMatchup, QuiplashSlot, Player } from '../../types/game'
 
 interface Props {
@@ -27,6 +27,11 @@ export function QuiplashGame({
   onVote,
 }: Props) {
   const [input, setInput] = useState('')
+  const [selectedSlot, setSelectedSlot] = useState<number | null>(null)
+
+  useEffect(() => {
+    setSelectedSlot(null)
+  }, [currentRound])
 
   const totalRounds = config.prompts?.length ?? 0
   const isMatched = matchup ? (playerId === matchup.playerA || playerId === matchup.playerB) : false
@@ -126,17 +131,28 @@ export function QuiplashGame({
             <p className="font-bold text-muted">Vote cast. Waiting for results...</p>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
-            {slots.map((slot) => (
-              <button
-                key={slot.id}
-                onClick={() => onVote(slot.id)}
-                className="sketch-border bg-white px-4 py-4 text-left font-semibold w-full text-lg"
-              >
-                {slot.text}
-              </button>
-            ))}
-          </div>
+          <>
+            <div className="flex flex-col gap-3">
+              {slots.map((slot) => (
+                <button
+                  key={slot.id}
+                  onClick={() => setSelectedSlot(slot.id)}
+                  className={`sketch-border px-4 py-4 text-left font-semibold w-full text-lg ${
+                    selectedSlot === slot.id ? 'bg-grape/10 border-grape' : 'bg-white'
+                  }`}
+                >
+                  {slot.text}
+                </button>
+              ))}
+            </div>
+            <button
+              disabled={selectedSlot === null}
+              onClick={() => { onVote(selectedSlot!); setSelectedSlot(null) }}
+              className="btn-sketch bg-grape text-white w-full font-bold disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Submit Vote
+            </button>
+          </>
         )}
       </div>
     )

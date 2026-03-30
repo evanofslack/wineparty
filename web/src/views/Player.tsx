@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { BlindTastingForm } from '../components/BlindTastingForm'
-import { Leaderboard } from '../components/Leaderboard'
 import { TriviaGame } from '../components/minigames/TriviaGame'
 import { WordleGame } from '../components/minigames/WordleGame'
 import { ConnectionsGame } from '../components/minigames/ConnectionsGame'
@@ -413,11 +412,6 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
           </div>
         )}
 
-        <div className="sketch-border bg-white px-4 py-3">
-          <p className="text-sm font-bold text-muted uppercase tracking-wider mb-2">Leaderboard</p>
-          <Leaderboard entries={gameState.leaderboard} highlightId={playerId} players={gameState.players} />
-        </div>
-
         <p className="text-center text-muted font-semibold mt-6">Waiting for next round...</p>
       </div>
     )
@@ -427,7 +421,6 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
   if (gameState?.phase === 'complete') {
     const winner = gameState.leaderboard[0]
     const isWinner = winner?.playerId === playerId
-    const mySummary = gameState.playerSummaries?.[playerId]
     return (
       <div className="flex flex-col items-center min-h-screen px-6 pt-8 pb-12 gap-6 text-center max-w-sm mx-auto">
         <div className="text-6xl">{isWinner ? '🏆' : '🍷'}</div>
@@ -438,12 +431,9 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
           <div className="sketch-border-sunny bg-sunny/20 px-6 py-4 w-full">
             <p className="text-sm font-bold text-muted">Winner</p>
             <p className="text-2xl font-black">{winner.playerName}</p>
-            <p className="text-lg font-bold text-grape">{winner.score} points</p>
+            <p className="text-lg font-bold text-grape">{winner.combinedScore} points</p>
           </div>
         )}
-        <div className="w-full">
-          <Leaderboard entries={gameState.leaderboard} highlightId={playerId} players={gameState.players} />
-        </div>
         {me && (me.totalScore > 0 || me.miniGameScore > 0) && (
           <div className="sketch-border bg-white px-4 py-4 w-full text-left">
             <p className="font-bold text-sm text-muted uppercase tracking-wider mb-3">Score Breakdown</p>
@@ -454,20 +444,36 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
             </div>
           </div>
         )}
-        {mySummary && (
+        {gameState.rounds.length > 0 && (
           <div className="sketch-border bg-white px-4 py-4 w-full text-left">
-            <p className="font-bold text-sm text-muted uppercase tracking-wider mb-3">Your Stats</p>
-            <div className="space-y-1.5 text-sm font-semibold">
-              {mySummary.favoriteWine && (
-                <p>Favorite wine: <span className="text-grape font-black">{mySummary.favoriteWine} ({mySummary.favoriteWineVariety}) #{mySummary.favoriteWineRound + 1}</span></p>
-              )}
-              <p>Best round: <span className="font-black">Round {mySummary.bestRound + 1}</span> <span className="text-grape">(+{mySummary.bestRoundPoints}pts)</span></p>
-              <p>Variety correct: <span className="font-black">{mySummary.varietyHits}</span> time{mySummary.varietyHits !== 1 ? 's' : ''}</p>
-              <p>Year points total: <span className="font-black">{mySummary.totalYearPoints}</span></p>
-              {mySummary.avgRatingGiven > 0 && (
-                <p>Avg rating given: <span className="font-black">{mySummary.avgRatingGiven.toFixed(1)}</span>/10</p>
-              )}
-            </div>
+            <p className="font-bold text-sm text-muted uppercase tracking-wider mb-3">Wine Ratings</p>
+            {gameState.rounds.map((round, i) => {
+              const guess = round.guesses.find((g) => g.playerId === playerId)
+              const score = round.scores.find((s) => s.playerId === playerId)
+              return (
+                <div key={i} className="flex justify-between items-center py-2 border-b last:border-0 border-paper">
+                  <span className="font-semibold text-ink truncate">{round.wine.name}</span>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="text-sm text-muted">{guess ? `${guess.rating}/10` : '—'}</span>
+                    <span className="font-black text-grape">+{score?.points ?? 0}</span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+        {(gameState.miniGameResults?.length ?? 0) > 0 && (
+          <div className="sketch-border bg-white px-4 py-4 w-full text-left">
+            <p className="font-bold text-sm text-muted uppercase tracking-wider mb-3">Mini-Games</p>
+            {gameState.miniGameResults!.map((r, i) => {
+              const delta = r.playerDelta[playerId] ?? 0
+              return (
+                <div key={i} className="flex justify-between items-center py-2 border-b last:border-0 border-paper">
+                  <span className="font-semibold text-ink capitalize">{r.gameType.replace(/_/g, ' ')}</span>
+                  <span className="font-black text-grape">+{delta}</span>
+                </div>
+              )
+            })}
           </div>
         )}
       </div>
@@ -715,5 +721,13 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
     )
   }
 
-  return null
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+      <div className="text-6xl">🍷</div>
+      <h1 className="text-2xl font-black text-ink">Wine Party</h1>
+      <p className="font-semibold text-muted">
+        Waiting for host<span className="animate-pulse">...</span>
+      </p>
+    </div>
+  )
 }

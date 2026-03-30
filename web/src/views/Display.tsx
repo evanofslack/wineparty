@@ -305,7 +305,7 @@ export function DisplayView() {
               {round.wine.flavors && round.wine.flavors.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-3">
                   {round.wine.flavors.map((f) => (
-                    <span key={f} className="border-2 border-muted/40 bg-white px-3 py-1 text-base font-semibold text-ink">
+                    <span key={f} className="border-2 border-muted/40 bg-white px-3 py-1 text-base font-semibold text-ink rounded-md">
                       {f}
                     </span>
                   ))}

@@ -297,6 +297,11 @@ export interface MiniGameWinner {
   points: number
 }
 
+export interface MiniGameResult {
+  gameType: string
+  playerDelta: Record<string, number>
+}
+
 export interface GameState {
   phase: Phase
   currentRound: number
@@ -312,6 +317,7 @@ export interface GameState {
   miniGameConfigs: MiniGameConfig[]
   miniGame?: MiniGameState
   miniGameWinners?: MiniGameWinner[]
+  miniGameResults?: MiniGameResult[]
   colors: PlayerColor[]
 }
 

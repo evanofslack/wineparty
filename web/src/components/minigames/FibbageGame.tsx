@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { MiniGameConfig, PlayerFibbageState, FibbageSlot, Player } from '../../types/game'
 
 interface Props {
@@ -24,6 +24,11 @@ export function FibbageGame({
 }: Props) {
   const [input, setInput] = useState('')
   const [rejected, setRejected] = useState(false)
+  const [selectedSlot, setSelectedSlot] = useState<number | null>(null)
+
+  useEffect(() => {
+    setSelectedSlot(null)
+  }, [currentQuestion])
 
   const questions = config.fibbageQuestions ?? []
   const q = questions[currentQuestion]
@@ -93,25 +98,36 @@ export function FibbageGame({
             <p className="font-bold text-muted">Vote cast. Waiting for others...</p>
           </div>
         ) : (
-          <div className="flex flex-col gap-2">
-            {slots.map((slot) => {
-              const isOwn = mySubmission !== '' && slot.text.toLowerCase().trim() === mySubmission.toLowerCase().trim()
-              return (
-                <button
-                  key={slot.id}
-                  disabled={isOwn}
-                  onClick={() => !isOwn && onVote(slot.id)}
-                  className={`sketch-border px-4 py-3 text-left font-semibold w-full ${
-                    isOwn ? 'opacity-40 cursor-not-allowed bg-paper' : 'bg-white'
-                  }`}
-                >
-                  <span className="font-black text-grape mr-2">{slot.id + 1}.</span>
-                  {slot.text}
-                  {isOwn && <span className="text-xs text-muted ml-2">(yours)</span>}
-                </button>
-              )
-            })}
-          </div>
+          <>
+            <div className="flex flex-col gap-2">
+              {slots.map((slot) => {
+                const isOwn = mySubmission !== '' && slot.text.toLowerCase().trim() === mySubmission.toLowerCase().trim()
+                const isSelected = selectedSlot === slot.id
+                return (
+                  <button
+                    key={slot.id}
+                    disabled={isOwn}
+                    onClick={() => !isOwn && setSelectedSlot(slot.id)}
+                    className={`sketch-border px-4 py-3 text-left font-semibold w-full ${
+                      isOwn ? 'opacity-40 cursor-not-allowed bg-paper' :
+                      isSelected ? 'bg-grape/10 border-grape' : 'bg-white'
+                    }`}
+                  >
+                    <span className="font-black text-grape mr-2">{slot.id + 1}.</span>
+                    {slot.text}
+                    {isOwn && <span className="text-xs text-muted ml-2">(yours)</span>}
+                  </button>
+                )
+              })}
+            </div>
+            <button
+              disabled={selectedSlot === null}
+              onClick={() => { onVote(selectedSlot!); setSelectedSlot(null) }}
+              className="btn-sketch bg-grape text-white w-full font-bold disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Submit Vote
+            </button>
+          </>
         )}
       </div>
     )

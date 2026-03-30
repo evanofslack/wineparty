@@ -289,6 +289,11 @@ type TimerState struct {
 	Running      bool       `json:"running"`
 }
 
+type MiniGameResult struct {
+	GameType    string         `json:"gameType"`
+	PlayerDelta map[string]int `json:"playerDelta"`
+}
+
 type GameState struct {
 	Phase            Phase                      `json:"phase"`
 	CurrentRound     int                        `json:"currentRound"`
@@ -304,6 +309,7 @@ type GameState struct {
 	MiniGameConfigs  []MiniGameConfig           `json:"miniGameConfigs"`
 	MiniGame         *MiniGameState             `json:"miniGame,omitempty"`
 	MiniGameWinners  []MiniGameWinner           `json:"miniGameWinners,omitempty"`
+	MiniGameResults  []MiniGameResult           `json:"miniGameResults,omitempty"`
 	Colors           []PlayerColor              `json:"colors"`
 }
 

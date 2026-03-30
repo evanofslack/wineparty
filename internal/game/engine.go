@@ -43,6 +43,20 @@ func (e *Engine) AddPlayer(id, name, color, avatar string, role Role) (*Player, 
 		}
 		return p, nil
 	}
+	taken := make(map[string]bool)
+	for pid, existing := range e.state.Players {
+		if pid != id {
+			taken[existing.Color] = true
+		}
+	}
+	if taken[color] {
+		for _, c := range e.state.Colors {
+			if !taken[c.Hex] {
+				color = c.Hex
+				break
+			}
+		}
+	}
 	p := &Player{
 		ID:        id,
 		Name:      name,
@@ -219,6 +233,17 @@ func (e *Engine) EndMiniGame() error {
 				Points:    pts,
 			})
 		}
+		result := MiniGameResult{
+			GameType:    e.state.MiniGame.Config.Type,
+			PlayerDelta: make(map[string]int),
+		}
+		for id, p := range e.state.Players {
+			if p.Role != RoleAdmin {
+				before := e.state.MiniGame.ScoreSnapshot[id]
+				result.PlayerDelta[id] = p.MiniGameScore - before
+			}
+		}
+		e.state.MiniGameResults = append(e.state.MiniGameResults, result)
 	}
 	e.state.Phase = PhaseMiniGameResults
 	return nil
