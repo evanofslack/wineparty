@@ -90,7 +90,6 @@ export function DisplayView() {
             )}
           </div>
         </div>
-        <DisplayPlayerBar players={allPlayers} leaderboard={leaderboard} />
       </div>
     )
   }
@@ -269,9 +268,9 @@ export function DisplayView() {
             </p>
             <p className="text-8xl font-black text-ink mt-4 leading-tight">{round.wine.name}</p>
             <p className="text-5xl font-bold mt-8">
-              <span className="text-coral font-black">{submitted}</span>
+              <span className="text-muted font-black">{submitted}</span>
               <span className="text-muted"> / </span>
-              <span className="text-lime font-black">{allPlayers.length}</span>
+              <span className="text-muted font-black">{allPlayers.length}</span>
               <span className="text-3xl font-bold text-muted ml-4">guesses in</span>
             </p>
             {gameState.timer && gameState.timer.durationSecs > 0 && (
@@ -304,9 +303,13 @@ export function DisplayView() {
                 <p className="text-2xl font-bold mt-2 text-muted">${round.wine.price}</p>
               )}
               {round.wine.flavors && round.wine.flavors.length > 0 && (
-                <p className="text-xl font-semibold mt-2 text-muted">
-                  {round.wine.flavors.join(' · ')}
-                </p>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {round.wine.flavors.map((f) => (
+                    <span key={f} className="border-2 border-muted/40 bg-white px-3 py-1 text-base font-semibold text-ink">
+                      {f}
+                    </span>
+                  ))}
+                </div>
               )}
             </div>
           </div>

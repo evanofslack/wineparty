@@ -117,7 +117,7 @@ export function AdminView({ sendJoin, sendAdminAction }: Props) {
   const APP_NAME = 'Wine Party'
 
   return (
-    <div className="min-h-screen bg-paper px-6 py-8 max-w-4xl mx-auto">
+    <div className="min-h-screen bg-paper px-8 py-8">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
           <span className="text-2xl font-black text-grape">{APP_NAME}</span>
