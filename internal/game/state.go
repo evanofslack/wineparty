@@ -161,9 +161,12 @@ type Phase string
 
 const (
 	PhaseLobby           Phase = "lobby"
+	PhaseGameIntro       Phase = "game_intro"
+	PhaseTastingIntro    Phase = "tasting_intro"
 	PhaseGuessing        Phase = "guessing"
 	PhaseScoring         Phase = "scoring"
 	PhaseComplete        Phase = "complete"
+	PhaseMiniGameIntro   Phase = "minigame_intro"
 	PhaseMiniGame        Phase = "minigame"
 	PhaseMiniGameResults Phase = "minigame_results"
 )

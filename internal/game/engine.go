@@ -71,8 +71,22 @@ func (e *Engine) StartGame() error {
 	}
 	now := time.Now()
 	e.state.StartedAt = &now
-	e.state.Phase = PhaseGuessing
+	e.state.Phase = PhaseGameIntro
 	e.state.CurrentRound = 0
+	return nil
+}
+
+func (e *Engine) AdvanceIntro() error {
+	switch e.state.Phase {
+	case PhaseGameIntro:
+		e.state.Phase = PhaseTastingIntro
+	case PhaseTastingIntro:
+		e.state.Phase = PhaseGuessing
+	case PhaseMiniGameIntro:
+		e.state.Phase = PhaseMiniGame
+	default:
+		return ErrWrongPhase
+	}
 	return nil
 }
 
@@ -164,7 +178,7 @@ func (e *Engine) NextRound() error {
 	for i, schedRound := range e.state.MiniGameSchedule {
 		if schedRound == e.state.CurrentRound && i < len(e.state.MiniGameConfigs) {
 			e.state.MiniGame = e.initMiniGame(e.state.MiniGameConfigs[i])
-			e.state.Phase = PhaseMiniGame
+			e.state.Phase = PhaseMiniGameIntro
 			return nil
 		}
 	}

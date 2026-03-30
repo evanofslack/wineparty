@@ -95,6 +95,166 @@ export function DisplayView() {
     )
   }
 
+  // Game intro
+  if (gameState.phase === 'game_intro') {
+    const numWines = gameState.rounds.length
+    const numMiniGames = gameState.miniGameSchedule.length
+    return (
+      <div className="flex flex-col h-screen overflow-hidden">
+        <div className="flex-1 flex flex-col items-center justify-center gap-10 p-16">
+          <div className="text-center">
+            <div className="text-8xl mb-4">🍷</div>
+            <h1 className="text-7xl font-black text-ink">{APP_NAME}</h1>
+            <p className="text-3xl font-bold text-muted mt-2">Blind Tasting Challenge</p>
+          </div>
+          <div className="flex gap-6">
+            <div className="sketch-border bg-white px-10 py-6 text-center">
+              <p className="text-6xl font-black text-ink">{numWines}</p>
+              <p className="text-xl font-bold text-muted mt-1">Wines</p>
+            </div>
+            {numMiniGames > 0 && (
+              <div className="sketch-border bg-white px-10 py-6 text-center">
+                <p className="text-6xl font-black text-ink">{numMiniGames}</p>
+                <p className="text-xl font-bold text-muted mt-1">Mini-Games</p>
+              </div>
+            )}
+          </div>
+          <div className="sketch-border bg-white px-10 py-6 w-full max-w-xl text-center">
+            <p className="text-xl font-semibold text-muted">Taste each wine blind, earn points for correctly identifying its details, and compete in mini-games between rounds.</p>
+          </div>
+        </div>
+        <DisplayPlayerBar players={allPlayers} leaderboard={leaderboard} />
+      </div>
+    )
+  }
+
+  // Tasting intro
+  if (gameState.phase === 'tasting_intro') {
+    return (
+      <div className="flex flex-col h-screen overflow-hidden">
+        <div className="flex-1 flex flex-col items-center justify-center gap-8 p-16">
+          <div className="text-center">
+            <span className="inline-block text-xs font-black px-3 py-1 bg-sunny text-ink uppercase tracking-wider mb-4">Wine Tasting</span>
+            <h2 className="text-6xl font-black text-ink">How Tasting Works</h2>
+            <p className="text-2xl font-bold text-muted mt-2">You'll taste each wine blind and guess its details</p>
+          </div>
+          <div className="sketch-border bg-white px-12 py-8 w-full max-w-2xl">
+            <div className="flex flex-col divide-y divide-paper">
+              <div className="flex justify-between items-center py-3">
+                <div>
+                  <p className="font-black text-xl text-ink">Grape Variety</p>
+                  <p className="text-sm text-muted">Name the grape (e.g. Cabernet Sauvignon)</p>
+                </div>
+                <span className="font-black text-2xl text-grape shrink-0 ml-6">3 pts</span>
+              </div>
+              <div className="flex justify-between items-center py-3">
+                <div>
+                  <p className="font-black text-xl text-ink">Region</p>
+                  <p className="text-sm text-muted">Country or specific region</p>
+                </div>
+                <span className="font-black text-2xl text-grape shrink-0 ml-6">2 pts</span>
+              </div>
+              <div className="flex justify-between items-center py-3">
+                <div>
+                  <p className="font-black text-xl text-ink">Vintage Year</p>
+                  <p className="text-sm text-muted">Exact: 3 pts &nbsp;·&nbsp; ±1 year: 2 pts &nbsp;·&nbsp; ±2 years: 1 pt</p>
+                </div>
+                <span className="font-black text-2xl text-grape shrink-0 ml-6">1–3 pts</span>
+              </div>
+              <div className="flex justify-between items-center py-3">
+                <div>
+                  <p className="font-black text-xl text-ink">Flavor Notes</p>
+                  <p className="text-sm text-muted">1 pt each for correct notes, up to 3</p>
+                </div>
+                <span className="font-black text-2xl text-grape shrink-0 ml-6">1–3 pts</span>
+              </div>
+            </div>
+            <div className="flex justify-between items-center mt-4 pt-4 border-t-2 border-ink/20">
+              <span className="font-black text-xl text-ink">Maximum per wine</span>
+              <span className="font-black text-3xl text-grape">11 pts</span>
+            </div>
+          </div>
+        </div>
+        <DisplayPlayerBar players={allPlayers} leaderboard={leaderboard} />
+      </div>
+    )
+  }
+
+  // Mini-game intro
+  if (gameState.phase === 'minigame_intro' && gameState.miniGame) {
+    const gameType = gameState.miniGame.config.type
+    const miniGameIndex = gameState.miniGameSchedule.indexOf(gameState.currentRound) + 1
+    const totalMiniGames = gameState.miniGameSchedule.length
+    const GAME_BADGE: Record<string, string> = {
+      trivia:       'bg-grape text-white',
+      fibbage:      'bg-sky text-ink',
+      quiplash:     'bg-coral text-white',
+      wordle:       'bg-lime text-ink',
+      connections:  'bg-sunny text-ink',
+      emoji_decode: 'bg-sunny text-ink',
+    }
+    const MINIGAME_INFO: Record<string, { title: string; description: string; points: string }> = {
+      trivia: {
+        title: 'Trivia',
+        description: 'Answer multiple choice questions as fast as you can.',
+        points: 'Points per correct answer — faster answers score more.',
+      },
+      fibbage: {
+        title: 'Fibbage',
+        description: 'Write a fake answer to fool your friends. Then vote for the one you think is real.',
+        points: '+3 pts for guessing correctly · +2 pts per player you fool.',
+      },
+      quiplash: {
+        title: 'Quiplash',
+        description: 'Write the funniest response to each prompt. Players vote for their favorite.',
+        points: '+2 pts per vote you receive.',
+      },
+      wordle: {
+        title: 'Wordle',
+        description: 'Guess the hidden 5-letter word. Green = right spot · Yellow = wrong spot · Gray = not in word.',
+        points: 'Fewer guesses = more points (up to 12 pts).',
+      },
+      connections: {
+        title: 'Connections',
+        description: 'Sort 16 words into 4 groups that share a hidden theme. Harder groups are worth more.',
+        points: 'Yellow: 1 pt · Green: 2 pts · Blue: 3 pts · Purple: 4 pts.',
+      },
+      emoji_decode: {
+        title: 'Emoji Decode',
+        description: 'Decode what phrase or title the emoji sequence represents. Answer fastest to earn the most.',
+        points: 'Up to 5 pts per round — scaled by how quickly you answer.',
+      },
+    }
+    const info = MINIGAME_INFO[gameType] ?? { title: gameType, description: '', points: '' }
+    const badgeClass = GAME_BADGE[gameType] ?? 'bg-ink text-white'
+    return (
+      <div className="flex flex-col h-screen overflow-hidden">
+        <div className="flex-1 flex flex-col items-center justify-center gap-8 p-16">
+          <div className="text-center flex flex-col items-center gap-3">
+            <span className={`text-xs font-black px-3 py-1 uppercase tracking-wider ${badgeClass}`}>
+              {info.title}
+            </span>
+            <p className="text-xl font-bold text-muted">
+              Mini-Game {miniGameIndex} of {totalMiniGames}
+            </p>
+            <h2 className="text-7xl font-black text-ink">{info.title}</h2>
+          </div>
+          <div className="sketch-border bg-white px-12 py-8 w-full max-w-2xl flex flex-col gap-6">
+            <div>
+              <p className="text-sm font-black uppercase tracking-wider text-muted mb-2">How to play</p>
+              <p className="text-2xl font-semibold text-ink leading-snug">{info.description}</p>
+            </div>
+            <div className="border-t border-paper pt-5">
+              <p className="text-sm font-black uppercase tracking-wider text-muted mb-2">Points</p>
+              <p className="text-xl font-semibold text-ink">{info.points}</p>
+            </div>
+          </div>
+        </div>
+        <DisplayPlayerBar players={allPlayers} leaderboard={leaderboard} />
+      </div>
+    )
+  }
+
   // Guessing phase
   if (gameState.phase === 'guessing') {
     const round = gameState.rounds[gameState.currentRound]

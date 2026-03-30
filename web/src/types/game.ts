@@ -29,13 +29,17 @@ export enum AdminActionType {
   ActionMiniGameAdvance = 15,
   ActionEmojiExpireRound = 16,
   ActionEmojiNextRound = 17,
+  ActionAdvanceIntro = 18,
 }
 
 export type Phase =
   | 'lobby'
+  | 'game_intro'
+  | 'tasting_intro'
   | 'guessing'
   | 'scoring'
   | 'complete'
+  | 'minigame_intro'
   | 'minigame'
   | 'minigame_results'
 

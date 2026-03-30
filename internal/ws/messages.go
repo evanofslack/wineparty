@@ -39,6 +39,7 @@ const (
 	ActionMiniGameAdvance                            // 15
 	ActionEmojiExpireRound                           // 16
 	ActionEmojiNextRound                             // 17
+	ActionAdvanceIntro                               // 18
 )
 
 // Envelope is the outer wrapper for all WS messages.

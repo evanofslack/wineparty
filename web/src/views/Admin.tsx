@@ -157,6 +157,14 @@ export function AdminView({ sendJoin, sendAdminAction }: Props) {
                   Start Game ▶️
                 </button>
               )}
+              {(gameState.phase === 'game_intro' || gameState.phase === 'tasting_intro' || gameState.phase === 'minigame_intro') && (
+                <button
+                  className="btn-sketch bg-grape text-white w-full"
+                  onClick={() => action(AdminActionType.ActionAdvanceIntro)}
+                >
+                  Continue →
+                </button>
+              )}
               {gameState.phase === 'guessing' && (
                 <button
                   className="btn-sketch bg-coral text-white w-full"

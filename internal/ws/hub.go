@@ -325,6 +325,8 @@ func (h *Hub) handleAdminAction(c *Client, raw json.RawMessage) {
 		err = h.engine.EmojiExpireRound()
 	case ActionEmojiNextRound:
 		err = h.engine.EmojiNextRound()
+	case ActionAdvanceIntro:
+		err = h.engine.AdvanceIntro()
 	default:
 		c.sendEnvelope(MsgError, ErrorPayload{Message: "unknown admin action"})
 		return
