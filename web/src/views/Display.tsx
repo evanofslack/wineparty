@@ -51,33 +51,33 @@ export function DisplayView() {
     return (
       <div className="flex flex-col h-screen overflow-hidden">
         <div className="flex-1 grid grid-cols-2 min-h-0">
-          <div className="flex flex-col items-center justify-center gap-10 p-12 border-r border-ink/10">
+          <div className="flex flex-col items-center justify-center gap-8 p-12 border-r border-ink/10">
             <div className="text-center">
               <div className="text-8xl mb-4">🍷</div>
               <h1 className="text-7xl font-black text-ink">{APP_NAME}!</h1>
               <p className="text-3xl font-bold text-muted mt-3">Blind Tasting Challenge</p>
             </div>
-            <div className="sketch-border-sunny bg-sunny/15 p-8 flex flex-col items-center gap-4">
+            <div className="sketch-border bg-white p-8 flex flex-col items-center gap-4">
               <p className="font-black text-2xl text-ink">Join the game</p>
-              <div className="w-48 h-48 sketch-border bg-paper flex items-center justify-center text-muted text-sm font-semibold">
+              <div className="w-72 h-72 sketch-border bg-paper flex items-center justify-center text-muted text-sm font-semibold">
                 QR → /
               </div>
-              <p className="text-xl font-bold text-muted">Scan to join</p>
+              <p className="text-lg font-bold text-muted font-mono">winepart.evanslack.dev/?lobby=changeme</p>
             </div>
           </div>
 
-          <div className="flex flex-col justify-center p-12">
+          <div className="flex flex-col justify-center p-12 min-h-0">
             {allPlayers.length > 0 ? (
-              <div className="sketch-border bg-white p-8 h-full flex flex-col">
-                <p className="font-black text-3xl mb-6 text-ink">
+              <div className="sketch-border bg-white p-6 flex flex-col min-h-0">
+                <p className="font-black text-3xl mb-4 text-ink shrink-0">
                   Players ({allPlayers.length})
                 </p>
-                <ul className="flex flex-col gap-2 overflow-hidden">
+                <ul className="flex flex-col gap-1.5 overflow-y-auto min-h-0">
                   {allPlayers.map((p) => (
-                    <li key={p.id} className="flex items-center gap-4 px-4 py-2 sketch-border bg-white/80">
-                      <span className={`w-3 h-3 rounded-full shrink-0 ${p.connected ? 'bg-lime' : 'bg-muted/40'}`} />
-                      <PlayerAvatar player={p} size={40} />
-                      <span className="text-xl font-bold text-ink truncate">{p.name}</span>
+                    <li key={p.id} className="flex items-center gap-3 px-3 py-1.5 sketch-border bg-white shrink-0">
+                      <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${p.connected ? 'bg-lime' : 'bg-muted/40'}`} />
+                      <PlayerAvatar player={p} size={32} />
+                      <span className="text-lg font-bold text-ink truncate">{p.name}</span>
                     </li>
                   ))}
                 </ul>
@@ -293,7 +293,7 @@ export function DisplayView() {
       <div className="flex flex-col h-screen overflow-hidden">
         <div className="flex-1 grid grid-cols-2 min-h-0">
           <div className="flex flex-col justify-center p-12 border-r border-ink/10">
-            <div className="sketch-border-sunny bg-sunny/20 px-8 py-10">
+            <div className="sketch-border bg-white px-8 py-10">
               <p className="text-lg font-bold text-muted uppercase tracking-wider mb-4">The wine was...</p>
               <h2 className="text-6xl font-black text-ink leading-tight">{round.wine.name}</h2>
               <p className="text-4xl font-bold mt-4 text-ink">{round.wine.variety}</p>
@@ -305,7 +305,7 @@ export function DisplayView() {
               {round.wine.flavors && round.wine.flavors.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-3">
                   {round.wine.flavors.map((f) => (
-                    <span key={f} className="border-2 border-muted/40 bg-white px-3 py-1 text-base font-semibold text-ink rounded-md">
+                    <span key={f} className="border-2 border-sunny/60 bg-sunny/20 px-3 py-1 text-base font-semibold text-ink rounded-md">
                       {f}
                     </span>
                   ))}
@@ -354,7 +354,7 @@ export function DisplayView() {
       <div className="flex flex-col h-screen overflow-hidden">
         <div className="flex-1 grid grid-cols-2 min-h-0">
           <div className="flex flex-col p-10 gap-5 overflow-hidden border-r border-ink/10">
-            <div className="sketch-border-sunny bg-sunny/30 px-6 py-4 flex items-center gap-4 shrink-0">
+            <div className="sketch-border bg-white px-6 py-4 flex items-center gap-4 shrink-0">
               <div className="text-4xl shrink-0">🏆</div>
               {winnerPlayer && <PlayerAvatar player={winnerPlayer} size={64} />}
               <div>
@@ -366,7 +366,7 @@ export function DisplayView() {
             </div>
 
             {(gameState.miniGameWinners?.length ?? 0) > 0 && (
-              <div className="sketch-border bg-white/80 px-4 py-3 flex-1 min-h-0 overflow-hidden">
+              <div className="sketch-border bg-white px-4 py-3 flex-1 min-h-0 overflow-hidden">
                 <p className="text-sm font-black uppercase tracking-wider text-muted mb-2">Mini-Game Highlights</p>
                 {gameState.miniGameWinners!.map((w, i) => {
                   const names = w.winnerIds.map((id) => gameState.players[id]?.name ?? '—').join(', ')
