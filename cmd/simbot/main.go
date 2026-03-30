@@ -135,7 +135,7 @@ func main() {
 			}
 			b.run(ctx)
 		}(i)
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(750 * time.Millisecond)
 	}
 
 	wg.Wait()
