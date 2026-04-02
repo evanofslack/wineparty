@@ -75,8 +75,8 @@ html, body, #root {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background-color: var(--color-ink);
-  border: 3px solid var(--color-ink);
+  background-color: #ffffff;
+  border: 2px solid #9ca3af;
   cursor: pointer;
   margin-top: -10px;
 }
@@ -88,8 +88,8 @@ html, body, #root {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background-color: var(--color-ink);
-  border: 3px solid var(--color-ink);
+  background-color: #ffffff;
+  border: 2px solid #9ca3af;
   cursor: pointer;
 }
 .range-lg::-moz-range-track {

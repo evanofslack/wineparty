@@ -173,8 +173,9 @@ export function BlindTastingForm({ onSubmit, submitted, yearMin, yearMax, priceM
 
       <button
         type="submit"
-        className="btn-sketch bg-grape text-white w-full text-lg mt-2"
-        style={{ backgroundColor: 'var(--color-grape)' }}
+        disabled={!variety || !country || !region}
+        className="btn-sketch w-full text-lg mt-2 text-white disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-x-0 disabled:translate-y-0"
+        style={{ backgroundColor: variety && country && region ? 'var(--color-grape)' : '#9ca3af' }}
       >
         Submit Guess 🍇
       </button>
