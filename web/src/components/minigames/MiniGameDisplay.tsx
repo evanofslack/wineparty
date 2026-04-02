@@ -42,6 +42,29 @@ interface EmojiLiveProps {
   players: Record<string, Player>
 }
 
+function HangmanDisplay({ answer, revealed }: { answer: string; revealed: number }) {
+  let lettersSeen = 0
+  return (
+    <div className="flex flex-wrap justify-center gap-x-1 gap-y-3 items-end px-4">
+      {answer.split('').map((ch, i) => {
+        if (ch === ' ') return <span key={i} className="w-5" />
+        if (!/[a-zA-Z0-9]/.test(ch)) {
+          return <span key={i} className="font-black text-4xl pb-1 text-ink">{ch}</span>
+        }
+        const show = lettersSeen++ < revealed
+        return (
+          <span key={i} className="inline-flex flex-col items-center" style={{ width: 32 }}>
+            <span className="font-black text-3xl leading-none text-ink" style={{ minHeight: '2rem' }}>
+              {show ? ch.toUpperCase() : '\u00A0'}
+            </span>
+            <span className="w-full border-b-4 border-ink mt-1" />
+          </span>
+        )
+      })}
+    </div>
+  )
+}
+
 function EmojiLiveDisplay({
   round, subPhase, timerSecs, roundStartedAt, currentQuestion, totalRounds, emojiCorrectAnswerers, players
 }: EmojiLiveProps) {
@@ -75,6 +98,17 @@ function EmojiLiveDisplay({
           <p className="text-9xl leading-relaxed">{round.emoji}</p>
         </div>
       )}
+      {subPhase === 'active' && round && (() => {
+        const elapsed = timerSecs - remaining
+        const letterCount = round.answer.split('').filter((c) => /[a-zA-Z0-9]/.test(c)).length
+        const revealStart = timerSecs * 0.25
+        const revealDuration = timerSecs - revealStart
+        const revealElapsed = Math.max(0, elapsed - revealStart)
+        const revealed = Math.floor(Math.min(1, revealElapsed / revealDuration) * letterCount)
+        return (
+          <HangmanDisplay answer={round.answer} revealed={revealed} />
+        )
+      })()}
       {subPhase === 'active' && (
         <div className="flex flex-col items-center gap-3 w-full">
           <div className="w-full bg-paper border-2 border-muted/20 h-4">

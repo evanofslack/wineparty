@@ -11,6 +11,29 @@ interface Props {
   onAnswer: (text: string) => void
 }
 
+function HangmanDisplay({ answer, revealed }: { answer: string; revealed: number }) {
+  let lettersSeen = 0
+  return (
+    <div className="flex flex-wrap justify-center gap-x-1 gap-y-2 items-end">
+      {answer.split('').map((ch, i) => {
+        if (ch === ' ') return <span key={i} className="w-4" />
+        if (!/[a-zA-Z0-9]/.test(ch)) {
+          return <span key={i} className="font-black text-xl pb-0.5 text-ink">{ch}</span>
+        }
+        const show = lettersSeen++ < revealed
+        return (
+          <span key={i} className="inline-flex flex-col items-center" style={{ width: 22 }}>
+            <span className="font-black text-lg leading-none text-ink" style={{ minHeight: '1.5rem' }}>
+              {show ? ch.toUpperCase() : '\u00A0'}
+            </span>
+            <span className="w-full border-b-2 border-ink mt-0.5" />
+          </span>
+        )
+      })}
+    </div>
+  )
+}
+
 export function EmojiDecodeGame({
   config,
   currentRound,
@@ -73,6 +96,15 @@ export function EmojiDecodeGame({
           </p>
           <p className="text-5xl leading-relaxed">{round.emoji}</p>
         </div>
+        {(() => {
+          const elapsed = secondsLeft !== null ? timerSecs - secondsLeft : 0
+          const letterCount = round.answer.split('').filter((c) => /[a-zA-Z0-9]/.test(c)).length
+          const revealStart = timerSecs * 0.25
+          const revealDuration = timerSecs - revealStart
+          const revealElapsed = Math.max(0, elapsed - revealStart)
+          const revealed = Math.floor(Math.min(1, revealElapsed / revealDuration) * letterCount)
+          return <HangmanDisplay answer={round.answer} revealed={revealed} />
+        })()}
         <div className="h-2 bg-ink/10 rounded-full overflow-hidden">
           <div
             className={`h-full ${timerColor} transition-all duration-250`}
