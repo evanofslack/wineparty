@@ -105,6 +105,8 @@ export interface LeaderboardEntry {
 export interface WineConfig {
   id: number
   name: string
+  hiddenName: string
+  realName: string
   variety: string
   country: string
   region: string
@@ -279,6 +281,7 @@ export interface MiniGameState {
   quiplashStates?: Record<string, PlayerQuiplashState>
   quiplashResults?: QuiplashRoundResult[]
   emojiCorrectAnswerers?: string[]
+  emojiRevealOrder?: number[]
   roundStartedAt?: string
   emojiStates?: Record<string, PlayerEmojiState>
 }

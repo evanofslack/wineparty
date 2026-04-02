@@ -121,6 +121,9 @@ func (e *Engine) StartGame() error {
 	if len(e.state.Rounds) == 0 {
 		return errors.New("no rounds configured")
 	}
+	rand.Shuffle(len(e.state.Rounds), func(i, j int) {
+		e.state.Rounds[i], e.state.Rounds[j] = e.state.Rounds[j], e.state.Rounds[i]
+	})
 	now := time.Now()
 	e.state.StartedAt = &now
 	e.state.Phase = PhaseGameIntro
@@ -432,10 +435,9 @@ func (e *Engine) submitConnectionsGroup(playerID string, group []string) error {
 		ps = &PlayerConnectionsState{FoundGroups: []string{}}
 		ms.ConnStates[playerID] = ps
 	}
-	if ps.TotalGuesses >= 5 {
+	if ps.IncorrectGuesses >= 6 {
 		return ErrMaxGuessesReached
 	}
-	ps.TotalGuesses++
 	normalized := make([]string, len(group))
 	for i, w := range group {
 		normalized[i] = strings.ToLower(strings.TrimSpace(w))
@@ -601,6 +603,7 @@ func (e *Engine) initMiniGame(cfg MiniGameConfig) *MiniGameState {
 		}
 		now := time.Now()
 		ms.RoundStartedAt = &now
+		ms.EmojiRevealOrder = buildEmojiRevealOrder(cfg.EmojiRounds[0].Answer)
 		ms.SubPhase = "active"
 	}
 	ms.ScoreSnapshot = make(map[string]int, len(e.state.Players))
@@ -1048,7 +1051,7 @@ func (e *Engine) submitEmojiAnswer(playerID, answer string) error {
 	}
 	timerSecs := ms.Config.TimerSeconds
 	if timerSecs <= 0 {
-		timerSecs = 30
+		timerSecs = 45
 	}
 	if ms.RoundStartedAt != nil {
 		expiry := ms.RoundStartedAt.Add(time.Duration(timerSecs) * time.Second)
@@ -1118,8 +1121,24 @@ func (e *Engine) EmojiNextRound() error {
 	ms.EmojiCorrectAnswerers = nil
 	now := time.Now()
 	ms.RoundStartedAt = &now
+	if ms.CurrentQuestion < len(ms.Config.EmojiRounds) {
+		ms.EmojiRevealOrder = buildEmojiRevealOrder(ms.Config.EmojiRounds[ms.CurrentQuestion].Answer)
+	}
 	ms.SubPhase = "active"
 	return nil
+}
+
+func buildEmojiRevealOrder(answer string) []int {
+	var indices []int
+	for i, ch := range answer {
+		if (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') {
+			indices = append(indices, i)
+		}
+	}
+	rand.Shuffle(len(indices), func(i, j int) {
+		indices[i], indices[j] = indices[j], indices[i]
+	})
+	return indices
 }
 
 func (e *Engine) SetPlayerScore(playerID string, score int) error {

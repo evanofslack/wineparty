@@ -312,15 +312,17 @@ func (h *Hub) handleAdminAction(c *Client, raw json.RawMessage) {
 		wineConfigs := make([]game.WineConfig, len(h.wines))
 		for i, w := range h.wines {
 			wineConfigs[i] = game.WineConfig{
-				ID:      w.ID,
-				Name:    w.Name,
-				Variety: w.Variety,
-				Country: w.Country,
-				Region:  w.Region,
-				Year:    w.Year,
-				Hint:    w.Hint,
-				Flavors: w.Flavors,
-				Price:   w.Price,
+				ID:         w.ID,
+				Name:       w.Name,
+				HiddenName: w.HiddenName,
+				RealName:   w.RealName,
+				Variety:    w.Variety,
+				Country:    w.Country,
+				Region:     w.Region,
+				Year:       w.Year,
+				Hint:       w.Hint,
+				Flavors:    w.Flavors,
+				Price:      w.Price,
 			}
 		}
 		h.engine.ResetToLobby(wineConfigs)

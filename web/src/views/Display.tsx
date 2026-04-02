@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { CountdownTimer } from "../components/CountdownTimer";
 import { MiniGameDisplay } from "../components/minigames/MiniGameDisplay";
 import { DisplayPlayerBar } from "../components/DisplayPlayerBar";
 import { PlayerAvatar } from "../components/PlayerAvatar";
 import { useGameStore } from "../store/gameStore";
+import { FLAVOR_COLORS } from "../components/FlavorPicker";
 import type {
   LeaderboardEntry,
   Player,
@@ -39,12 +40,14 @@ type Floater = { id: string; emoji: string; name: string; x: number };
 function FloaterOverlay() {
   const { store } = useGameStore();
   const [floaters, setFloaters] = useState<Floater[]>([]);
+  const gameStateRef = useRef(store.gameState);
+  useEffect(() => { gameStateRef.current = store.gameState; }, [store.gameState]);
 
   useEffect(() => {
     function onReaction(e: Event) {
       const { playerId, emoji } = (e as CustomEvent<EmojiReactionPayload>)
         .detail;
-      const name = store.gameState?.players[playerId]?.name ?? "";
+      const name = gameStateRef.current?.players[playerId]?.name ?? "";
       const id = crypto.randomUUID();
       const x = Math.random() * 70 + 10;
       setFloaters((prev) => [...prev, { id, emoji, name, x }]);
@@ -55,7 +58,7 @@ function FloaterOverlay() {
     }
     window.addEventListener("emojiReaction", onReaction);
     return () => window.removeEventListener("emojiReaction", onReaction);
-  }, [store.gameState]);
+  }, []);
 
   return (
     <div
@@ -115,7 +118,7 @@ function DisplayContent() {
     return (
       <div className="flex flex-col h-screen overflow-hidden">
         <div className="flex-1 grid grid-cols-2 min-h-0">
-          <div className="flex flex-col items-center justify-center gap-8 p-12 border-r border-ink/10">
+          <div className="flex flex-col items-center justify-center gap-8 p-12">
             <div className="text-center">
               <div className="text-8xl mb-4">🍷</div>
               <h1 className="text-7xl font-black text-ink">{APP_NAME}!</h1>
@@ -236,13 +239,24 @@ function DisplayContent() {
               </div>
               <div className="flex justify-between items-center py-3">
                 <div>
-                  <p className="font-black text-xl text-ink">Region</p>
+                  <p className="font-black text-xl text-ink">Country</p>
                   <p className="text-sm text-muted">
-                    Country or specific region
+                    Correct country
                   </p>
                 </div>
                 <span className="font-black text-2xl text-grape shrink-0 ml-6">
                   2 pts
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-3">
+                <div>
+                  <p className="font-black text-xl text-ink">Region</p>
+                  <p className="text-sm text-muted">
+                    Correct region
+                  </p>
+                </div>
+                <span className="font-black text-2xl text-grape shrink-0 ml-6">
+                  1 pt
                 </span>
               </div>
               <div className="flex justify-between items-center py-3">
@@ -273,7 +287,7 @@ function DisplayContent() {
               <span className="font-black text-xl text-ink">
                 Maximum per wine
               </span>
-              <span className="font-black text-3xl text-grape">11 pts</span>
+              <span className="font-black text-3xl text-grape">12 pts</span>
             </div>
           </div>
         </div>
@@ -391,10 +405,10 @@ function DisplayContent() {
               Round {gameState.currentRound + 1} of {gameState.rounds.length}
             </p>
             <p className="text-8xl font-black text-ink mt-4 leading-tight">
-              {round.wine.name}
+              {round.wine.hiddenName || round.wine.name}
             </p>
             <p className="text-5xl font-bold mt-8">
-              <span className="text-muted font-black">{submitted}</span>
+              <span className="text-lime font-black">{submitted}</span>
               <span className="text-muted"> / </span>
               <span className="text-muted font-black">{allPlayers.length}</span>
               <span className="text-3xl font-bold text-muted ml-4">
@@ -420,13 +434,13 @@ function DisplayContent() {
     return (
       <div className="flex flex-col h-screen overflow-hidden">
         <div className="flex-1 grid grid-cols-2 min-h-0">
-          <div className="flex flex-col justify-center p-12 border-r border-ink/10">
+          <div className="flex flex-col justify-center p-12">
             <div className="sketch-border bg-white px-8 py-10">
               <p className="text-lg font-bold text-muted uppercase tracking-wider mb-4">
                 The wine was...
               </p>
               <h2 className="text-6xl font-black text-ink leading-tight">
-                {round.wine.name}
+                {round.wine.realName || round.wine.name}
               </h2>
               <p className="text-4xl font-bold mt-4 text-ink">
                 {round.wine.variety}
@@ -447,12 +461,12 @@ function DisplayContent() {
               )}
               {round.wine.flavors && round.wine.flavors.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-3">
-                  {round.wine.flavors.map((f) => (
+                  {round.wine.flavors.map((f, i) => (
                     <span
                       key={f}
-                      className="border-2 border-sunny/60 bg-sunny/20 px-3 py-1 text-base font-semibold text-ink rounded-md"
+                      className={`border-2 px-3 py-1 text-base font-semibold rounded-md ${FLAVOR_COLORS[i % FLAVOR_COLORS.length]}`}
                     >
-                      {f}
+                      {f.charAt(0).toUpperCase() + f.slice(1)}
                     </span>
                   ))}
                 </div>
@@ -515,16 +529,16 @@ function DisplayContent() {
     return (
       <div className="flex flex-col h-screen overflow-hidden">
         <div className="flex-1 grid grid-cols-2 min-h-0">
-          <div className="flex flex-col p-10 gap-5 overflow-hidden border-r border-ink/10">
+          <div className="flex flex-col p-10 gap-5 overflow-hidden">
             <div className="sketch-border bg-white px-6 py-4 flex items-center gap-4 shrink-0">
               <div className="text-4xl shrink-0">🏆</div>
               {winnerPlayer && <PlayerAvatar player={winnerPlayer} size={64} />}
               <div>
-                <h1 className="text-4xl font-black leading-tight">
+                <h1 className="text-5xl font-black leading-tight">
                   {winner ? `${winner.playerName} wins!` : "Game Over!"}
                 </h1>
                 {winner && (
-                  <p className="text-3xl font-black text-grape">
+                  <p className="text-4xl font-black text-grape">
                     {winner.score} pts
                   </p>
                 )}
@@ -533,8 +547,8 @@ function DisplayContent() {
 
             {(gameState.miniGameWinners?.length ?? 0) > 0 && (
               <div className="sketch-border bg-white px-4 py-3 flex-1 min-h-0 overflow-hidden">
-                <p className="text-sm font-black uppercase tracking-wider text-muted mb-2">
-                  Mini-Game Highlights
+                <p className="text-base font-black uppercase tracking-wider text-muted mb-2">
+                  Minigame Winners
                 </p>
                 {gameState.miniGameWinners!.map((w, i) => {
                   const names = w.winnerIds
@@ -567,7 +581,7 @@ function DisplayContent() {
                       <p className="text-xs font-bold text-muted uppercase tracking-wider mb-1">
                         Most Popular
                       </p>
-                      <p className="font-black text-sm text-ink leading-tight">
+                      <p className="font-black text-base text-ink leading-tight">
                         {summary.mostPopular.wineName}
                       </p>
                       <p className="text-xs text-muted">
@@ -588,7 +602,7 @@ function DisplayContent() {
                         <p className="text-xs font-bold text-muted uppercase tracking-wider mb-1">
                           Least Liked
                         </p>
-                        <p className="font-black text-sm text-ink leading-tight">
+                        <p className="font-black text-base text-ink leading-tight">
                           {summary.leastLiked.wineName}
                         </p>
                         <p className="text-xs text-muted">
@@ -607,7 +621,7 @@ function DisplayContent() {
                       <p className="text-xs font-bold text-muted uppercase tracking-wider mb-1">
                         Most Divisive
                       </p>
-                      <p className="font-black text-sm text-ink leading-tight">
+                      <p className="font-black text-base text-ink leading-tight">
                         {summary.mostContested.wineName}
                       </p>
                       <p className="text-xs text-muted">
@@ -623,7 +637,7 @@ function DisplayContent() {
                   )}
                 </div>
                 <div className="sketch-border bg-white px-5 py-4 flex-1 min-h-0 overflow-hidden">
-                  <p className="text-sm font-bold text-muted uppercase tracking-wider mb-3">
+                  <p className="text-base font-bold text-muted uppercase tracking-wider mb-3">
                     Wine Ratings
                   </p>
                   {summary.wineRatings.map((wr) => {
@@ -633,10 +647,10 @@ function DisplayContent() {
                         key={wr.roundIndex}
                         className="flex justify-between items-center py-2 border-b last:border-0 border-paper"
                       >
-                        <span className="font-semibold text-lg">
+                        <span className="font-semibold text-xl">
                           {wr.wineName} ({wr.wineVariety})
                         </span>
-                        <span className="font-black text-xl text-grape">
+                        <span className="font-black text-2xl text-grape">
                           {wr.ratedCount > 0 ? (
                             <>
                               {wr.avgRating.toFixed(1)}/10
@@ -720,7 +734,7 @@ function DisplayContent() {
     return (
       <div className="flex flex-col h-screen overflow-hidden">
         <div className="flex-1 grid grid-cols-2 min-h-0">
-          <div className="flex flex-col items-center justify-center p-10 border-r border-ink/10 overflow-hidden">
+          <div className="flex flex-col items-center justify-center p-10 overflow-hidden">
             <div className="w-full max-w-2xl">
               <MiniGameDisplay
                 miniGame={mg}
@@ -747,15 +761,15 @@ function DisplayContent() {
                       style={{ backgroundColor: s.player.color ?? "#ccc" }}
                     />
                     <div className="flex items-center gap-4 px-4 py-3 flex-1">
-                      <span className="text-2xl w-10 text-center font-black shrink-0 text-muted">
+                      <span className="text-4xl w-14 text-center font-black shrink-0 text-muted">
                         {rankLabel}
                       </span>
                       <PlayerAvatar player={s.player} size={40} />
-                      <span className="flex-1 font-bold text-2xl text-ink truncate">
+                      <span className="flex-1 font-bold text-3xl text-ink truncate">
                         {s.player.name}
                       </span>
-                      <span className="font-black text-3xl text-grape tabular-nums">
-                        {s.pts} pts
+                      <span className="font-black text-4xl text-ink tabular-nums">
+                        +{s.pts}
                       </span>
                     </div>
                   </div>

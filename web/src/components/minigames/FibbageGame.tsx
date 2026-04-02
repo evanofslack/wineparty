@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { MiniGameConfig, PlayerFibbageState, FibbageSlot, Player } from '../../types/game'
 
 interface Props {
@@ -23,22 +23,40 @@ export function FibbageGame({
   onVote,
 }: Props) {
   const [input, setInput] = useState('')
-  const [rejected, setRejected] = useState(false)
+  const [rejectedUntil, setRejectedUntil] = useState(0)
   const [selectedSlot, setSelectedSlot] = useState<number | null>(null)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
     setSelectedSlot(null)
   }, [currentQuestion])
+
+  useEffect(() => {
+    if (rejectedUntil > 0) {
+      intervalRef.current = setInterval(() => {
+        if (Date.now() >= rejectedUntil) {
+          if (intervalRef.current) clearInterval(intervalRef.current)
+        }
+      }, 100)
+      return () => {
+        if (intervalRef.current) clearInterval(intervalRef.current)
+      }
+    }
+  }, [rejectedUntil])
+
+  const rejected = Date.now() < rejectedUntil
 
   const questions = config.fibbageQuestions ?? []
   const q = questions[currentQuestion]
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!input.trim()) return
-    setRejected(false)
-    onSubmit(input.trim())
-    setInput('')
+    if (!input.trim() || rejected) return
+    if (q && input.trim().toLowerCase() === q.answer.toLowerCase()) {
+      setRejectedUntil(Date.now() + 3000)
+      return
+    }
+    onSubmit(input.trim().toLowerCase())
   }
 
   if (!q) return null
@@ -65,17 +83,24 @@ export function FibbageGame({
               type="text"
               placeholder="Type a fake answer..."
               value={input}
-              onChange={(e) => { setInput(e.target.value); setRejected(false) }}
+              onChange={(e) => setInput(e.target.value)}
               className="sketch-border px-4 py-3 font-semibold bg-white w-full"
               maxLength={80}
               autoFocus
+              autoCorrect="off"
+              autoCapitalize="none"
+              spellCheck={false}
             />
             {rejected && (
               <p className="text-coral font-bold text-sm text-center">
                 That's the real answer! Enter something different.
               </p>
             )}
-            <button type="submit" className="btn-sketch bg-grape text-white w-full font-bold">
+            <button
+              type="submit"
+              disabled={rejected}
+              className="btn-sketch bg-grape text-white w-full font-bold disabled:opacity-40 disabled:cursor-not-allowed"
+            >
               Submit Answer
             </button>
           </form>
@@ -101,7 +126,8 @@ export function FibbageGame({
           <>
             <div className="flex flex-col gap-2">
               {slots.map((slot) => {
-                const isOwn = mySubmission !== '' && slot.text.toLowerCase().trim() === mySubmission.toLowerCase().trim()
+                const displayText = slot.text.toLowerCase()
+                const isOwn = mySubmission !== '' && displayText.trim() === mySubmission.toLowerCase().trim()
                 const isSelected = selectedSlot === slot.id
                 return (
                   <button
@@ -114,7 +140,7 @@ export function FibbageGame({
                     }`}
                   >
                     <span className="font-black text-grape mr-2">{slot.id + 1}.</span>
-                    {slot.text}
+                    {displayText}
                     {isOwn && <span className="text-xs text-muted ml-2">(yours)</span>}
                   </button>
                 )
@@ -149,7 +175,7 @@ export function FibbageGame({
                 className={`sketch-border px-4 py-3 ${slot.isCorrect ? 'bg-lime/30 border-lime' : 'bg-white'}`}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <span className="font-semibold text-ink">{slot.text}</span>
+                  <span className="font-semibold text-ink">{slot.text.toLowerCase()}</span>
                   {slot.isCorrect && (
                     <span className="text-xs font-black text-lime-700 shrink-0">REAL ANSWER</span>
                   )}

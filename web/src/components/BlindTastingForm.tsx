@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react'
+import { useState, useMemo, FormEvent } from 'react'
 import { FlavorPicker } from './FlavorPicker'
 import type { GuessPayload } from '../types/game'
 
@@ -18,6 +18,17 @@ const REGIONS = [
   'Bordeaux', 'Columbia', 'Veneto', 'Marlborough', 'La Rioja', 'Stellenbosch', 'Sonoma', 'Barossa', 'Napa', 'Willamette',
 ]
 
+function seededShuffle<T>(arr: T[], seed: number): T[] {
+  const result = [...arr]
+  let s = seed >>> 0
+  for (let i = result.length - 1; i > 0; i--) {
+    s = (Math.imul(s ^ (s >>> 13), 0x9e3779b9) | 0) >>> 0
+    const j = s % (i + 1)
+    ;[result[i], result[j]] = [result[j], result[i]]
+  }
+  return result
+}
+
 interface Props {
   onSubmit: (guess: GuessPayload) => void
   submitted: boolean
@@ -25,16 +36,21 @@ interface Props {
   yearMax: number
   priceMin: number
   priceMax: number
+  seed?: number
 }
 
-export function BlindTastingForm({ onSubmit, submitted, yearMin, yearMax, priceMin, priceMax }: Props) {
+export function BlindTastingForm({ onSubmit, submitted, yearMin, yearMax, priceMin, priceMax, seed }: Props) {
   const [variety, setVariety] = useState('')
   const [country, setCountry] = useState('')
   const [region, setRegion] = useState('')
   const [year, setYear] = useState<number>(Math.round((yearMin + yearMax) / 2))
-  const [price, setPrice] = useState<number>(Math.round((priceMin + priceMax) / 2 / 5) * 5)
+  const [price, setPrice] = useState<number>(Math.round((priceMin + priceMax) / 2))
   const [flavors, setFlavors] = useState<string[]>([])
   const [rating, setRating] = useState<number>(5)
+
+  const varieties = useMemo(() => seed ? seededShuffle(VARIETIES, seed) : VARIETIES, [seed])
+  const countries = useMemo(() => seed ? seededShuffle(COUNTRIES, seed + 1) : COUNTRIES, [seed])
+  const regions = useMemo(() => seed ? seededShuffle(REGIONS, seed + 2) : REGIONS, [seed])
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -65,7 +81,7 @@ export function BlindTastingForm({ onSubmit, submitted, yearMin, yearMax, priceM
           required
         >
           <option value="">Select variety...</option>
-          {VARIETIES.map((v) => (
+          {varieties.map((v) => (
             <option key={v} value={v}>{v}</option>
           ))}
         </select>
@@ -80,7 +96,7 @@ export function BlindTastingForm({ onSubmit, submitted, yearMin, yearMax, priceM
           required
         >
           <option value="">Select country...</option>
-          {COUNTRIES.map((c) => (
+          {countries.map((c) => (
             <option key={c} value={c}>{c}</option>
           ))}
         </select>
@@ -95,7 +111,7 @@ export function BlindTastingForm({ onSubmit, submitted, yearMin, yearMax, priceM
           required
         >
           <option value="">Select region...</option>
-          {REGIONS.map((r) => (
+          {regions.map((r) => (
             <option key={r} value={r}>{r}</option>
           ))}
         </select>
@@ -109,7 +125,7 @@ export function BlindTastingForm({ onSubmit, submitted, yearMin, yearMax, priceM
           max={yearMax}
           value={year}
           onChange={(e) => setYear(Number(e.target.value))}
-          className="w-full accent-sunny"
+          className="w-full accent-sunny range-lg"
         />
         <div className="flex justify-between text-xs text-muted font-semibold">
           <span>{yearMin}</span>
@@ -124,10 +140,10 @@ export function BlindTastingForm({ onSubmit, submitted, yearMin, yearMax, priceM
           type="range"
           min={priceMin}
           max={priceMax}
-          step={5}
+          step={1}
           value={price}
           onChange={(e) => setPrice(Number(e.target.value))}
-          className="w-full accent-lime"
+          className="w-full accent-lime range-lg"
         />
         <div className="flex justify-between text-xs text-muted font-semibold">
           <span>${priceMin}</span>
@@ -136,7 +152,7 @@ export function BlindTastingForm({ onSubmit, submitted, yearMin, yearMax, priceM
         </div>
       </div>
 
-      <FlavorPicker selected={flavors} onChange={setFlavors} />
+      <FlavorPicker selected={flavors} onChange={setFlavors} seed={seed} />
 
       <div className="sketch-border-coral bg-coral/10 px-3 py-3 rounded flex flex-col gap-1.5">
         <label className="font-bold text-sm text-ink">Your Rating: {rating}/10</label>
@@ -146,7 +162,7 @@ export function BlindTastingForm({ onSubmit, submitted, yearMin, yearMax, priceM
           max={10}
           value={rating}
           onChange={(e) => setRating(Number(e.target.value))}
-          className="w-full accent-coral"
+          className="w-full accent-coral range-lg"
         />
         <div className="flex justify-between text-xs text-muted font-semibold">
           <span>1</span>

@@ -39,10 +39,14 @@ interface EmojiLiveProps {
   currentQuestion: number
   totalRounds: number
   emojiCorrectAnswerers: string[]
+  emojiRevealOrder: number[] | undefined
   players: Record<string, Player>
 }
 
-function HangmanDisplay({ answer, revealed }: { answer: string; revealed: number }) {
+function HangmanDisplay({ answer, revealed, revealOrder }: { answer: string; revealed: number; revealOrder?: number[] }) {
+  const revealedSet = revealOrder
+    ? new Set(revealOrder.slice(0, revealed))
+    : null
   let lettersSeen = 0
   return (
     <div className="flex flex-wrap justify-center gap-x-1 gap-y-3 items-end px-4">
@@ -51,7 +55,8 @@ function HangmanDisplay({ answer, revealed }: { answer: string; revealed: number
         if (!/[a-zA-Z0-9]/.test(ch)) {
           return <span key={i} className="font-black text-4xl pb-1 text-ink">{ch}</span>
         }
-        const show = lettersSeen++ < revealed
+        const idx = lettersSeen++
+        const show = revealedSet ? revealedSet.has(i) : idx < revealed
         return (
           <span key={i} className="inline-flex flex-col items-center" style={{ width: 32 }}>
             <span className="font-black text-3xl leading-none text-ink" style={{ minHeight: '2rem' }}>
@@ -66,7 +71,7 @@ function HangmanDisplay({ answer, revealed }: { answer: string; revealed: number
 }
 
 function EmojiLiveDisplay({
-  round, subPhase, timerSecs, roundStartedAt, currentQuestion, totalRounds, emojiCorrectAnswerers, players
+  round, subPhase, timerSecs, roundStartedAt, currentQuestion, totalRounds, emojiCorrectAnswerers, emojiRevealOrder, players
 }: EmojiLiveProps) {
   const [remaining, setRemaining] = useState<number>(timerSecs)
 
@@ -101,12 +106,12 @@ function EmojiLiveDisplay({
       {subPhase === 'active' && round && (() => {
         const elapsed = timerSecs - remaining
         const letterCount = round.answer.split('').filter((c) => /[a-zA-Z0-9]/.test(c)).length
-        const revealStart = timerSecs * 0.25
+        const revealStart = 5
         const revealDuration = timerSecs - revealStart
         const revealElapsed = Math.max(0, elapsed - revealStart)
         const revealed = Math.floor(Math.min(1, revealElapsed / revealDuration) * letterCount)
         return (
-          <HangmanDisplay answer={round.answer} revealed={revealed} />
+          <HangmanDisplay answer={round.answer} revealed={revealed} revealOrder={emojiRevealOrder} />
         )
       })()}
       {subPhase === 'active' && (
@@ -285,14 +290,21 @@ export function MiniGameDisplay({ miniGame, players, resultsMode = false }: Prop
       <div className="flex flex-col items-center gap-10">
         <GameBadge type="wordle" />
         <p className="text-3xl font-black text-ink uppercase tracking-widest">Wordle</p>
-        {resultsMode && (
-          <p className="text-5xl font-black text-grape uppercase tracking-widest">{word}</p>
+        {resultsMode ? (
+          <div className="flex gap-1 justify-center">
+            {word.split('').map((ch, i) => (
+              <div key={i} className="w-16 h-16 bg-lime border-2 border-lime flex items-center justify-center">
+                <span className="font-black text-2xl text-ink">{ch.toUpperCase()}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex gap-1">
+            {Array.from({ length: wordLen }, (_, i) => (
+              <div key={i} className="w-24 h-24 border-4 border-muted/30 bg-white" />
+            ))}
+          </div>
         )}
-        <div className="flex gap-1">
-          {Array.from({ length: wordLen }, (_, i) => (
-            <div key={i} className="w-24 h-24 border-4 border-muted/30 bg-white" />
-          ))}
-        </div>
         <p className="text-2xl font-bold text-muted">
           {wordLen}-letter word · {maxGuesses} guesses
         </p>
@@ -420,7 +432,7 @@ export function MiniGameDisplay({ miniGame, players, resultsMode = false }: Prop
               {slots.map((slot) => (
                 <div key={slot.id} className="sketch-border bg-white px-3 py-2 flex items-center gap-3">
                   <span className="font-black text-ink w-6 shrink-0">{slot.id + 1}.</span>
-                  <span className="font-semibold text-lg text-ink">{slot.text}</span>
+                  <span className="font-semibold text-lg text-ink">{slot.text.toLowerCase()}</span>
                 </div>
               ))}
             </div>
@@ -448,7 +460,7 @@ export function MiniGameDisplay({ miniGame, players, resultsMode = false }: Prop
                   >
                     <span className="font-black text-ink w-6 shrink-0">{slot.id + 1}.</span>
                     <div className="flex-1">
-                      <p className="font-semibold text-base text-ink">{slot.text}</p>
+                      <p className="font-semibold text-base text-ink">{slot.text.toLowerCase()}</p>
                       {slot.isCorrect && <p className="text-xs font-black text-lime-700">REAL ANSWER</p>}
                       {owner && <p className="text-xs text-muted">{owner.name}</p>}
                     </div>
@@ -585,7 +597,7 @@ export function MiniGameDisplay({ miniGame, players, resultsMode = false }: Prop
     const rounds = config.emojiRounds ?? []
     const round = rounds[miniGame.currentQuestion]
     const subPhase = miniGame.subPhase ?? 'active'
-    const timerSecs = config.timerSeconds ?? 30
+    const timerSecs = config.timerSeconds ?? 45
 
     if (resultsMode) {
       return (
@@ -625,6 +637,7 @@ export function MiniGameDisplay({ miniGame, players, resultsMode = false }: Prop
         currentQuestion={miniGame.currentQuestion}
         totalRounds={rounds.length}
         emojiCorrectAnswerers={miniGame.emojiCorrectAnswerers ?? []}
+        emojiRevealOrder={miniGame.emojiRevealOrder}
         players={players}
       />
     )

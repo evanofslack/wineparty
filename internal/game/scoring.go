@@ -8,8 +8,8 @@ import (
 
 const (
 	pointsVariety    = 3
-	pointsCountry    = 1
-	pointsRegion     = 2
+	pointsCountry    = 2
+	pointsRegion     = 1
 	pointsYearExact  = 3
 	pointsYearMid    = 2
 	pointsYearFar    = 1
@@ -102,9 +102,13 @@ func computeSummary(state *GameState) (*GameSummary, map[string]*PlayerSummary) 
 				ratings = append(ratings, float64(g.Rating))
 			}
 		}
+		wineName := round.Wine.RealName
+		if wineName == "" {
+			wineName = round.Wine.Name
+		}
 		wrs := WineRatingSummary{
 			RoundIndex:  i,
-			WineName:    round.Wine.Name,
+			WineName:    wineName,
 			WineVariety: round.Wine.Variety,
 			RatedCount:  count,
 		}

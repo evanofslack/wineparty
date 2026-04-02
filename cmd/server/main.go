@@ -26,15 +26,17 @@ func main() {
 	wines := make([]game.WineConfig, len(cfg.Wines))
 	for i, w := range cfg.Wines {
 		wines[i] = game.WineConfig{
-			ID:      w.ID,
-			Name:    w.Name,
-			Variety: w.Variety,
-			Country: w.Country,
-			Region:  w.Region,
-			Year:    w.Year,
-			Hint:    w.Hint,
-			Flavors: w.Flavors,
-			Price:   w.Price,
+			ID:         w.ID,
+			Name:       w.Name,
+			HiddenName: w.HiddenName,
+			RealName:   w.RealName,
+			Variety:    w.Variety,
+			Country:    w.Country,
+			Region:     w.Region,
+			Year:       w.Year,
+			Hint:       w.Hint,
+			Flavors:    w.Flavors,
+			Price:      w.Price,
 		}
 	}
 

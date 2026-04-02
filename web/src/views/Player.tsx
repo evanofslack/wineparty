@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { BlindTastingForm } from '../components/BlindTastingForm'
+import { FLAVOR_COLORS } from '../components/FlavorPicker'
 import { TriviaGame } from '../components/minigames/TriviaGame'
 import { WordleGame } from '../components/minigames/WordleGame'
 import { ConnectionsGame } from '../components/minigames/ConnectionsGame'
@@ -303,14 +304,14 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
     const submittedThisRound = myGuess !== undefined || submittedRound === gameState.currentRound
     const years = gameState.rounds.map((r) => r.wine.year).filter((y) => y > 0)
     const rawYearMin = years.length > 0 ? Math.min(...years) : new Date().getFullYear() - 10
-    const rawYearMax = years.length > 0 ? Math.max(...years) : new Date().getFullYear()
-    const yearMin = Math.floor((rawYearMin - 5) / 5) * 5
-    const yearMax = Math.ceil((rawYearMax + 3) / 5) * 5
+    const yearMin = rawYearMin - 2
+    const yearMax = new Date().getFullYear()
     const prices = gameState.rounds.map((r) => r.wine.price).filter((p) => p > 0)
     const rawMin = prices.length > 0 ? Math.min(...prices) : 10
     const rawMax = prices.length > 0 ? Math.max(...prices) : 100
-    const priceMin = Math.floor((rawMin * 0.8) / 5) * 5
-    const priceMax = Math.ceil((rawMax * 1.2) / 5) * 5
+    const priceMin = Math.floor(rawMin * 0.8)
+    const priceMax = Math.ceil(rawMax * 1.2)
+    const seed = gameState.startedAt ? new Date(gameState.startedAt).getTime() : undefined
 
     function handleGuess(payload: GuessPayload) {
       sendGuess(payload)
@@ -319,13 +320,10 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
 
     return (
       <div className="flex flex-col min-h-screen px-4 pt-6 pb-10 max-w-md mx-auto">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center mb-4">
           <h2 className="text-xl font-black text-ink">
             Wine #{gameState.currentRound + 1} of {gameState.rounds.length}
           </h2>
-          <span className="sketch-border bg-white px-2 py-1 text-sm font-bold text-ink">
-            {me.totalScore + me.miniGameScore}pt
-          </span>
         </div>
         <BlindTastingForm
           onSubmit={handleGuess}
@@ -334,7 +332,24 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
           yearMax={yearMax}
           priceMin={priceMin}
           priceMax={priceMax}
+          seed={seed}
         />
+        {submittedThisRound && (
+          <div className="sketch-border bg-white px-6 py-4 w-full flex flex-col items-center gap-3 mt-6">
+            <p className="text-sm font-bold text-muted uppercase tracking-wider">Send a reaction</p>
+            <div className="flex flex-wrap justify-center gap-3">
+              {REACTION_EMOJIS.map((emoji) => (
+                <button
+                  key={emoji}
+                  onClick={() => sendEmojiReaction({ playerId, emoji })}
+                  className="text-3xl p-2 rounded-xl active:scale-90 transition-transform"
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         {error && <p className="text-coral font-bold mt-4 text-center">{error}</p>}
       </div>
     )
@@ -348,7 +363,7 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
 
         <div className="sketch-border-sunny bg-sunny/20 px-4 py-4 mb-4">
           <p className="text-sm font-bold text-muted">The wine was...</p>
-          <p className="text-xl font-black text-ink">{currentRound.wine.name}</p>
+          <p className="text-xl font-black text-ink">{currentRound.wine.realName || currentRound.wine.name}</p>
           <p className="text-lg font-bold mt-0.5 text-ink">{currentRound.wine.variety}</p>
           <p className="font-semibold text-muted">{currentRound.wine.country} · {currentRound.wine.region}, <span className="font-black text-[#722F37]">{currentRound.wine.year}</span></p>
         </div>
@@ -383,7 +398,7 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
                   label: 'Region',
                   guess: myGuess.region || '—',
                   answer: currentRound.wine.region,
-                  pts: myScore.regionHit ? 2 : 0,
+                  pts: myScore.regionHit ? 1 : 0,
                 },
                 {
                   label: 'Year',
@@ -417,18 +432,27 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
                     {myGuess.flavors.length === 0 ? (
                       <span className="text-muted">—</span>
                     ) : (
-                      myGuess.flavors.map((f, i) => (
-                        <span key={i}>
-                          {i > 0 && <span className="text-muted">, </span>}
-                          <span className={(myScore.flavorMatches ?? []).includes(f) ? 'text-lime font-bold' : 'text-muted'}>
-                            {f}
-                          </span>
-                        </span>
-                      ))
+                      <span className="flex flex-wrap gap-1">
+                        {myGuess.flavors.map((f, i) => {
+                          const matched = (myScore.flavorMatches ?? []).some(m => m.toLowerCase() === f.toLowerCase())
+                          const color = FLAVOR_COLORS[i % FLAVOR_COLORS.length]
+                          return (
+                            <span key={i} className={`inline-block px-1.5 py-0.5 rounded text-xs font-bold text-white ${color}`}>
+                              {matched ? '✓ ' : '✗ '}{f}
+                            </span>
+                          )
+                        })}
+                      </span>
                     )}
                   </span>
                   <span className="text-sm font-semibold text-muted leading-snug">
-                    {currentRound.wine.flavors?.join(', ') || '—'}
+                    <span className="flex flex-wrap gap-1">
+                      {(currentRound.wine.flavors ?? []).length === 0 ? '—' : (currentRound.wine.flavors ?? []).map((f, i) => (
+                        <span key={i} className={`inline-block px-1.5 py-0.5 rounded text-xs font-bold text-white ${FLAVOR_COLORS[i % FLAVOR_COLORS.length]}`}>
+                          {f.charAt(0).toUpperCase() + f.slice(1)}
+                        </span>
+                      ))}
+                    </span>
                   </span>
                   <span className={`text-xs font-black w-8 text-right ${myScore.flavorPoints > 0 ? 'text-lime' : 'text-muted'}`}>
                     {myScore.flavorPoints > 0 ? `+${myScore.flavorPoints}` : '—'}
@@ -518,11 +542,8 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
     const type = mg.config.type
     return (
       <div className="flex flex-col min-h-screen px-4 pt-6 pb-10 max-w-md mx-auto">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center mb-4">
           <h2 className="text-xl font-black text-ink capitalize">Mini Game: {type}</h2>
-          <span className="sketch-border bg-white px-2 py-1 text-sm font-bold text-ink">
-            {me.totalScore + me.miniGameScore}pt
-          </span>
         </div>
         {type === 'trivia' && (
           <TriviaGame

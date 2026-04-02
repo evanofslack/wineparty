@@ -11,29 +11,6 @@ interface Props {
   onAnswer: (text: string) => void
 }
 
-function HangmanDisplay({ answer, revealed }: { answer: string; revealed: number }) {
-  let lettersSeen = 0
-  return (
-    <div className="flex flex-wrap justify-center gap-x-1 gap-y-2 items-end">
-      {answer.split('').map((ch, i) => {
-        if (ch === ' ') return <span key={i} className="w-4" />
-        if (!/[a-zA-Z0-9]/.test(ch)) {
-          return <span key={i} className="font-black text-xl pb-0.5 text-ink">{ch}</span>
-        }
-        const show = lettersSeen++ < revealed
-        return (
-          <span key={i} className="inline-flex flex-col items-center" style={{ width: 22 }}>
-            <span className="font-black text-lg leading-none text-ink" style={{ minHeight: '1.5rem' }}>
-              {show ? ch.toUpperCase() : '\u00A0'}
-            </span>
-            <span className="w-full border-b-2 border-ink mt-0.5" />
-          </span>
-        )
-      })}
-    </div>
-  )
-}
-
 export function EmojiDecodeGame({
   config,
   currentRound,
@@ -48,7 +25,7 @@ export function EmojiDecodeGame({
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const timerSecs = config.timerSeconds ?? 30
+  const timerSecs = config.timerSeconds ?? 45
   const rounds = config.emojiRounds ?? []
   const round = rounds[currentRound]
 
@@ -84,27 +61,18 @@ export function EmojiDecodeGame({
   if (!round) return null
 
   const alreadyCorrect = correctAnswerers.includes(playerId)
+  const timerExpired = secondsLeft === 0
 
   if (subPhase === 'active') {
     const timerPct = secondsLeft !== null ? (secondsLeft / timerSecs) * 100 : 100
     const timerColor = timerPct > 50 ? 'bg-lime' : timerPct > 25 ? 'bg-sunny' : 'bg-coral'
     return (
       <div className="flex flex-col gap-4">
-        <div className="sketch-border bg-white px-4 py-6 text-center">
-          <p className="text-xs font-bold text-muted uppercase tracking-wider mb-3">
-            Round {currentRound + 1} of {rounds.length} — What does this represent?
+        <div className="sketch-border bg-white px-4 py-4 text-center">
+          <p className="text-xs font-bold text-muted uppercase tracking-wider mb-2">
+            Round {currentRound + 1} of {rounds.length} — Decode the emoji!
           </p>
-          <p className="text-5xl leading-relaxed">{round.emoji}</p>
         </div>
-        {(() => {
-          const elapsed = secondsLeft !== null ? timerSecs - secondsLeft : 0
-          const letterCount = round.answer.split('').filter((c) => /[a-zA-Z0-9]/.test(c)).length
-          const revealStart = timerSecs * 0.25
-          const revealDuration = timerSecs - revealStart
-          const revealElapsed = Math.max(0, elapsed - revealStart)
-          const revealed = Math.floor(Math.min(1, revealElapsed / revealDuration) * letterCount)
-          return <HangmanDisplay answer={round.answer} revealed={revealed} />
-        })()}
         <div className="h-2 bg-ink/10 rounded-full overflow-hidden">
           <div
             className={`h-full ${timerColor} transition-all duration-250`}
@@ -116,7 +84,12 @@ export function EmojiDecodeGame({
         )}
         {alreadyCorrect ? (
           <div className="sketch-border-lime bg-lime/20 px-6 py-4 text-center w-full">
-            <p className="font-black text-xl text-ink">Got it! Waiting for round to end...</p>
+            <p className="font-black text-xl text-ink">Correct! Waiting for round to end...</p>
+          </div>
+        ) : timerExpired ? (
+          <div className="sketch-border-coral bg-coral/20 px-6 py-4 text-center w-full">
+            <p className="font-black text-xl text-ink">Time's up!</p>
+            <p className="text-muted font-semibold mt-1">Waiting for next round...</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
@@ -132,7 +105,11 @@ export function EmojiDecodeGame({
             {incorrect && (
               <p className="text-coral font-bold text-sm text-center">Incorrect, try again</p>
             )}
-            <button type="submit" className="btn-sketch bg-grape text-white w-full font-bold">
+            <button
+              type="submit"
+              disabled={timerExpired}
+              className="btn-sketch bg-grape text-white w-full font-bold disabled:opacity-40"
+            >
               Submit
             </button>
           </form>
@@ -144,15 +121,12 @@ export function EmojiDecodeGame({
   if (subPhase === 'round_expired') {
     return (
       <div className="flex flex-col gap-4 items-center text-center">
-        <div className="sketch-border bg-white px-4 py-4 w-full">
-          <p className="text-4xl">{round.emoji}</p>
-        </div>
         <div className="sketch-border-coral bg-coral/20 px-6 py-4 w-full">
           <p className="text-sm font-bold text-muted">Time's up! The answer was</p>
           <p className="text-2xl font-black text-ink">{round.answer}</p>
         </div>
         <p className="text-muted font-semibold">
-          {alreadyCorrect ? 'You got it! Waiting for host...' : 'Waiting for host...'}
+          {alreadyCorrect ? 'Correct! Waiting for host...' : 'Waiting for host...'}
         </p>
       </div>
     )

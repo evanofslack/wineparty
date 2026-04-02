@@ -10,15 +10,17 @@ import (
 )
 
 type Wine struct {
-	ID      int      `yaml:"id"`
-	Name    string   `yaml:"name"`
-	Variety string   `yaml:"variety"`
-	Country string   `yaml:"country"`
-	Region  string   `yaml:"region"`
-	Year    int      `yaml:"year"`
-	Hint    string   `yaml:"hint"`
-	Flavors []string `yaml:"flavors"`
-	Price   int      `yaml:"price"`
+	ID         int      `yaml:"id"`
+	Name       string   `yaml:"name"`
+	HiddenName string   `yaml:"hidden_name"`
+	RealName   string   `yaml:"real_name"`
+	Variety    string   `yaml:"variety"`
+	Country    string   `yaml:"country"`
+	Region     string   `yaml:"region"`
+	Year       int      `yaml:"year"`
+	Hint       string   `yaml:"hint"`
+	Flavors    []string `yaml:"flavors"`
+	Price      int      `yaml:"price"`
 }
 
 type WinesFile struct {

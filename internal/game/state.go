@@ -143,6 +143,7 @@ type MiniGameState struct {
 	QuiplashStates        map[string]*PlayerQuiplashState    `json:"quiplashStates,omitempty"`
 	QuiplashResults       []QuiplashRoundResult              `json:"quiplashResults,omitempty"`
 	EmojiCorrectAnswerers []string                           `json:"emojiCorrectAnswerers,omitempty"`
+	EmojiRevealOrder      []int                              `json:"emojiRevealOrder,omitempty"`
 	RoundStartedAt        *time.Time                         `json:"roundStartedAt,omitempty"`
 	EmojiStates           map[string]*PlayerEmojiState       `json:"emojiStates,omitempty"`
 }
@@ -235,15 +236,17 @@ type LeaderboardEntry struct {
 }
 
 type WineConfig struct {
-	ID      int      `json:"id"`
-	Name    string   `json:"name"`
-	Variety string   `json:"variety"`
-	Country string   `json:"country"`
-	Region  string   `json:"region"`
-	Year    int      `json:"year"`
-	Hint    string   `json:"hint"`
-	Flavors []string `json:"flavors"`
-	Price   int      `json:"price"`
+	ID         int      `json:"id"`
+	Name       string   `json:"name"`
+	HiddenName string   `json:"hiddenName"`
+	RealName   string   `json:"realName"`
+	Variety    string   `json:"variety"`
+	Country    string   `json:"country"`
+	Region     string   `json:"region"`
+	Year       int      `json:"year"`
+	Hint       string   `json:"hint"`
+	Flavors    []string `json:"flavors"`
+	Price      int      `json:"price"`
 }
 
 type Round struct {

@@ -27,7 +27,6 @@ export function ConnectionsGame({ config, myState, onSubmitGroup }: Props) {
   const groups = config.groups ?? []
   const foundGroups = myState?.foundGroups ?? []
   const incorrectGuesses = myState?.incorrectGuesses ?? 0
-  const totalGuesses = myState?.totalGuesses ?? 0
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [wordOrder, setWordOrder] = useState<string[]>(() => shuffle(groups.flatMap((g) => g.words)))
   const [shakingWords, setShakingWords] = useState<string[]>([])
@@ -58,7 +57,7 @@ export function ConnectionsGame({ config, myState, onSubmitGroup }: Props) {
     return undefined
   }, [incorrectGuesses])
 
-  const exhausted = totalGuesses >= 5
+  const exhausted = incorrectGuesses >= 6
   const remaining = wordOrder.filter((w) => !foundWords.has(w))
 
   function toggleWord(word: string) {
@@ -135,7 +134,7 @@ export function ConnectionsGame({ config, myState, onSubmitGroup }: Props) {
           <p className="text-coral font-bold text-sm">No guesses remaining!</p>
         ) : (
           <p className="text-muted font-semibold text-sm">
-            <span className="font-black text-ink">{5 - totalGuesses}</span> / 5 guesses remaining
+            <span className="font-black text-ink">{6 - incorrectGuesses}</span> / 6 guesses remaining
           </p>
         )}
       </div>
