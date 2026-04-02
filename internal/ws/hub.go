@@ -75,6 +75,7 @@ func (h *Hub) Run() {
 				close(c.send)
 				if c.PlayerID != "" {
 					h.engine.SetPlayerDisconnected(c.PlayerID)
+					h.engine.UnreserveColor(c.PlayerID)
 					h.repo.SaveState()
 					h.broadcastState()
 				}
@@ -117,6 +118,8 @@ func (h *Hub) handleMessage(c *Client, data []byte) {
 		h.handleAdminAction(c, env.Payload)
 	case MsgMiniGameSubmit:
 		h.handleMiniGameAnswer(c, env.Payload)
+	case MsgReserveColor:
+		h.handleReserveColor(c, env.Payload)
 	default:
 		c.sendEnvelope(MsgError, ErrorPayload{Message: "unknown message type"})
 	}
@@ -155,6 +158,27 @@ func (h *Hub) handleJoin(c *Client, raw json.RawMessage) {
 			Payload:  map[string]string{"name": player.Name, "role": string(player.Role)},
 		})
 	}
+	h.broadcastState()
+}
+
+func (h *Hub) handleReserveColor(c *Client, raw json.RawMessage) {
+	var p ReserveColorPayload
+	if err := json.Unmarshal(raw, &p); err != nil {
+		c.sendEnvelope(MsgError, ErrorPayload{Message: "invalid reserve color payload"})
+		return
+	}
+	if p.PlayerID == "" {
+		c.sendEnvelope(MsgError, ErrorPayload{Message: "playerId required"})
+		return
+	}
+	if c.PlayerID == "" {
+		c.PlayerID = p.PlayerID
+	}
+	if err := h.engine.ReserveColor(p.PlayerID, p.Color); errors.Is(err, game.ErrColorTaken) {
+		c.sendEnvelope(MsgError, ErrorPayload{Message: "this color is no longer available"})
+		return
+	}
+	h.repo.SaveState()
 	h.broadcastState()
 }
 

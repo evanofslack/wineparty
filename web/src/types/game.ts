@@ -7,6 +7,7 @@ export enum MessageType {
   MsgAdminAction = 4,
   MsgPlayerList = 5,
   MsgMiniGameSubmit = 6,
+  MsgReserveColor = 7,
 }
 
 // AdminActionType mirrors Go AdminActionType iota — NEVER reorder, append only
@@ -319,6 +320,7 @@ export interface GameState {
   miniGameWinners?: MiniGameWinner[]
   miniGameResults?: MiniGameResult[]
   colors: PlayerColor[]
+  reservedColors: Record<string, string>
 }
 
 export interface Envelope<T = unknown> {
@@ -333,6 +335,11 @@ export interface JoinPayload {
   lobbyToken?: string
   color?: string
   avatar?: string
+}
+
+export interface ReserveColorPayload {
+  playerId: string
+  color: string
 }
 
 export interface GuessPayload {

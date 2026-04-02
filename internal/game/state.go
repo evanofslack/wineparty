@@ -311,6 +311,7 @@ type GameState struct {
 	MiniGameWinners  []MiniGameWinner           `json:"miniGameWinners,omitempty"`
 	MiniGameResults  []MiniGameResult           `json:"miniGameResults,omitempty"`
 	Colors           []PlayerColor              `json:"colors"`
+	ReservedColors   map[string]string          `json:"reservedColors"` // playerID → hex
 }
 
 func NewGameState(wines []WineConfig) *GameState {
@@ -324,10 +325,11 @@ func NewGameState(wines []WineConfig) *GameState {
 		}
 	}
 	return &GameState{
-		Phase:        PhaseLobby,
-		CurrentRound: 0,
-		Rounds:       rounds,
-		Players:      make(map[string]*Player),
-		Leaderboard:  []LeaderboardEntry{},
+		Phase:          PhaseLobby,
+		CurrentRound:   0,
+		Rounds:         rounds,
+		Players:        make(map[string]*Player),
+		Leaderboard:    []LeaderboardEntry{},
+		ReservedColors: make(map[string]string),
 	}
 }

@@ -14,6 +14,7 @@ const (
 	MsgAdminAction                      // 4: client -> server: admin issues command
 	MsgPlayerList                       // 5: server -> client: current player list (unused, state covers it)
 	MsgMiniGameSubmit                   // 6: client -> server: player submits mini-game answer
+	MsgReserveColor                     // 7: client -> server: reserve or unreserve a color
 )
 
 // AdminActionType identifies an admin command.
@@ -61,6 +62,13 @@ type JoinPayload struct {
 // ErrorPayload carries an error message to the client.
 type ErrorPayload struct {
 	Message string `json:"message"`
+}
+
+// ReserveColorPayload is sent by a client to reserve or unreserve a color.
+// An empty Color field unreserves.
+type ReserveColorPayload struct {
+	PlayerID string `json:"playerId"`
+	Color    string `json:"color"`
 }
 
 // GuessPayload carries a player's wine guess.

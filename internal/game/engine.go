@@ -18,6 +18,7 @@ var (
 	ErrAlreadyAnswered   = errors.New("already answered")
 	ErrInvalidAnswer     = errors.New("invalid answer")
 	ErrMaxGuessesReached = errors.New("max guesses reached")
+	ErrColorTaken        = errors.New("color already taken")
 )
 
 type Engine struct {
@@ -32,6 +33,35 @@ func (e *Engine) State() *GameState {
 	return e.state
 }
 
+func (e *Engine) ReserveColor(playerID, hex string) error {
+	if e.state.ReservedColors == nil {
+		e.state.ReservedColors = make(map[string]string)
+	}
+	if hex == "" {
+		delete(e.state.ReservedColors, playerID)
+		return nil
+	}
+	for pid, p := range e.state.Players {
+		if pid != playerID && p.Color == hex {
+			return ErrColorTaken
+		}
+	}
+	for pid, reserved := range e.state.ReservedColors {
+		if pid != playerID && reserved == hex {
+			return ErrColorTaken
+		}
+	}
+	delete(e.state.ReservedColors, playerID)
+	e.state.ReservedColors[playerID] = hex
+	return nil
+}
+
+func (e *Engine) UnreserveColor(playerID string) {
+	if e.state.ReservedColors != nil {
+		delete(e.state.ReservedColors, playerID)
+	}
+}
+
 func (e *Engine) AddPlayer(id, name, color, avatar string, role Role) (*Player, error) {
 	if p, exists := e.state.Players[id]; exists {
 		p.Connected = true
@@ -43,10 +73,18 @@ func (e *Engine) AddPlayer(id, name, color, avatar string, role Role) (*Player, 
 		}
 		return p, nil
 	}
+	if e.state.ReservedColors != nil {
+		delete(e.state.ReservedColors, id)
+	}
 	taken := make(map[string]bool)
 	for pid, existing := range e.state.Players {
 		if pid != id {
 			taken[existing.Color] = true
+		}
+	}
+	for pid, reserved := range e.state.ReservedColors {
+		if pid != id {
+			taken[reserved] = true
 		}
 	}
 	if taken[color] {

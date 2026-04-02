@@ -8,7 +8,7 @@ import { QuiplashGame } from '../components/minigames/QuiplashGame'
 import { EmojiDecodeGame } from '../components/minigames/EmojiDecodeGame'
 import { PlayerAvatar } from '../components/PlayerAvatar'
 import { useGameStore } from '../store/gameStore'
-import type { JoinPayload, GuessPayload, MiniGameAnswerPayload } from '../types/game'
+import type { JoinPayload, GuessPayload, MiniGameAnswerPayload, ReserveColorPayload } from '../types/game'
 
 const MAX_PAINTED = 32
 
@@ -19,9 +19,10 @@ interface Props {
   sendJoin: (payload: JoinPayload) => void
   sendGuess: (payload: GuessPayload) => void
   sendMiniGameAnswer: (payload: MiniGameAnswerPayload) => void
+  sendReserveColor: (payload: ReserveColorPayload) => void
 }
 
-export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, sendGuess, sendMiniGameAnswer }: Props) {
+export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, sendGuess, sendMiniGameAnswer, sendReserveColor }: Props) {
   const { store } = useGameStore()
   const { gameState, connected, error } = store
   const [nameInput, setNameInput] = useState(playerName)
@@ -52,8 +53,8 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
     setStep(2)
   }
 
-  function handleColorNext(hex: string) {
-    setSelectedColor(hex)
+  function handleColorContinue() {
+    sendReserveColor({ playerId, color: selectedColor })
     setStep(3)
   }
 
@@ -123,11 +124,15 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
 
     // Step 2: Color picker
     if (step === 2) {
-      const takenColors = new Set(
-        Object.values(gameState?.players ?? {})
+      const takenColors = new Set([
+        ...Object.values(gameState?.players ?? {})
           .filter((p) => p.id !== playerId && p.color)
-          .map((p) => p.color)
-      )
+          .map((p) => p.color),
+        ...Object.entries(gameState?.reservedColors ?? {})
+          .filter(([pid]) => pid !== playerId)
+          .map(([, hex]) => hex),
+      ])
+      const continueDisabled = !selectedColor || takenColors.has(selectedColor)
       return (
         <div className="flex flex-col items-center justify-center min-h-screen px-6 gap-6">
           <h1 className="text-2xl font-black text-ink text-center">Pick your color</h1>
@@ -138,10 +143,11 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
             <div className="grid grid-cols-4 gap-4 max-w-xs w-full">
               {colors.map((c) => {
                 const taken = takenColors.has(c.hex)
+                const selected = selectedColor === c.hex && !taken
                 return (
                   <button
                     key={c.hex}
-                    onClick={() => !taken && handleColorNext(c.hex)}
+                    onClick={() => !taken && setSelectedColor(c.hex)}
                     disabled={taken}
                     className="flex flex-col items-center gap-1"
                     style={{ opacity: taken ? 0.35 : 1, cursor: taken ? 'not-allowed' : 'pointer' }}
@@ -152,8 +158,8 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
                         height: 56,
                         borderRadius: '50%',
                         backgroundColor: taken ? '#aaaaaa' : c.hex,
-                        border: selectedColor === c.hex ? '4px solid #222' : '3px solid transparent',
-                        boxShadow: selectedColor === c.hex ? '0 0 0 2px #fff' : undefined,
+                        border: selected ? '4px solid #222' : '3px solid transparent',
+                        boxShadow: selected ? '0 0 0 2px #fff' : undefined,
                       }}
                     />
                     <span className="text-xs font-bold text-ink">{c.name}</span>
@@ -162,6 +168,15 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
               })}
             </div>
           )}
+          <button
+            onClick={handleColorContinue}
+            disabled={continueDisabled}
+            className="btn-sketch bg-coral text-white text-lg px-8"
+            style={{ opacity: continueDisabled ? 0.4 : 1, cursor: continueDisabled ? 'not-allowed' : 'pointer' }}
+          >
+            Continue
+          </button>
+          {error && <p className="text-coral font-bold text-center">{error}</p>}
           <button
             onClick={() => setStep(1)}
             className="text-sm font-bold text-muted underline"
@@ -230,7 +245,7 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
 
           <div className="flex gap-3 mt-2">
             <button
-              onClick={() => setStep(2)}
+              onClick={() => { sendReserveColor({ playerId, color: '' }); setStep(2) }}
               className="text-sm font-bold text-muted underline"
             >
               Back
