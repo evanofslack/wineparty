@@ -11,7 +11,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
 COPY --from=frontend /app/web/dist ./web/dist
-RUN CGO_ENABLED=0 go build -o wineparty .
+RUN CGO_ENABLED=0 go build -o wineparty . && chmod +x wineparty
 
 FROM alpine:3.19
 WORKDIR /app
