@@ -3,23 +3,19 @@ import { FlavorPicker } from './FlavorPicker'
 import type { GuessPayload } from '../types/game'
 
 const VARIETIES = [
-  'Cabernet Sauvignon', 'Merlot', 'Pinot Noir', 'Syrah/Shiraz', 'Zinfandel',
-  'Malbec', 'Grenache', 'Sangiovese', 'Nebbiolo', 'Tempranillo',
-  'Chardonnay', 'Sauvignon Blanc', 'Riesling', 'Pinot Grigio', 'Gewürztraminer',
-  'Viognier', 'Chenin Blanc', 'Albariño', 'Grenache Rosé', 'Other',
+  // Reds — 3 real + 2 decoy
+  'Cabernet Sauvignon', 'Merlot', 'Malbec', 'Pinot Noir', 'Syrah',
+  // Whites — 3 real + 2 decoy
+  'Chardonnay', 'Sauvignon Blanc', 'Pinot Grigio', 'Riesling', 'Viognier',
 ]
 
 const COUNTRIES = [
-  'France', 'USA', 'Italy', 'Spain', 'Argentina',
-  'Australia', 'New Zealand', 'Germany', 'Portugal', 'Austria', 'Chile', 'Other',
+  'France', 'USA', 'Italy', 'New Zealand', 'Argentina', 'South Africa',
+  'Australia', 'Spain', 'Chile', 'Germany',
 ]
 
 const REGIONS = [
-  'Napa Valley', 'Sonoma', 'Willamette Valley', 'Walla Walla',
-  'Bordeaux', 'Burgundy', 'Rhône Valley', 'Champagne', 'Alsace', 'Loire Valley',
-  'Tuscany', 'Piedmont', 'Rioja', 'Priorat',
-  'Mendoza', 'Marlborough', 'Barossa Valley', 'Provence',
-  'Other',
+  'Bordeaux', 'Columbia', 'Veneto', 'Marlborough', 'La Rioja', 'Stellenbosch', 'Sonoma', 'Barossa', 'Napa', 'Willamette',
 ]
 
 interface Props {
