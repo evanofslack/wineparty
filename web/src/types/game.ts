@@ -323,7 +323,6 @@ export interface GameState {
   miniGameResults?: MiniGameResult[]
   colors: PlayerColor[]
   reservedColors: Record<string, string>
-  joinUrl?: string
 }
 
 export interface Envelope<T = unknown> {

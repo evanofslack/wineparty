@@ -99,7 +99,6 @@ func main() {
 		base = fmt.Sprintf("http://localhost:%s", cfg.Port)
 	}
 	joinURL := fmt.Sprintf("%s/?lobby=%s", base, cfg.LobbyToken)
-	state.JoinURL = joinURL
 
 	eng := game.NewEngine(state)
 	hub := ws.NewHub(repo, eng, cfg.AdminPassword, cfg.LobbyToken, wines, playerColors, cfg.LogDir, miniGameSchedule, miniGameConfigs)
@@ -116,6 +115,10 @@ func main() {
 	})
 	r.Get("/qr", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "/app/qr.png")
+	})
+	r.Get("/api/config", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, `{"joinUrl":%q}`, joinURL)
 	})
 
 	fsys := wineparty.GetFrontendFS()

@@ -63,6 +63,14 @@ function FloaterOverlay() {
 function DisplayContent() {
   const { store } = useGameStore()
   const { gameState, connected } = store
+  const [joinUrl, setJoinUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch('/api/config')
+      .then((r) => r.json())
+      .then((d) => setJoinUrl(d.joinUrl ?? null))
+      .catch(() => {})
+  }, [])
 
   if (!connected) {
     return (
@@ -96,8 +104,8 @@ function DisplayContent() {
             <div className="sketch-border bg-white p-8 flex flex-col items-center gap-4">
               <p className="font-black text-2xl text-ink">Join the game</p>
               <img src="/qr" alt="QR code" className="w-72 h-72" />
-              {gameState?.joinUrl && (
-                <p className="text-lg font-bold text-muted font-mono">{gameState.joinUrl}</p>
+              {joinUrl && (
+                <p className="text-lg font-bold text-muted font-mono">{joinUrl}</p>
               )}
             </div>
           </div>

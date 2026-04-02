@@ -313,7 +313,6 @@ type GameState struct {
 	MiniGameResults  []MiniGameResult           `json:"miniGameResults,omitempty"`
 	Colors           []PlayerColor              `json:"colors"`
 	ReservedColors   map[string]string          `json:"reservedColors"` // playerID → hex
-	JoinURL          string                     `json:"joinUrl"`
 }
 
 func NewGameState(wines []WineConfig) *GameState {
