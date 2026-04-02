@@ -15,6 +15,7 @@ const (
 	MsgPlayerList                       // 5: server -> client: current player list (unused, state covers it)
 	MsgMiniGameSubmit                   // 6: client -> server: player submits mini-game answer
 	MsgReserveColor                     // 7: client -> server: reserve or unreserve a color
+	MsgEmojiReaction                    // 8: client -> server: player fires emoji; server broadcasts
 )
 
 // AdminActionType identifies an admin command.
@@ -62,6 +63,12 @@ type JoinPayload struct {
 // ErrorPayload carries an error message to the client.
 type ErrorPayload struct {
 	Message string `json:"message"`
+}
+
+// EmojiReactionPayload is sent by a player to fire an emoji reaction on the display.
+type EmojiReactionPayload struct {
+	PlayerID string `json:"playerId"`
+	Emoji    string `json:"emoji"`
 }
 
 // ReserveColorPayload is sent by a client to reserve or unreserve a color.

@@ -8,7 +8,7 @@ import { QuiplashGame } from '../components/minigames/QuiplashGame'
 import { EmojiDecodeGame } from '../components/minigames/EmojiDecodeGame'
 import { PlayerAvatar } from '../components/PlayerAvatar'
 import { useGameStore } from '../store/gameStore'
-import type { JoinPayload, GuessPayload, MiniGameAnswerPayload, ReserveColorPayload } from '../types/game'
+import type { JoinPayload, GuessPayload, MiniGameAnswerPayload, ReserveColorPayload, EmojiReactionPayload } from '../types/game'
 
 const MAX_PAINTED = 32
 
@@ -20,9 +20,12 @@ interface Props {
   sendGuess: (payload: GuessPayload) => void
   sendMiniGameAnswer: (payload: MiniGameAnswerPayload) => void
   sendReserveColor: (payload: ReserveColorPayload) => void
+  sendEmojiReaction: (payload: EmojiReactionPayload) => void
 }
 
-export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, sendGuess, sendMiniGameAnswer, sendReserveColor }: Props) {
+const REACTION_EMOJIS = ['🍷', '🥂', '🍇', '😍', '🔥', '👏', '😂', '🤢', '💀', '🤯']
+
+export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, sendGuess, sendMiniGameAnswer, sendReserveColor, sendEmojiReaction }: Props) {
   const { store } = useGameStore()
   const { gameState, connected, error } = store
   const [nameInput, setNameInput] = useState(playerName)
@@ -275,6 +278,17 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
         <div className="sketch-border bg-white px-6 py-4 w-full max-w-sm">
           <p className="text-muted font-semibold">Waiting for host to start...</p>
           <p className="text-xl font-black text-grape mt-2">{playerCount} player{playerCount !== 1 ? 's' : ''} ready</p>
+        </div>
+        <div className="flex flex-wrap justify-center gap-3 max-w-xs">
+          {REACTION_EMOJIS.map((emoji) => (
+            <button
+              key={emoji}
+              onClick={() => sendEmojiReaction({ playerId, emoji })}
+              className="text-3xl p-2 rounded-xl active:scale-90 transition-transform"
+            >
+              {emoji}
+            </button>
+          ))}
         </div>
         {error && <p className="text-coral font-bold">{error}</p>}
       </div>

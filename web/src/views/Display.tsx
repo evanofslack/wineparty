@@ -1,9 +1,10 @@
+import { useState, useEffect } from 'react'
 import { CountdownTimer } from '../components/CountdownTimer'
 import { MiniGameDisplay } from '../components/minigames/MiniGameDisplay'
 import { DisplayPlayerBar } from '../components/DisplayPlayerBar'
 import { PlayerAvatar } from '../components/PlayerAvatar'
 import { useGameStore } from '../store/gameStore'
-import type { LeaderboardEntry, Player } from '../types/game'
+import type { LeaderboardEntry, Player, EmojiReactionPayload } from '../types/game'
 
 const APP_NAME = 'Wine Party'
 
@@ -24,7 +25,42 @@ function playersAsLeaderboard(players: Record<string, Player>): LeaderboardEntry
     })
 }
 
-export function DisplayView() {
+type Floater = { id: string; emoji: string; name: string; x: number }
+
+function FloaterOverlay() {
+  const { store } = useGameStore()
+  const [floaters, setFloaters] = useState<Floater[]>([])
+
+  useEffect(() => {
+    function onReaction(e: Event) {
+      const { playerId, emoji } = (e as CustomEvent<EmojiReactionPayload>).detail
+      const name = store.gameState?.players[playerId]?.name ?? ''
+      const id = crypto.randomUUID()
+      const x = Math.random() * 70 + 10
+      setFloaters((prev) => [...prev, { id, emoji, name, x }])
+      setTimeout(() => setFloaters((prev) => prev.filter((f) => f.id !== id)), 3100)
+    }
+    window.addEventListener('emojiReaction', onReaction)
+    return () => window.removeEventListener('emojiReaction', onReaction)
+  }, [store.gameState])
+
+  return (
+    <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 9999 }}>
+      {floaters.map((f) => (
+        <div
+          key={f.id}
+          className="float-emoji absolute bottom-0 flex flex-col items-center"
+          style={{ left: `${f.x}%` }}
+        >
+          <span className="text-5xl">{f.emoji}</span>
+          <span className="text-sm font-black text-ink mt-1 whitespace-nowrap">{f.name}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function DisplayContent() {
   const { store } = useGameStore()
   const { gameState, connected } = store
 
@@ -516,4 +552,13 @@ export function DisplayView() {
   }
 
   return null
+}
+
+export function DisplayView() {
+  return (
+    <>
+      <DisplayContent />
+      <FloaterOverlay />
+    </>
+  )
 }

@@ -8,6 +8,7 @@ export enum MessageType {
   MsgPlayerList = 5,
   MsgMiniGameSubmit = 6,
   MsgReserveColor = 7,
+  MsgEmojiReaction = 8,
 }
 
 // AdminActionType mirrors Go AdminActionType iota — NEVER reorder, append only
@@ -341,6 +342,11 @@ export interface JoinPayload {
 export interface ReserveColorPayload {
   playerId: string
   color: string
+}
+
+export interface EmojiReactionPayload {
+  playerId: string
+  emoji: string
 }
 
 export interface GuessPayload {

@@ -120,6 +120,8 @@ func (h *Hub) handleMessage(c *Client, data []byte) {
 		h.handleMiniGameAnswer(c, env.Payload)
 	case MsgReserveColor:
 		h.handleReserveColor(c, env.Payload)
+	case MsgEmojiReaction:
+		h.handleEmojiReaction(c, env.Payload)
 	default:
 		c.sendEnvelope(MsgError, ErrorPayload{Message: "unknown message type"})
 	}
@@ -159,6 +161,25 @@ func (h *Hub) handleJoin(c *Client, raw json.RawMessage) {
 		})
 	}
 	h.broadcastState()
+}
+
+func (h *Hub) handleEmojiReaction(_ *Client, raw json.RawMessage) {
+	var p EmojiReactionPayload
+	if err := json.Unmarshal(raw, &p); err != nil {
+		return
+	}
+	allowed := map[string]bool{
+		"🍷": true, "🥂": true, "🍇": true, "😍": true, "🔥": true,
+		"👏": true, "😂": true, "🤢": true, "💀": true, "🤯": true,
+	}
+	if !allowed[p.Emoji] {
+		return
+	}
+	data, err := json.Marshal(Envelope{Type: MsgEmojiReaction, Payload: p})
+	if err != nil {
+		return
+	}
+	h.broadcast <- data
 }
 
 func (h *Hub) handleReserveColor(c *Client, raw json.RawMessage) {

@@ -9,6 +9,7 @@ import {
   type AdminActionPayload,
   type MiniGameAnswerPayload,
   type ReserveColorPayload,
+  type EmojiReactionPayload,
 } from '../types/game'
 import type { GameAction } from '../store/gameStore'
 
@@ -44,6 +45,9 @@ export function useGameSocket(dispatch: Dispatch<GameAction>) {
             break
           case MessageType.MsgError:
             dispatch({ type: 'SET_ERROR', message: (env.payload as { message: string }).message })
+            break
+          case MessageType.MsgEmojiReaction:
+            window.dispatchEvent(new CustomEvent('emojiReaction', { detail: env.payload as EmojiReactionPayload }))
             break
         }
       } catch {
@@ -100,5 +104,9 @@ export function useGameSocket(dispatch: Dispatch<GameAction>) {
     send(MessageType.MsgReserveColor, payload)
   }
 
-  return { sendJoin, sendGuess, sendAdminAction, sendMiniGameAnswer, sendReserveColor }
+  function sendEmojiReaction(payload: EmojiReactionPayload) {
+    send(MessageType.MsgEmojiReaction, payload)
+  }
+
+  return { sendJoin, sendGuess, sendAdminAction, sendMiniGameAnswer, sendReserveColor, sendEmojiReaction }
 }
