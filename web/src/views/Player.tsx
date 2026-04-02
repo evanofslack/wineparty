@@ -279,16 +279,19 @@ export function PlayerView({ playerId, playerName, setPlayerName, sendJoin, send
           <p className="text-muted font-semibold">Waiting for host to start...</p>
           <p className="text-xl font-black text-grape mt-2">{playerCount} player{playerCount !== 1 ? 's' : ''} ready</p>
         </div>
-        <div className="flex flex-wrap justify-center gap-3 max-w-xs">
-          {REACTION_EMOJIS.map((emoji) => (
-            <button
-              key={emoji}
-              onClick={() => sendEmojiReaction({ playerId, emoji })}
-              className="text-3xl p-2 rounded-xl active:scale-90 transition-transform"
-            >
-              {emoji}
-            </button>
-          ))}
+        <div className="sketch-border bg-white px-6 py-4 w-full max-w-sm flex flex-col items-center gap-3">
+          <p className="text-sm font-bold text-muted uppercase tracking-wider">Send a reaction</p>
+          <div className="flex flex-wrap justify-center gap-3">
+            {REACTION_EMOJIS.map((emoji) => (
+              <button
+                key={emoji}
+                onClick={() => sendEmojiReaction({ playerId, emoji })}
+                className="text-3xl p-2 rounded-xl active:scale-90 transition-transform"
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
         </div>
         {error && <p className="text-coral font-bold">{error}</p>}
       </div>
