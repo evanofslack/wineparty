@@ -67,9 +67,10 @@ type PlayerFibbageState struct {
 }
 
 type QuiplashMatchup struct {
-	PlayerA string `json:"playerA"`
-	PlayerB string `json:"playerB"`
-	Prompt  string `json:"prompt"`
+	PlayerA       string `json:"playerA"`
+	PlayerB       string `json:"playerB"`
+	Prompt        string `json:"prompt"`
+	NoScorePlayer string `json:"noScorePlayer,omitempty"` // participates but earns 0 pts (already has a scoring round)
 }
 
 type QuiplashSlot struct {

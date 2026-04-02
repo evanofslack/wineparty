@@ -634,29 +634,60 @@ func (e *Engine) computeMiniGameWinner() ([]string, int) {
 	return winners, maxDelta
 }
 
+// generateMatchups ensures every player writes at least once.
+// For an odd player count, one player writes twice; their second matchup is
+// marked with NoScorePlayer so they don't earn double points.
 func generateMatchups(playerIDs []string, maxRounds int, prompts []string) []QuiplashMatchup {
-	var pairs [][2]string
-	for i := 0; i < len(playerIDs); i++ {
-		for j := i + 1; j < len(playerIDs); j++ {
-			pairs = append(pairs, [2]string{playerIDs[i], playerIDs[j]})
-		}
+	if len(playerIDs) == 0 {
+		return nil
 	}
-	rand.Shuffle(len(pairs), func(i, j int) { pairs[i], pairs[j] = pairs[j], pairs[i] })
-	n := len(pairs)
+
+	ids := make([]string, len(playerIDs))
+	copy(ids, playerIDs)
+	rand.Shuffle(len(ids), func(i, j int) { ids[i], ids[j] = ids[j], ids[i] })
+
+	var matchups []QuiplashMatchup
+	for i := 0; i+1 < len(ids); i += 2 {
+		matchups = append(matchups, QuiplashMatchup{
+			PlayerA: ids[i],
+			PlayerB: ids[i+1],
+		})
+	}
+
+	// Odd player out: pair with a random already-paired player.
+	// That already-paired player is the double-writer and earns no points
+	// in this extra matchup (they score fully in their original matchup).
+	if len(ids)%2 == 1 {
+		oddPlayer := ids[len(ids)-1]
+		partnerMatchupIdx := rand.Intn(len(matchups))
+		partner := matchups[partnerMatchupIdx].PlayerA
+		matchups = append(matchups, QuiplashMatchup{
+			PlayerA:       oddPlayer,
+			PlayerB:       partner,
+			NoScorePlayer: partner,
+		})
+	}
+
+	rand.Shuffle(len(matchups), func(i, j int) { matchups[i], matchups[j] = matchups[j], matchups[i] })
+
+	n := len(matchups)
 	if maxRounds > 0 && maxRounds < n {
 		n = maxRounds
 	}
 	if len(prompts) < n {
 		n = len(prompts)
 	}
-	matchups := make([]QuiplashMatchup, n)
-	for i := 0; i < n; i++ {
-		matchups[i] = QuiplashMatchup{
-			PlayerA: pairs[i][0],
-			PlayerB: pairs[i][1],
-			Prompt:  prompts[i],
-		}
+	matchups = matchups[:n]
+
+	promptOrder := make([]int, len(prompts))
+	for i := range promptOrder {
+		promptOrder[i] = i
 	}
+	rand.Shuffle(len(promptOrder), func(i, j int) { promptOrder[i], promptOrder[j] = promptOrder[j], promptOrder[i] })
+	for i := range matchups {
+		matchups[i].Prompt = prompts[promptOrder[i]]
+	}
+
 	return matchups
 }
 
@@ -950,9 +981,15 @@ func (e *Engine) QuiplashReveal() error {
 			slot.Votes = votesB
 		}
 	}
-	// award points
+	// award points; NoScorePlayer participates but earns nothing this matchup
 	ptsA := votesA * 2
 	ptsB := votesB * 2
+	if matchup.NoScorePlayer == matchup.PlayerA {
+		ptsA = 0
+	}
+	if matchup.NoScorePlayer == matchup.PlayerB {
+		ptsB = 0
+	}
 	if ptsA > 0 {
 		psA.Points += ptsA
 		if p, ok := e.state.Players[matchup.PlayerA]; ok {

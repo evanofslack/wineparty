@@ -212,6 +212,7 @@ export interface QuiplashMatchup {
   playerA: string
   playerB: string
   prompt: string
+  noScorePlayer?: string
 }
 
 export interface QuiplashSlot {
