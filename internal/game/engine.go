@@ -121,9 +121,6 @@ func (e *Engine) StartGame() error {
 	if len(e.state.Rounds) == 0 {
 		return errors.New("no rounds configured")
 	}
-	rand.Shuffle(len(e.state.Rounds), func(i, j int) {
-		e.state.Rounds[i], e.state.Rounds[j] = e.state.Rounds[j], e.state.Rounds[i]
-	})
 	now := time.Now()
 	e.state.StartedAt = &now
 	e.state.Phase = PhaseGameIntro
