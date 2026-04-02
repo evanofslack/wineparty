@@ -96,7 +96,7 @@ function DisplayContent() {
             <div className="sketch-border bg-white p-8 flex flex-col items-center gap-4">
               <p className="font-black text-2xl text-ink">Join the game</p>
               <img src="/qr" alt="QR code" className="w-72 h-72" />
-              {gameState.joinUrl && (
+              {gameState?.joinUrl && (
                 <p className="text-lg font-bold text-muted font-mono">{gameState.joinUrl}</p>
               )}
             </div>
