@@ -94,6 +94,13 @@ func main() {
 	}
 	state.Colors = playerColors
 
+	base := cfg.BaseURL
+	if base == "" {
+		base = fmt.Sprintf("http://localhost:%s", cfg.Port)
+	}
+	joinURL := fmt.Sprintf("%s/?lobby=%s", base, cfg.LobbyToken)
+	state.JoinURL = joinURL
+
 	eng := game.NewEngine(state)
 	hub := ws.NewHub(repo, eng, cfg.AdminPassword, cfg.LobbyToken, wines, playerColors, cfg.LogDir, miniGameSchedule, miniGameConfigs)
 	go hub.Run()
@@ -114,11 +121,6 @@ func main() {
 	fsys := wineparty.GetFrontendFS()
 	r.Handle("/*", spaHandler(fsys))
 
-	base := cfg.BaseURL
-	if base == "" {
-		base = fmt.Sprintf("http://localhost:%s", cfg.Port)
-	}
-	joinURL := fmt.Sprintf("%s/?lobby=%s", base, cfg.LobbyToken)
 	slog.Info("starting wineparty server", "port", cfg.Port)
 	slog.Info("player join url", "url", joinURL)
 	if err := http.ListenAndServe(":"+cfg.Port, r); err != nil {

@@ -8,6 +8,8 @@ services:
     environment:
       PORT: "8080"
       ADMIN_PASSWORD: "${ADMIN_PASSWORD:-wine123}"
+      BASE_URL: "${BASE_URL}"
+      LOBBY_TOKEN: "${LOBBY_TOKEN:-changeme}"
       WINES_FILE: "config/wines.yaml"
       GAMES_FILE: "config/games.yaml"
       STATE_FILE: "/data/state.json"
