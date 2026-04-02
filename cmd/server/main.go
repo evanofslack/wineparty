@@ -107,6 +107,9 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("ok"))
 	})
+	r.Get("/qr", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "/app/qr.png")
+	})
 
 	fsys := wineparty.GetFrontendFS()
 	r.Handle("/*", spaHandler(fsys))

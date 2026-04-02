@@ -13,6 +13,7 @@ services:
       STATE_FILE: "/data/state.json"
     volumes:
       - ./config:/app/config:ro
+      - ./config/qr.png:/app/qr.png:ro
       - wineparty-data:/data
     restart: unless-stopped
 

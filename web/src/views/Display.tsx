@@ -95,9 +95,7 @@ function DisplayContent() {
             </div>
             <div className="sketch-border bg-white p-8 flex flex-col items-center gap-4">
               <p className="font-black text-2xl text-ink">Join the game</p>
-              <div className="w-72 h-72 sketch-border bg-paper flex items-center justify-center text-muted text-sm font-semibold">
-                QR → /
-              </div>
+              <img src="/qr" alt="QR code" className="w-72 h-72" />
               <p className="text-lg font-bold text-muted font-mono">winepart.evanslack.dev/?lobby=changeme</p>
             </div>
           </div>
